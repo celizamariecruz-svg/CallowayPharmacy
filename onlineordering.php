@@ -85,12 +85,14 @@ if ($prodResult) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacy Online Ordering - Calloway Pharmacy</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="theme.js"></script>
     <style>
         :root {
             --bg-color: #f0f4f8;
@@ -134,33 +136,51 @@ if ($prodResult) {
             min-height: 100vh;
         }
 
-        /* ─── Header ─── */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            background-color: var(--secondary-bg);
-            box-shadow: 0 2px 8px var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        /* ─── Topbar Override (add cart button) ─── */
+        .topbar {
+            grid-template-columns: 48px 1fr auto 48px !important;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary-blue);
-            text-decoration: none;
+        .topbar-cart-btn {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            gap: 0.4rem;
+            padding: 0 0.8rem;
+            transition: all 0.2s;
+            justify-self: end;
+            white-space: nowrap;
+        }
+        .topbar-cart-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.05); }
+        .topbar-cart-btn .cart-count-badge {
+            background: white;
+            color: var(--primary-blue, #2563eb);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 0.1rem 0.45rem;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* ─── Search Section ─── */
+        .search-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem 0;
         }
 
         .search-bar {
-            flex: 1;
             max-width: 500px;
-            margin: 0 1.5rem;
             position: relative;
         }
 
@@ -186,12 +206,6 @@ if ($prodResult) {
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-light);
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
         }
 
         .btn {
@@ -225,29 +239,13 @@ if ($prodResult) {
             color: white;
         }
 
-        .toggle-btn {
-            background: var(--card-bg);
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            color: var(--text-color);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .toggle-btn:hover { background: var(--secondary-bg); }
-
         /* ─── Stats Bar ─── */
         .stats-bar {
             display: flex;
             justify-content: center;
             gap: 2rem;
             padding: 1rem 2rem;
+            margin-top: 60px;
             background: var(--card-bg);
             box-shadow: var(--shadow-md);
             flex-wrap: wrap;
@@ -1091,40 +1089,34 @@ if ($prodResult) {
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
-            header { flex-direction: column; gap: 0.8rem; padding: 1rem; }
             .search-bar { max-width: 100%; margin: 0; }
             .products-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
             .stats-bar { gap: 1rem; }
             .cart-panel { width: 100%; max-width: 100vw; right: -100%; }
+            .topbar-cart-btn span:not(.cart-count-badge) { display: none; }
         }
     </style>
 </head>
-<body data-theme="light">
+<body>
     <!-- Toast container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <header>
-        <a href="index.php" class="logo" style="text-decoration:none; color:inherit;">
-            <i class="fas fa-prescription-bottle-medical"></i> Calloway Pharmacy
-        </a>
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search medicines, vitamins, supplements..." oninput="filterProducts()">
-        </div>
-        <div class="header-actions">
-            <button class="btn btn-outline" onclick="toggleCartPanel()"><i class="fas fa-shopping-cart"></i> Cart (<span id="headerCartCount">0</span>)</button>
-            <button class="toggle-btn" id="theme-toggle" title="Toggle theme">🌙</button>
-            <?php if ($isLoggedIn): ?>
-                <a href="logout.php" class="btn" style="background:var(--danger, #ef4444); color:#fff; padding:0.5rem 1rem; border-radius:8px; text-decoration:none; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            <?php else: ?>
-                <a href="login.php" class="btn" style="background:var(--primary-color); color:#fff; padding:0.5rem 1rem; border-radius:8px; text-decoration:none; font-size:0.85rem; display:flex; align-items:center; gap:0.4rem;">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </a>
-            <?php endif; ?>
-        </div>
-    </header>
+    <?php include 'header-component.php'; ?>
+
+    <!-- Inject cart button into topbar -->
+    <script>
+    (function() {
+        const topbar = document.getElementById('topbar');
+        const themeBtn = document.getElementById('themeToggleBtn');
+        if (topbar && themeBtn) {
+            const cartBtn = document.createElement('button');
+            cartBtn.className = 'topbar-cart-btn';
+            cartBtn.onclick = function() { toggleCartPanel(); };
+            cartBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> <span>Cart</span> <span class="cart-count-badge" id="headerCartCount">0</span>';
+            topbar.insertBefore(cartBtn, themeBtn);
+        }
+    })();
+    </script>
 
     <!-- Stats bar -->
     <div class="stats-bar">
@@ -1139,6 +1131,14 @@ if ($prodResult) {
         <div class="stat-item">
             <div class="stat-number"><?php echo count(array_filter($products, fn($p) => intval($p['stock_quantity']) > 0)); ?></div>
             <div class="stat-label">In Stock</div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-section">
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search medicines, vitamins, supplements..." oninput="filterProducts()">
         </div>
     </div>
 
@@ -1627,19 +1627,6 @@ if ($prodResult) {
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
             }
         }
-
-        // ─── Theme Toggle ───
-        const toggleBtn = document.getElementById('theme-toggle');
-        toggleBtn.addEventListener('click', () => {
-            const body = document.body;
-            if (body.getAttribute('data-theme') === 'light') {
-                body.setAttribute('data-theme', 'dark');
-                toggleBtn.textContent = '☀️';
-            } else {
-                body.setAttribute('data-theme', 'light');
-                toggleBtn.textContent = '🌙';
-            }
-        });
 
         // ─── Toast Notification ───
         function showToast(message, type = 'success') {
