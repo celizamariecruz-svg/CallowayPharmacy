@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Health Check - Calloway Pharmacy</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-body {
+            padding: 20px;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        .check-item.success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+
+        .check-item.error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+
+        .check-item.warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .check-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+
+        .check-label {
+            flex: 1;
+        }
+
+        .check-value {
+            font-family: 'Courier New', monospace;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .btn-container {
+            text-align: center;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 5px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .summary {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>≡ƒÅÑ System Health Check</h1>
+            <p>Calloway Pharmacy Inventory Management System</p>
+        </div>
+
+        <div class="content">
+            <div class="section"><div class="section-header">≡ƒùä∩╕Å Database Connection</div><div class="section-body"><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Database connection active</span></div></div></div><div class="section"><div class="section-header">≡ƒôè Database Tables</div><div class="section-body"><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: users</span><span class="check-value">1 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: roles</span><span class="check-value">4 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: products</span><span class="check-value">60 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: categories</span><span class="check-value">7 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: suppliers</span><span class="check-value">3 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: permissions</span><span class="check-value">26 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: role_permissions</span><span class="check-value">39 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: sales</span><span class="check-value">18 records</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Table: sale_items</span><span class="check-value">21 records</span></div></div></div><div class="section"><div class="section-header">≡ƒæñ Admin Account</div><div class="section-body"><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Admin account exists</span><span class="check-value">Role: Admin</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Admin account is active</span></div></div></div><div class="section"><div class="section-header">≡ƒöÉ Permissions System</div><div class="section-body"><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Permissions configured</span><span class="check-value">26 permissions</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Admin permissions assigned</span><span class="check-value">26 permissions</span></div></div></div><div class="section"><div class="section-header">≡ƒÆè Products Inventory</div><div class="section-body"><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Active products in inventory</span><span class="check-value">60 products</span></div></div></div><div class="section"><div class="section-header">≡ƒôü Critical Files</div><div class="section-body"><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Database connection</span><span class="check-value">db_connection.php</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Authentication system</span><span class="check-value">Auth.php</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Security manager</span><span class="check-value">Security.php</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">CSRF protection</span><span class="check-value">CSRF.php</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Login page</span><span class="check-value">login.php</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Logout handler</span><span class="check-value">logout.php</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Dashboard</span><span class="check-value">index.html</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Point of Sale</span><span class="check-value">pos.php</span></div><div class="check-item success"><span class="check-icon">Γ£ô</span><span class="check-label">Inventory API</span><span class="check-value">inventory_api.php</span></div></div></div>
+            <div class="summary">
+                <h3>≡ƒôê System Status Summary</h3>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number" style="color: #4caf50">
+                            100%
+                        </div>
+                        <div class="stat-label">Health Score</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" style="color: #4caf50;">22</div>
+                        <div class="stat-label">Passed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" style="color: #f44336;">0</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" style="color: #ff9800;">0</div>
+                        <div class="stat-label">Warnings</div>
+                    </div>
+                </div>
+            </div>
+
+                        <div class="check-item success" style="margin: 20px 0;">
+                <span class="check-icon">≡ƒÄë</span>
+                <span class="check-label">
+                    <strong>System is healthy and ready to use!</strong><br>
+                    All critical components are functioning properly.
+                </span>
+            </div>
+                    </div>
+
+        <div class="btn-container">
+            <a href="quick_fix.php" class="btn btn-primary">≡ƒöº Clear Session & Re-login</a>
+            <a href="index.html" class="btn btn-success">≡ƒÅá Go to Dashboard</a>
+            <a href="login.php" class="btn btn-primary">≡ƒöæ Login Page</a>
+        </div>
+    </div>
+</body>
+</html>

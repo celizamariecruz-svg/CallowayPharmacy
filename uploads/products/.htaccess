@@ -1,0 +1,11 @@
+# Ensure correct MIME types for product images (important when X-Content-Type-Options: nosniff is enabled)
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+</IfModule>
+
+# Extra hardening: never execute scripts from uploads
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+
+Options -Indexes

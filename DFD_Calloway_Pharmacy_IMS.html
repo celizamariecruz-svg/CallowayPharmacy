@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calloway Pharmacy IMS - Data Flow Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 4px solid #0c5460;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #17a2b8;
+            border-bottom: 3px solid #17a2b8;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "▪";
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        .dfd-container {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .dfd-level {
+            margin-bottom: 40px;
+        }
+
+        .dfd-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #17a2b8;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .dfd-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 300px;
+            position: relative;
+        }
+
+        /* DFD Elements */
+        .entity {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .entity:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .process {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 4px;
+            padding: 15px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            min-width: 180px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .process:hover {
+            background: #b8e0e8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .datastore {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 0;
+            padding: 15px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            min-width: 180px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .datastore:hover {
+            background: #c3e6cb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .flow {
+            background: #f8d7da;
+            border-left: 3px solid #dc3545;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+            color: #721c24;
+        }
+
+        .flow::before {
+            content: "→ ";
+            font-weight: bold;
+        }
+
+        .diagram-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .arrow {
+            font-size: 1.5em;
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        /* Module Cards */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .module-card {
+            background: #fff;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .module-card h3 {
+            color: #17a2b8;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #17a2b8;
+            padding-bottom: 10px;
+        }
+
+        .module-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .module-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95em;
+        }
+
+        .module-card li:last-child {
+            border-bottom: none;
+        }
+
+        .module-card li::before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* Database Schema */
+        .schema-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .schema-table thead {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .schema-table th,
+        .schema-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .schema-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .schema-table tbody tr:hover {
+            background: #e7f3f5;
+        }
+
+        /* Data Dictionary */
+        .data-dict {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .data-dict-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 15px;
+        }
+
+        .data-dict-item:last-child {
+            border-bottom: none;
+        }
+
+        .data-dict-item strong {
+            color: #17a2b8;
+        }
+
+        .data-dict-item .type {
+            background: #e7f3f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        /* Legend */
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-symbol {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .legend-entity { background: #ffc107; }
+        .legend-process { background: #17a2b8; }
+        .legend-datastore { background: #28a745; }
+        .legend-flow { background: #dc3545; }
+
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .module-card {
+                page-break-inside: avoid;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .legend {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>💊 Calloway Pharmacy IMS</h1>
+            <p>Data Flow Diagram (DFD) - Context & Level Diagrams</p>
+            <p style="margin-top: 15px; font-size: 0.95em;">Chapter 3 - System Design & Architecture</p>
+        </div>
+
+        <div class="content">
+            <!-- CONTEXT DIAGRAM -->
+            <div class="section">
+                <div class="section-title">Context Diagram (Level 0)</div>
+                
+                <p style="margin-bottom: 20px; color: #555;">
+                    The Context Diagram shows the entire Calloway Pharmacy IMS as a single process, with all external entities and data flows between them.
+                </p>
+
+                <div class="dfd-container">
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-symbol legend-entity">E</div>
+                            <div>External Entity (Customers, Staff, etc.)</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-symbol legend-process">P</div>
+                            <div>Main Process (System)</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-symbol legend-datastore">DB</div>
+                            <div>Data Store (Database)</div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-symbol legend-flow">→</div>
+                            <div>Data Flow</div>
+                        </div>
+                    </div>
+
+                    <div class="dfd-diagram">
+                        <div style="text-align: center; margin-bottom: 40px;">
+                            <div style="display: inline-block; margin: 20px;">
+                                <div class="entity">👥 Customers</div>
+                            </div>
+                            <div style="display: inline-block; margin: 20px;">
+                                <div class="entity">👨‍💼 Staff/Cashier</div>
+                            </div>
+                            <div style="display: inline-block; margin: 20px;">
+                                <div class="entity">📱 Admin Manager</div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin: 40px 0;">
+                            <div style="display: inline-block;">
+                                <div class="process" style="padding: 30px 50px; font-size: 1.2em;">
+                                    0.0 Calloway Pharmacy IMS
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 40px;">
+                            <div style="display: inline-block; margin: 20px;">
+                                <div class="datastore">🗄️ Pharmacy Database</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 40px;">
+                            <div class="flow">Product information, Orders, Payment</div>
+                            <div class="flow">Receipts, Reports, Loyalty Data</div>
+                            <div class="flow">Medicine Locator Queries</div>
+                            <div class="flow">Online Ordering Requests</div>
+                            <div class="flow">QR Loyalty Scans</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEVEL 1 DFD -->
+            <div class="section">
+                <div class="section-title">Level 1 - System Decomposition</div>
+                
+                <p style="margin-bottom: 20px; color: #555;">
+                    The Level 1 DFD decomposes the main system into its core functional modules.
+                </p>
+
+                <div class="dfd-container">
+                    <div class="dfd-level">
+                        <div class="dfd-title">🏪 1.0 POS Module</div>
+                        <div class="diagram-row">
+                            <div class="process">1.1 Add to Cart</div>
+                            <span class="arrow">→</span>
+                            <div class="process">1.2 Calculate Total</div>
+                            <span class="arrow">→</span>
+                            <div class="process">1.3 Process Payment</div>
+                        </div>
+                        <div class="diagram-row">
+                            <div class="process">1.4 Generate Receipt</div>
+                            <span class="arrow">→</span>
+                            <div class="process">1.5 Update Stock</div>
+                        </div>
+                        <div class="flow">Data: Product ID, Quantity, Price, Payment Method</div>
+                        <div class="flow">Data: Cart Total, Change, Receipt Details</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">📦 2.0 Inventory Management Module</div>
+                        <div class="diagram-row">
+                            <div class="process">2.1 Track Stock</div>
+                            <span class="arrow">→</span>
+                            <div class="process">2.2 Low Stock Alert</div>
+                            <span class="arrow">→</span>
+                            <div class="process">2.3 Reorder Products</div>
+                        </div>
+                        <div class="diagram-row">
+                            <div class="process">2.4 Update Inventory</div>
+                            <span class="arrow">→</span>
+                            <div class="process">2.5 Expiry Monitoring</div>
+                        </div>
+                        <div class="flow">Data: Stock Quantity, Expiry Date, Location</div>
+                        <div class="flow">Data: Reorder Threshold, Supplier Info</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">🔍 3.0 Medicine Locator Module</div>
+                        <div class="diagram-row">
+                            <div class="process">3.1 Search Products</div>
+                            <span class="arrow">→</span>
+                            <div class="process">3.2 Filter by Category</div>
+                            <span class="arrow">→</span>
+                            <div class="process">3.3 Display Location</div>
+                        </div>
+                        <div class="flow">Data: Product Name, Category, Shelf Location, Stock Status</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">🛒 4.0 Online Ordering Module</div>
+                        <div class="diagram-row">
+                            <div class="process">4.1 Browse Products</div>
+                            <span class="arrow">→</span>
+                            <div class="process">4.2 Add to Online Cart</div>
+                            <span class="arrow">→</span>
+                            <div class="process">4.3 Checkout Online</div>
+                        </div>
+                        <div class="diagram-row">
+                            <div class="process">4.4 Process Online Payment</div>
+                            <span class="arrow">→</span>
+                            <div class="process">4.5 Track Order</div>
+                        </div>
+                        <div class="flow">Data: Order ID, Delivery Address, Status Updates</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">🎟️ 5.0 Loyalty QR Module</div>
+                        <div class="diagram-row">
+                            <div class="process">5.1 Generate QR Code</div>
+                            <span class="arrow">→</span>
+                            <div class="process">5.2 Scan QR</div>
+                            <span class="arrow">→</span>
+                            <div class="process">5.3 Apply Discount</div>
+                        </div>
+                        <div class="diagram-row">
+                            <div class="process">5.4 Track Points</div>
+                            <span class="arrow">→</span>
+                            <div class="process">5.5 Redeem Rewards</div>
+                        </div>
+                        <div class="flow">Data: Customer ID, QR Code, Points Balance, Discount %</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">📊 6.0 Reports Module</div>
+                        <div class="diagram-row">
+                            <div class="process">6.1 Sales Report</div>
+                            <span class="arrow">→</span>
+                            <div class="process">6.2 Inventory Report</div>
+                            <span class="arrow">→</span>
+                            <div class="process">6.3 Analytics</div>
+                        </div>
+                        <div class="diagram-row">
+                            <div class="process">6.4 Customer Report</div>
+                            <span class="arrow">→</span>
+                            <div class="process">6.5 Export Data</div>
+                        </div>
+                        <div class="flow">Data: Transaction Summaries, Trends, Performance Metrics</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE DETAILS -->
+            <div class="section">
+                <div class="section-title">Module Overview & Data Flows</div>
+
+                <div class="module-grid">
+                    <div class="module-card">
+                        <h3>🏪 POS Module</h3>
+                        <ul>
+                            <li>Product Browsing</li>
+                            <li>Cart Management</li>
+                            <li>Payment Processing</li>
+                            <li>Receipt Generation</li>
+                            <li>Stock Deduction</li>
+                            <li>Transaction Logging</li>
+                        </ul>
+                    </div>
+
+                    <div class="module-card">
+                        <h3>📦 Inventory</h3>
+                        <ul>
+                            <li>Stock Tracking</li>
+                            <li>Low Stock Alerts</li>
+                            <li>Expiry Management</li>
+                            <li>Location Management</li>
+                            <li>Reorder Points</li>
+                            <li>Batch Processing</li>
+                        </ul>
+                    </div>
+
+                    <div class="module-card">
+                        <h3>🔍 Medicine Locator</h3>
+                        <ul>
+                            <li>Real-time Search</li>
+                            <li>Category Filtering</li>
+                            <li>Location Display</li>
+                            <li>Availability Check</li>
+                            <li>Quick Links</li>
+                            <li>Alternative Suggestions</li>
+                        </ul>
+                    </div>
+
+                    <div class="module-card">
+                        <h3>🛒 Online Ordering</h3>
+                        <ul>
+                            <li>Browse Catalog</li>
+                            <li>Add to Cart</li>
+                            <li>Checkout Process</li>
+                            <li>Payment Gateway</li>
+                            <li>Order Tracking</li>
+                            <li>Delivery Management</li>
+                        </ul>
+                    </div>
+
+                    <div class="module-card">
+                        <h3>🎟️ Loyalty QR</h3>
+                        <ul>
+                            <li>QR Generation</li>
+                            <li>QR Scanning</li>
+                            <li>Discount Application</li>
+                            <li>Points Tracking</li>
+                            <li>Reward Redemption</li>
+                            <li>Member Profile</li>
+                        </ul>
+                    </div>
+
+                    <div class="module-card">
+                        <h3>📊 Reports</h3>
+                        <ul>
+                            <li>Sales Analytics</li>
+                            <li>Inventory Reports</li>
+                            <li>Customer Insights</li>
+                            <li>Performance Metrics</li>
+                            <li>PDF Export</li>
+                            <li>Scheduled Reports</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATABASE SCHEMA -->
+            <div class="section">
+                <div class="section-title">Data Store - Database Schema</div>
+
+                <p style="margin-bottom: 20px; color: #555;">
+                    Core entities and their relationships in the Calloway Pharmacy IMS database.
+                </p>
+
+                <table class="schema-table">
+                    <thead>
+                        <tr>
+                            <th>Table Name</th>
+                            <th>Description</th>
+                            <th>Key Fields</th>
+                            <th>Related Modules</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>products</strong></td>
+                            <td>Medicine/Product Catalog</td>
+                            <td>product_id, name, category, price, stock_quantity, expiry_date, location</td>
+                            <td>POS, Inventory, Medicine Locator, Online Ordering</td>
+                        </tr>
+                        <tr>
+                            <td><strong>sales</strong></td>
+                            <td>Transaction Records</td>
+                            <td>sale_id, sale_reference, total, payment_method, paid_amount, change_amount, cashier, created_at</td>
+                            <td>POS, Reports</td>
+                        </tr>
+                        <tr>
+                            <td><strong>sale_items</strong></td>
+                            <td>POS Transaction Details</td>
+                            <td>sale_id, product_id, name, unit_price, quantity, line_total</td>
+                            <td>POS, Reports, Inventory</td>
+                        </tr>
+                        <tr>
+                            <td><strong>customers</strong></td>
+                            <td>Customer Information</td>
+                            <td>customer_id, name, email, phone, address, loyalty_points, qr_code</td>
+                            <td>Loyalty QR, Online Ordering, Reports</td>
+                        </tr>
+                        <tr>
+                            <td><strong>orders</strong></td>
+                            <td>Online Orders</td>
+                            <td>order_id, customer_id, total, status, delivery_address, created_at, delivered_at</td>
+                            <td>Online Ordering, Reports, Inventory</td>
+                        </tr>
+                        <tr>
+                            <td><strong>order_items</strong></td>
+                            <td>Online Order Details</td>
+                            <td>order_id, product_id, quantity, unit_price, line_total</td>
+                            <td>Online Ordering, Inventory</td>
+                        </tr>
+                        <tr>
+                            <td><strong>loyalty_transactions</strong></td>
+                            <td>QR Code Usage Log</td>
+                            <td>transaction_id, customer_id, qr_code, discount_applied, points_earned, created_at</td>
+                            <td>Loyalty QR, Reports</td>
+                        </tr>
+                        <tr>
+                            <td><strong>inventory_logs</strong></td>
+                            <td>Stock Change History</td>
+                            <td>log_id, product_id, quantity_change, reason, created_by, created_at</td>
+                            <td>Inventory, Reports</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- DATA DICTIONARY -->
+            <div class="section">
+                <div class="section-title">Data Dictionary - Key Entities</div>
+
+                <div class="data-dict">
+                    <div class="data-dict-item">
+                        <strong>Product Record</strong>
+                        <ul style="margin-top: 8px; list-style: none; padding: 0;">
+                            <li>• product_id <span class="type">INT PRIMARY KEY</span></li>
+                            <li>• name <span class="type">VARCHAR(255)</span> - Product name</li>
+                            <li>• category <span class="type">VARCHAR(100)</span> - Medicine category</li>
+                            <li>• price <span class="type">DECIMAL(10,2)</span> - Selling price in ₱</li>
+                            <li>• stock_quantity <span class="type">INT</span> - Available units</li>
+                            <li>• expiry_date <span class="type">DATE</span> - Expiration date</li>
+                            <li>• location <span class="type">VARCHAR(100)</span> - Shelf/Rack location</li>
+                        </ul>
+                    </div>
+
+                    <div class="data-dict-item">
+                        <strong>Sale Transaction</strong>
+                        <ul style="margin-top: 8px; list-style: none; padding: 0;">
+                            <li>• sale_id <span class="type">INT PRIMARY KEY</span></li>
+                            <li>• sale_reference <span class="type">VARCHAR(100)</span> - Unique reference code</li>
+                            <li>• total <span class="type">DECIMAL(10,2)</span> - Transaction total</li>
+                            <li>• payment_method <span class="type">ENUM</span> - Cash/Card/Mixed</li>
+                            <li>• paid_amount <span class="type">DECIMAL(10,2)</span> - Amount paid</li>
+                            <li>• change_amount <span class="type">DECIMAL(10,2)</span> - Change given</li>
+                            <li>• cashier <span class="type">VARCHAR(100)</span> - Staff name</li>
+                            <li>• created_at <span class="type">TIMESTAMP</span> - Transaction time</li>
+                        </ul>
+                    </div>
+
+                    <div class="data-dict-item">
+                        <strong>Customer Record (Loyalty)</strong>
+                        <ul style="margin-top: 8px; list-style: none; padding: 0;">
+                            <li>• customer_id <span class="type">INT PRIMARY KEY</span></li>
+                            <li>• name <span class="type">VARCHAR(255)</span> - Full name</li>
+                            <li>• email <span class="type">VARCHAR(255)</span> - Email address</li>
+                            <li>• phone <span class="type">VARCHAR(20)</span> - Mobile number</li>
+                            <li>• loyalty_points <span class="type">INT</span> - Current points balance</li>
+                            <li>• qr_code <span class="type">LONGTEXT</span> - Encoded QR data</li>
+                        </ul>
+                    </div>
+
+                    <div class="data-dict-item">
+                        <strong>Order Record (Online)</strong>
+                        <ul style="margin-top: 8px; list-style: none; padding: 0;">
+                            <li>• order_id <span class="type">INT PRIMARY KEY</span></li>
+                            <li>• customer_id <span class="type">INT FOREIGN KEY</span></li>
+                            <li>• total <span class="type">DECIMAL(10,2)</span> - Order total</li>
+                            <li>• status <span class="type">ENUM</span> - Pending/Processing/Ready/Delivered</li>
+                            <li>• delivery_address <span class="type">TEXT</span> - Shipping address</li>
+                            <li>• created_at <span class="type">TIMESTAMP</span> - Order placement time</li>
+                            <li>• delivered_at <span class="type">TIMESTAMP NULL</span> - Delivery time</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAILED DATA FLOWS -->
+            <div class="section">
+                <div class="section-title">Detailed Data Flows by Process</div>
+
+                <div class="dfd-container">
+                    <div class="dfd-level">
+                        <div class="dfd-title">POS Transaction Flow</div>
+                        <div class="flow">1. Customer selects products → Product ID, Quantity</div>
+                        <div class="flow">2. System verifies stock → Stock Quantity check</div>
+                        <div class="flow">3. Add to cart → Cart items with prices</div>
+                        <div class="flow">4. Calculate total → Total amount, tax (if applicable)</div>
+                        <div class="flow">5. Process payment → Payment method, Amount paid</div>
+                        <div class="flow">6. Deduct stock → Update product stock_quantity</div>
+                        <div class="flow">7. Generate receipt → Receipt data (ID, items, total, change)</div>
+                        <div class="flow">8. Log transaction → Store in sales & sale_items tables</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">Inventory Management Flow</div>
+                        <div class="flow">1. Monitor stock levels → Current stock_quantity</div>
+                        <div class="flow">2. Check expiry dates → Compare with system date</div>
+                        <div class="flow">3. Alert low stock → If stock ≤ reorder_point</div>
+                        <div class="flow">4. Log stock changes → Insert into inventory_logs</div>
+                        <div class="flow">5. Update product table → Adjust stock_quantity</div>
+                        <div class="flow">6. Generate reorder list → Products needing replenishment</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">Online Ordering Flow</div>
+                        <div class="flow">1. Browse products → Product catalog with availability</div>
+                        <div class="flow">2. Add to online cart → Product ID, Quantity, Price</div>
+                        <div class="flow">3. Checkout → Delivery address, Contact info</div>
+                        <div class="flow">4. Payment gateway → Process online payment (Card/E-wallet)</div>
+                        <div class="flow">5. Create order → Insert into orders & order_items tables</div>
+                        <div class="flow">6. Reserve stock → Reduce product quantity</div>
+                        <div class="flow">7. Track order → Status updates sent to customer</div>
+                        <div class="flow">8. Fulfill delivery → Mark as delivered in database</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">Loyalty QR Module Flow</div>
+                        <div class="flow">1. Register customer → Capture name, email, phone</div>
+                        <div class="flow">2. Generate QR code → Encode customer_id + unique token</div>
+                        <div class="flow">3. Customer scans QR → At POS or via mobile app</div>
+                        <div class="flow">4. Verify QR → Decode and validate customer_id</div>
+                        <div class="flow">5. Apply discount → Calculate discount percentage</div>
+                        <div class="flow">6. Award points → loyalty_points += transaction_amount * multiplier</div>
+                        <div class="flow">7. Log transaction → Store in loyalty_transactions table</div>
+                        <div class="flow">8. Display balance → Show updated points to customer</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">Reports & Analytics Flow</div>
+                        <div class="flow">1. Gather transaction data → From sales & sale_items tables</div>
+                        <div class="flow">2. Aggregate by period → Daily, weekly, monthly, yearly</div>
+                        <div class="flow">3. Calculate metrics → Total revenue, avg transaction, top products</div>
+                        <div class="flow">4. Generate reports → PDF with charts, tables, summaries</div>
+                        <div class="flow">5. Display dashboard → Real-time KPIs and visualizations</div>
+                        <div class="flow">6. Export data → CSV/PDF for external analysis</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATA SECURITY -->
+            <div class="section">
+                <div class="section-title">Data Security & Validation</div>
+
+                <div class="module-grid">
+                    <div class="module-card">
+                        <h3>🔒 Input Validation</h3>
+                        <ul>
+                            <li>Product ID validation</li>
+                            <li>Quantity range checks</li>
+                            <li>Price format validation</li>
+                            <li>Email format validation</li>
+                            <li>Phone number validation</li>
+                            <li>SQL injection prevention</li>
+                        </ul>
+                    </div>
+
+                    <div class="module-card">
+                        <h3>🛡️ Database Security</h3>
+                        <ul>
+                            <li>CSRF token protection</li>
+                            <li>Prepared statements</li>
+                            <li>Row-level locking (FOR UPDATE)</li>
+                            <li>Transaction rollback on errors</li>
+                            <li>Session management</li>
+                            <li>XSS prevention (escaping)</li>
+                        </ul>
+                    </div>
+
+                    <div class="module-card">
+                        <h3>📝 Audit Trail</h3>
+                        <ul>
+                            <li>Transaction logging</li>
+                            <li>Inventory change logs</li>
+                            <li>User action tracking</li>
+                            <li>Payment history</li>
+                            <li>Timestamp recording</li>
+                            <li>Error logging</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SYSTEM INTERFACES -->
+            <div class="section">
+                <div class="section-title">System Interfaces & Integration Points</div>
+
+                <div class="dfd-container">
+                    <div class="dfd-level">
+                        <div class="dfd-title">Internal Interfaces</div>
+                        <div class="flow">POS ↔ Inventory: Stock deduction, availability check</div>
+                        <div class="flow">Online Ordering ↔ Inventory: Stock reservation, fulfillment</div>
+                        <div class="flow">Loyalty QR ↔ POS: Discount application, points addition</div>
+                        <div class="flow">All Modules ↔ Reports: Data aggregation, analytics</div>
+                        <div class="flow">Medicine Locator ↔ Inventory: Real-time stock, location data</div>
+                    </div>
+
+                    <div class="dfd-level">
+                        <div class="dfd-title">External Interfaces</div>
+                        <div class="flow">Payment Gateway: Credit/Debit card processing</div>
+                        <div class="flow">Email Service: Order confirmations, receipts</div>
+                        <div class="flow">SMS Service: OTP, notifications</div>
+                        <div class="flow">Barcode Scanner: Product lookup via barcode</div>
+                        <div class="flow">Printer: Receipt printing</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="section">
+                <div class="section-title">System Summary & Architecture</div>
+
+                <div style="background: #f0f8ff; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+                    <h4 style="color: #17a2b8; margin-top: 0;">Core Architecture</h4>
+                    <p><strong>Frontend:</strong> HTML5, CSS3, Vanilla JavaScript (Responsive design, Mobile-first)</p>
+                    <p><strong>Backend:</strong> PHP 7+ with MySQLi prepared statements</p>
+                    <p><strong>Database:</strong> MySQL/MariaDB with transactional integrity</p>
+                    <p><strong>Security:</strong> CSRF tokens, parameterized queries, input validation, output escaping</p>
+                </div>
+
+                <div style="background: #f0fff4; border-left: 4px solid #28a745; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+                    <h4 style="color: #28a745; margin-top: 0;">Key Features by Module</h4>
+                    <ul style="list-style-position: inside;">
+                        <li><strong>POS:</strong> Real-time cart, payment processing, receipt generation, stock sync</li>
+                        <li><strong>Inventory:</strong> Stock tracking, expiry monitoring, low-stock alerts, location management</li>
+                        <li><strong>Medicine Locator:</strong> Real-time search, category filtering, shelf location display</li>
+                        <li><strong>Online Ordering:</strong> Browse, checkout, payment gateway, order tracking</li>
+                        <li><strong>Loyalty QR:</strong> QR generation, scanning, point tracking, discount application</li>
+                        <li><strong>Reports:</strong> Sales analytics, inventory reports, customer insights, PDF export</li>
+                    </ul>
+                </div>
+
+                <div style="background: #fff8f0; border-left: 4px solid #f39c12; padding: 20px; border-radius: 4px;">
+                    <h4 style="color: #f39c12; margin-top: 0;">Data Flow Patterns</h4>
+                    <p>✓ <strong>Synchronous flows:</strong> POS transactions, payment processing, QR scanning</p>
+                    <p>✓ <strong>Asynchronous flows:</strong> Email notifications, report generation, batch processing</p>
+                    <p>✓ <strong>Real-time updates:</strong> Stock levels, inventory alerts, order status</p>
+                    <p>✓ <strong>Batch operations:</strong> End-of-day reports, expiry checks, reorder lists</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💊 <strong>Calloway Pharmacy IMS</strong> | Data Flow Diagram - System Design Documentation</p>
+            <p>Generated for Chapter 3 - System Design & Architecture | December 2024</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 3 - System Design | Calloway Pharmacy IMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Calibri', 'Times New Roman', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 40px 20px;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 4px solid #0c5460;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #17a2b8;
+            border-bottom: 3px solid #17a2b8;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "▪";
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        .subsection-title {
+            font-size: 1.3em;
+            color: #17a2b8;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+            color: #555;
+        }
+
+        /* Diagram Container */
+        .diagram-container {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        .design-box {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px auto;
+            display: inline-block;
+            min-width: 200px;
+            font-weight: 600;
+            color: #0c5460;
+        }
+
+        .user-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 600;
+            margin: 15px auto;
+            font-size: 0.9em;
+        }
+
+        .database-box {
+            background: #d4edda;
+            border: 2px dashed #28a745;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 15px auto;
+            display: inline-block;
+            font-weight: 600;
+            color: #155724;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #17a2b8;
+            margin: 15px 0;
+        }
+
+        .interaction-flow {
+            background: #f0f8ff;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin: 25px 0;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        table thead {
+            background: #17a2b8;
+            color: white;
+        }
+
+        table th,
+        table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        table tbody tr:hover {
+            background: #e7f3f5;
+        }
+
+        table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        /* Module Grid */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .module-card {
+            background: #fff;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .module-card h3 {
+            color: #17a2b8;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #17a2b8;
+            padding-bottom: 10px;
+        }
+
+        .module-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .module-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95em;
+        }
+
+        .module-card li:last-child {
+            border-bottom: none;
+        }
+
+        .module-card li::before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: #f0f8ff;
+            border-left: 4px solid #17a2b8;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .highlight-box h4 {
+            color: #17a2b8;
+            margin-bottom: 10px;
+        }
+
+        /* User Roles */
+        .role-card {
+            background: #fff;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .role-card h4 {
+            color: #17a2b8;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .role-card ul {
+            margin-left: 20px;
+        }
+
+        .role-card li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Legend */
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-symbol {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8em;
+        }
+
+        .legend-user { background: #ffc107; }
+        .legend-system { background: #17a2b8; }
+        .legend-database { background: #28a745; }
+        .legend-process { background: #6f42c1; }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .content {
+                padding: 20px;
+            }
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>💊 CHAPTER III</h1>
+            <p>System Design & Architecture</p>
+            <p style="margin-top: 15px; font-size: 0.95em;">Calloway Pharmacy Inventory Management System</p>
+        </div>
+
+        <div class="content">
+
+            <!-- SYSTEM DESIGN OVERVIEW -->
+            <div class="section">
+                <div class="section-title">System Design</div>
+                
+                <p>This section demonstrates how the Calloway Pharmacy IMS processes system functionality to automate pharmacy operations and return processed results to users. The system design illustrates how various user levels interact and transact with the system, ensuring efficient management of inventory, sales, and customer data. The overall architecture of the website system is represented through comprehensive procedures and structured interactions shown in Figure 3.</p>
+
+                <div class="highlight-box">
+                    <h4>🎯 System Design Objectives</h4>
+                    <ul>
+                        <li>Automate critical pharmacy operations (POS, inventory, ordering)</li>
+                        <li>Provide seamless user interaction through intuitive interfaces</li>
+                        <li>Ensure data consistency and integrity across all modules</li>
+                        <li>Enable real-time reporting and decision-making</li>
+                        <li>Maintain secure and efficient transaction processing</li>
+                    </ul>
+                </div>
+
+                <div class="diagram-container">
+                    <h3 style="color: #17a2b8; margin-bottom: 30px;">Figure 3: System Design Architecture</h3>
+                    
+                    <div style="margin: 30px 0;">
+                        <div class="user-box">👥 Customers</div>
+                        <div class="arrow">↓</div>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <div class="design-box">🏪 Point of Sale (POS) Module</div>
+                        <div class="arrow">↓</div>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <div class="design-box">📦 Inventory Management</div>
+                        <div class="design-box" style="margin-left: 15px; margin-top: 0;">🔍 Medicine Locator</div>
+                        <div class="design-box" style="margin-left: 15px; margin-top: 0;">🛒 Online Ordering</div>
+                        <div class="arrow">↓</div>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <div class="design-box">🎟️ Loyalty QR System</div>
+                        <div class="arrow">↓</div>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <div class="design-box">📊 Reports & Analytics</div>
+                        <div class="arrow">↓</div>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <div class="database-box">🗄️ Pharmacy Database<br>(MySQL/MariaDB)</div>
+                    </div>
+
+                    <div style="margin-top: 40px;">
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-symbol legend-user">U</div>
+                                <div>User/External Entity</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-symbol legend-system">M</div>
+                                <div>System Module/Process</div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-symbol legend-database">DB</div>
+                                <div>Data Store/Database</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 20px;">The system design illustrates the complete flow of information from user input through processing modules to final data storage. Each module performs specific operations while maintaining data integrity and security standards. The modular design allows independent updates and improvements without affecting other system components.</p>
+            </div>
+
+            <!-- DATABASE & ADMIN TABLES -->
+            <div class="section">
+                <div class="section-title">Database Schema & Table Structure</div>
+
+                <div class="subsection-title">Admin Account Management</div>
+
+                <p>The admin table stores administrative account information including a unique admin ID, username, and password. Additional administrator details such as first name, last name, gender, email address, and phone number are maintained in the admin_info table. This separation of authentication data from personal information follows database normalization principles.</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Table Name</th>
+                                <th>Purpose</th>
+                                <th>Key Fields</th>
+                                <th>Related Information</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>admin</strong></td>
+                                <td>Admin Authentication</td>
+                                <td>admin_id (PK), username, password, created_at</td>
+                                <td>Links to admin_info table</td>
+                            </tr>
+                            <tr>
+                                <td><strong>admin_info</strong></td>
+                                <td>Admin Profile Details</td>
+                                <td>admin_id (FK), first_name, last_name, gender, email, phone_number</td>
+                                <td>Associated with admin authentication</td>
+                            </tr>
+                            <tr>
+                                <td><strong>products</strong></td>
+                                <td>Medicine/Product Catalog</td>
+                                <td>product_id (PK), name, category, price, stock_quantity, expiry_date, location</td>
+                                <td>Used by POS, Inventory, Online Ordering</td>
+                            </tr>
+                            <tr>
+                                <td><strong>sales</strong></td>
+                                <td>POS Transaction Records</td>
+                                <td>sale_id (PK), sale_reference, total, payment_method, cashier, timestamp</td>
+                                <td>References products, customers</td>
+                            </tr>
+                            <tr>
+                                <td><strong>customers</strong></td>
+                                <td>Customer & Loyalty Data</td>
+                                <td>customer_id (PK), name, email, phone, qr_code, loyalty_points</td>
+                                <td>Used by Loyalty QR, Online Ordering, Reports</td>
+                            </tr>
+                            <tr>
+                                <td><strong>orders</strong></td>
+                                <td>Online Order Information</td>
+                                <td>order_id (PK), customer_id (FK), total, status, delivery_address, created_at</td>
+                                <td>Associated with customers, order_items</td>
+                            </tr>
+                            <tr>
+                                <td><strong>loyalty_transactions</strong></td>
+                                <td>QR Scan & Points Log</td>
+                                <td>transaction_id (PK), customer_id (FK), qr_code, discount_applied, points_earned</td>
+                                <td>References customers table</td>
+                            </tr>
+                            <tr>
+                                <td><strong>inventory_logs</strong></td>
+                                <td>Stock Movement History</td>
+                                <td>log_id (PK), product_id (FK), quantity_change, reason, created_by, timestamp</td>
+                                <td>Tracks inventory changes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection-title">Product & Item Information</div>
+
+                <p>The item_info table stores detailed information about pharmacy products (medicines). It maintains critical data including product name, category, selling price, stock quantity, expiry dates, and storage location. The system automatically updates stock levels when transactions occur in the POS module.</p>
+
+                <div class="interaction-flow">
+                    <strong>Key Data Elements in item_info Table:</strong><br>
+                    • Product ID and Name<br>
+                    • Category (e.g., Antibiotics, Vitamins, Cough Syrups)<br>
+                    • Cost Price and Selling Price<br>
+                    • Current Stock Quantity<br>
+                    • Expiry Date for Batch Tracking<br>
+                    • Storage Location/Shelf Number<br>
+                    • Supplier Information<br>
+                    • Reorder Threshold Levels
+                </p>
+                </div>
+
+                <p>This comprehensive product database ensures accurate inventory management, prevents stockouts of critical medications, and facilitates quick medicine locator searches for both staff and customers.</p>
+            </div>
+
+            <!-- SYSTEM ARCHITECTURE -->
+            <div class="section">
+                <div class="section-title">System Architecture</div>
+
+                <p>The Calloway Pharmacy IMS system architecture illustrates how the entire Inventory Management System operates efficiently. The pharmacy product information serves as the central data source for medicine details including inventory levels, pricing, availability, and location information. The system is accessed by three primary user types: Admin Users, Staff/Cashier Users, and Customers.</p>
+
+                <div class="diagram-container">
+                    <h3 style="color: #17a2b8; margin-bottom: 30px;">Figure 4: System Architecture Diagram</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div class="user-box">👨‍💼 Admin Users</div>
+                        <div class="user-box">💼 Staff/Cashier</div>
+                        <div class="user-box">👥 Customers</div>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div class="design-box">Admin Interface<br>(Full Access)</div>
+                        <div class="design-box">Staff Interface<br>(Limited Access)</div>
+                        <div class="design-box">Customer Portal<br>(Public Access)</div>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div style="margin: 30px 0;">
+                        <div class="design-box" style="width: 100%; display: block; margin: 0 auto;">
+                            🌐 Web Server (PHP Backend)<br>
+                            Request Handler • Session Management • Business Logic Processing
+                        </div>
+                    </div>
+
+                    <div class="arrow">↓</div>
+
+                    <div style="margin: 30px 0;">
+                        <div class="database-box" style="width: 100%; display: block;">
+                            🗄️ Pharmacy Database (MySQL/MariaDB)<br>
+                            Products • Sales • Customers • Orders • Inventory • Loyalty Data
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>🏗️ Architecture Components</h4>
+                    <ul>
+                        <li><strong>Admin Users:</strong> Have full access to manage all aspects of the system including user management, inventory adjustments, and comprehensive reporting</li>
+                        <li><strong>Staff/Cashier Users:</strong> Have limited access through the Staff Interface to perform point-of-sale transactions, manage bookings, and access assigned reports</li>
+                        <li><strong>Customers:</strong> Access the public customer portal for online ordering, medicine locator searches, and loyalty program features</li>
+                        <li><strong>Web Server:</strong> Acts as the main processing unit, handles all user requests, processes system operations, and communicates with the database</li>
+                        <li><strong>Database:</strong> Securely stores all data including product information, transaction records, customer profiles, and transaction history</li>
+                    </ul>
+                </div>
+
+                <p>Whenever users make requests—such as adding new products to inventory, processing sales transactions, searching for medicines, or checking order status—the Web Server retrieves or updates the necessary information from the Database in real-time. This setup ensures smooth, secure, and efficient management of pharmacy operations while allowing all user types to access the system according to their role-based permissions.</p>
+            </div>
+
+            <!-- USER ROLES & PERMISSIONS -->
+            <div class="section">
+                <div class="section-title">User Roles & Access Permissions</div>
+
+                <div class="module-grid">
+                    <div class="role-card">
+                        <h4>👨‍💼 Admin/Manager Role</h4>
+                        <ul>
+                            <li>Full system access and control</li>
+                            <li>User account management</li>
+                            <li>Product catalog administration</li>
+                            <li>Inventory adjustments</li>
+                            <li>Report generation and analytics</li>
+                            <li>System configuration settings</li>
+                            <li>View all transactions and orders</li>
+                            <li>Manage pricing and discounts</li>
+                        </ul>
+                    </div>
+
+                    <div class="role-card">
+                        <h4>💼 Staff/Cashier Role</h4>
+                        <ul>
+                            <li>Point-of-sale transactions</li>
+                            <li>Customer interaction</li>
+                            <li>Medicine locator searches</li>
+                            <li>Receipt generation and printing</li>
+                            <li>View assigned reports</li>
+                            <li>Loyalty point application</li>
+                            <li>Basic inventory checks</li>
+                            <li>Cannot modify product prices</li>
+                        </ul>
+                    </div>
+
+                    <div class="role-card">
+                        <h4>👥 Customer/Public Role</h4>
+                        <ul>
+                            <li>Online product browsing</li>
+                            <li>Medicine locator searches</li>
+                            <li>Online ordering</li>
+                            <li>Order tracking</li>
+                            <li>Loyalty program participation</li>
+                            <li>QR code scanning for discounts</li>
+                            <li>Account profile management</li>
+                            <li>Limited transaction history view</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE INTERACTION FLOWS -->
+            <div class="section">
+                <div class="section-title">Module Interaction & Data Flow</div>
+
+                <div class="subsection-title">POS Module Data Flow</div>
+
+                <div class="interaction-flow">
+                    <strong>1. Customer Arrives at Pharmacy</strong><br>
+                    ↓<br>
+                    <strong>2. Staff Initiates POS Transaction</strong> - Search product by name/code<br>
+                    ↓<br>
+                    <strong>3. Product Verification</strong> - System checks stock_quantity > 0<br>
+                    ↓<br>
+                    <strong>4. Add to Cart</strong> - Product ID, quantity, unit_price recorded<br>
+                    ↓<br>
+                    <strong>5. Calculate Total</strong> - Subtotal + Tax (if applicable)<br>
+                    ↓<br>
+                    <strong>6. Apply Loyalty Discount</strong> - If customer scans QR code<br>
+                    ↓<br>
+                    <strong>7. Process Payment</strong> - Cash/Card/Mixed payment method<br>
+                    ↓<br>
+                    <strong>8. Generate Receipt</strong> - Print transaction details<br>
+                    ↓<br>
+                    <strong>9. Update Database</strong> - Insert into sales table, deduct stock, log transaction
+                </div>
+
+                <div class="subsection-title">Inventory Management Data Flow</div>
+
+                <div class="interaction-flow">
+                    <strong>1. Real-time Stock Monitoring</strong> - System tracks stock_quantity<br>
+                    ↓<br>
+                    <strong>2. Low Stock Alert</strong> - If stock ≤ reorder_threshold, flag item<br>
+                    ↓<br>
+                    <strong>3. Expiry Date Tracking</strong> - Monitor expiry_date field<br>
+                    ↓<br>
+                    <strong>4. Generate Reorder Report</strong> - Admin views items needing replenishment<br>
+                    ↓<br>
+                    <strong>5. Log Inventory Changes</strong> - Record all stock movements in inventory_logs<br>
+                    ↓<br>
+                    <strong>6. Update Product Information</strong> - Modify stock_quantity in products table
+                </div>
+
+                <div class="subsection-title">Online Ordering Data Flow</div>
+
+                <div class="interaction-flow">
+                    <strong>1. Customer Browses Online Catalog</strong> - View products with availability<br>
+                    ↓<br>
+                    <strong>2. Add Items to Online Cart</strong> - Record product_id, quantity<br>
+                    ↓<br>
+                    <strong>3. Proceed to Checkout</strong> - Enter delivery address and contact info<br>
+                    ↓<br>
+                    <strong>4. Process Payment</strong> - Online payment gateway integration<br>
+                    ↓<br>
+                    <strong>5. Create Order Record</strong> - Insert into orders & order_items tables<br>
+                    ↓<br>
+                    <strong>6. Reserve Inventory</strong> - Reduce stock_quantity temporarily<br>
+                    ↓<br>
+                    <strong>7. Send Confirmation</strong> - Email/SMS order confirmation<br>
+                    ↓<br>
+                    <strong>8. Track & Deliver</strong> - Update order status, confirm delivery
+                </div>
+
+                <div class="subsection-title">Loyalty QR Module Data Flow</div>
+
+                <div class="interaction-flow">
+                    <strong>1. Customer Registration</strong> - Capture name, email, phone<br>
+                    ↓<br>
+                    <strong>2. Generate QR Code</strong> - Encode customer_id + unique token<br>
+                    ↓<br>
+                    <strong>3. Customer Makes Purchase</strong> - Complete POS transaction<br>
+                    ↓<br>
+                    <strong>4. Scan QR Code</strong> - Staff scans customer's QR at checkout<br>
+                    ↓<br>
+                    <strong>5. Apply Discount</strong> - Calculate discount based on tier/promotion<br>
+                    ↓<br>
+                    <strong>6. Award Loyalty Points</strong> - Points = transaction_total × multiplier<br>
+                    ↓<br>
+                    <strong>7. Log Transaction</strong> - Record in loyalty_transactions table<br>
+                    ↓<br>
+                    <strong>8. Display Updated Balance</strong> - Show customer's new points total
+                </div>
+            </div>
+
+            <!-- SYSTEM PROCESSING PROCEDURES -->
+            <div class="section">
+                <div class="section-title">System Processing & Operational Procedures</div>
+
+                <div class="subsection-title">Transaction Processing</div>
+
+                <div class="highlight-box">
+                    <h4>⚙️ POS Transaction Processing Steps</h4>
+                    <ul>
+                        <li><strong>Product Search:</strong> User enters product name or barcode → System queries products table</li>
+                        <li><strong>Availability Check:</strong> Verify stock_quantity > 0 and expiry_date is valid</li>
+                        <li><strong>Cart Management:</strong> Store selected items in temporary session array</li>
+                        <li><strong>Price Calculation:</strong> Multiply unit_price × quantity for each item</li>
+                        <li><strong>Tax Computation:</strong> Apply applicable taxes if configured</li>
+                        <li><strong>Loyalty Integration:</strong> If QR scanned, apply customer discount</li>
+                        <li><strong>Payment Processing:</strong> Accept payment via configured methods</li>
+                        <li><strong>Stock Deduction:</strong> Subtract sold quantity from stock_quantity</li>
+                        <li><strong>Transaction Logging:</strong> Insert record into sales & sale_items tables</li>
+                        <li><strong>Receipt Generation:</strong> Compile transaction summary and print</li>
+                    </ul>
+                </div>
+
+                <div class="subsection-title">Data Integrity & Validation</div>
+
+                <p>The system implements comprehensive validation at each processing step to ensure data accuracy and prevent errors:</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Validation Point</th>
+                                <th>Check Performed</th>
+                                <th>Action if Invalid</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Product ID Lookup</td>
+                                <td>Verify product exists in products table</td>
+                                <td>Display error message, prevent addition</td>
+                            </tr>
+                            <tr>
+                                <td>Stock Availability</td>
+                                <td>Confirm stock_quantity ≥ requested quantity</td>
+                                <td>Alert user, reduce quantity or deny transaction</td>
+                            </tr>
+                            <tr>
+                                <td>Expiry Date Check</td>
+                                <td>Ensure expiry_date > current date</td>
+                                <td>Prevent sale of expired medicines</td>
+                            </tr>
+                            <tr>
+                                <td>Price Validation</td>
+                                <td>Confirm price value is positive and matches database</td>
+                                <td>Flag discrepancies, require admin approval</td>
+                            </tr>
+                            <tr>
+                                <td>Customer Information</td>
+                                <td>Verify email format and phone number length</td>
+                                <td>Request correction before proceeding</td>
+                            </tr>
+                            <tr>
+                                <td>Payment Amount</td>
+                                <td>Confirm paid_amount ≥ total amount due</td>
+                                <td>Request additional payment or cancel</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection-title">Error Handling & Recovery</div>
+
+                <p>The system includes robust error handling mechanisms to ensure transaction reliability:</p>
+
+                <ul>
+                    <li><strong>Transaction Rollback:</strong> If any step fails, entire transaction is rolled back to maintain data consistency</li>
+                    <li><strong>Duplicate Prevention:</strong> System prevents duplicate transactions through unique transaction IDs</li>
+                    <li><strong>Concurrent Access Control:</strong> Database locking prevents simultaneous modifications to same records</li>
+                    <li><strong>Error Logging:</strong> All system errors recorded in application logs for troubleshooting</li>
+                    <li><strong>User Notification:</strong> Clear error messages displayed to users with recommended actions</li>
+                    <li><strong>Automatic Recovery:</strong> System attempts automatic recovery for non-critical failures</li>
+                </ul>
+            </div>
+
+            <!-- SYSTEM CHARACTERISTICS -->
+            <div class="section">
+                <div class="section-title">System Characteristics & Quality Attributes</div>
+
+                <div class="subsection-title">Functionality</div>
+
+                <p>The Calloway Pharmacy IMS is designed to achieve comprehensive functionality across all operational areas:</p>
+
+                <ul>
+                    <li><strong>User-Friendly Interface:</strong> Priority given to intuitive design allowing efficient management of transactions, inventory, and records. Features made easily accessible so users navigate with ease</li>
+                    <li><strong>Complete Transaction Processing:</strong> System facilitates end-to-end recording of product sales, customer interactions, and financial transactions</li>
+                    <li><strong>Automated Operations:</strong> Processes like stock updates, receipt generation, and loyalty point calculation execute automatically</li>
+                    <li><strong>Comprehensive Data Management:</strong> Complete lifecycle management of products, customers, and transactions</li>
+                </ul>
+
+                <div class="subsection-title">Reliability & Dependability</div>
+
+                <p>High reliability and consistent performance ensure outstanding user experience:</p>
+
+                <ul>
+                    <li><strong>Real-Time Updates:</strong> System delivers accurate reports with current data, providing immediate information access</li>
+                    <li><strong>Performance Optimization:</strong> Transaction processing and page load times maintained at less than 1 second average</li>
+                    <li><strong>User-Friendly Navigation:</strong> Organized interface layouts enable quick access to information</li>
+                    <li><strong>Quality Assurance:</strong> Thorough testing ensures stability during updates and system modifications</li>
+                    <li><strong>Technology Flexibility:</strong> System designed to accommodate new technologies and evolving user demands</li>
+                </ul>
+
+                <div class="subsection-title">Usability</div>
+
+                <p>System designed for seamless operation and remarkable user experience:</p>
+
+                <ul>
+                    <li><strong>Ease of Access:</strong> Users at all skill levels easily access and operate system features</li>
+                    <li><strong>Intuitive Design:</strong> Clear workflows streamline complicated procedures</li>
+                    <li><strong>Responsive Interface:</strong> Well-organized layouts and navigation menus enhance overall UX</li>
+                    <li><strong>Multi-Device Compatibility:</strong> System functions smoothly across computers and mobile devices</li>
+                    <li><strong>Minimal Training Required:</strong> Interface clarity reduces learning curve and training time</li>
+                </ul>
+
+                <div class="subsection-title">Efficiency & Performance</div>
+
+                <p>System optimized for maximum operational efficiency:</p>
+
+                <ul>
+                    <li><strong>Streamlined Operations:</strong> Automated processes reduce manual workload and human errors</li>
+                    <li><strong>Time Savings:</strong> System automation saves significant time versus manual processes</li>
+                    <li><strong>Real-Time Data Processing:</strong> Immediate data processing enables faster decision-making</li>
+                    <li><strong>Resource Optimization:</strong> Centralized information and efficient workflows maximize resource utilization</li>
+                    <li><strong>Reduced Delays:</strong> Minimizes delays caused by errors or system outages</li>
+                </ul>
+
+                <div class="subsection-title">Maintainability & Sustainability</div>
+
+                <p>System built with long-term maintainability as a core concern:</p>
+
+                <ul>
+                    <li><strong>Modular Design:</strong> Individual components can be updated or modified without affecting overall functionality</li>
+                    <li><strong>Regular Maintenance Plans:</strong> Scheduled performance evaluations and software upgrades keep system current</li>
+                    <li><strong>Clear Documentation:</strong> Comprehensive documentation simplifies troubleshooting and updates</li>
+                    <li><strong>Automated Monitoring:</strong> System alerts enable early issue detection, minimizing downtime</li>
+                    <li><strong>Cost Effectiveness:</strong> Modular updates reduce maintenance costs versus complete replacements</li>
+                    <li><strong>Future Scalability:</strong> Architecture supports system expansion as business needs grow</li>
+                </ul>
+            </div>
+
+            <!-- CHAPTER SUMMARY -->
+            <div class="section">
+                <div class="section-title">Chapter 3 Summary</div>
+
+                <div class="highlight-box">
+                    <h4>📋 Key System Design Components</h4>
+                    <ul>
+                        <li>✓ Three-tier architecture with separation of concerns (Presentation, Business Logic, Data Access)</li>
+                        <li>✓ Comprehensive database schema supporting all operational modules</li>
+                        <li>✓ Role-based access control for Admin, Staff, and Customer users</li>
+                        <li>✓ Detailed module interaction flows for POS, Inventory, Online Ordering, Loyalty, and Reporting</li>
+                        <li>✓ Robust data validation and error handling procedures</li>
+                        <li>✓ Security measures including CSRF protection and prepared statements</li>
+                        <li>✓ Performance optimization with sub-second response times</li>
+                        <li>✓ Maintainable and scalable architecture for future enhancements</li>
+                    </ul>
+                </div>
+
+                <p style="margin-top: 20px;">The system design presented in this chapter demonstrates a comprehensive approach to building the Calloway Pharmacy IMS. Through carefully structured database schemas, clearly defined user roles, and detailed processing procedures, the system achieves the objectives of automating pharmacy operations while maintaining data integrity and providing an excellent user experience. The modular architecture ensures that each component functions independently while contributing to the overall system functionality.</p>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            <p>💊 <strong>Calloway Pharmacy Inventory Management System</strong> | System Design & Architecture</p>
+            <p>Chapter 3 - Design and Methodology | December 2024</p>
+        </div>
+    </div>
+</body>
+</html>

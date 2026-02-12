@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Readiness Report - Part 3 | Loyalty QR System</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --orange: #f97316;
+            --teal: #14b8a6;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--pink) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(249, 115, 22, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .report-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        }
+        
+        .report-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; position: relative; }
+        .report-header .subtitle { opacity: 0.9; font-size: 1.1rem; }
+        .report-header .date {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        
+        .part-badge {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: var(--orange);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .nav-link.active { background: var(--orange); color: white; }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .section-icon.qr { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .section-icon.warning { background: #fffbeb; }
+        .section-icon.success { background: #ecfdf5; }
+        .section-icon.info { background: #eff6ff; }
+        
+        .section h2 { font-size: 1.5rem; color: var(--dark); }
+        
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+        
+        .code-block .comment { color: #64748b; }
+        .code-block .keyword { color: #f472b6; }
+        .code-block .string { color: #34d399; }
+        .code-block .variable { color: #60a5fa; }
+        .code-block .function { color: #fbbf24; }
+        
+        .info-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .info-box.danger { background: #fef2f2; border-left: 4px solid var(--danger); }
+        .info-box.warning { background: #fffbeb; border-left: 4px solid var(--warning); }
+        .info-box.success { background: #ecfdf5; border-left: 4px solid var(--success); }
+        .info-box.info { background: #eff6ff; border-left: 4px solid var(--info); }
+        
+        .info-box-icon { font-size: 1.5rem; flex-shrink: 0; }
+        
+        .flow-container {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+            min-width: 140px;
+        }
+        
+        .flow-step .step-number {
+            width: 30px;
+            height: 30px;
+            background: var(--orange);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: 700;
+        }
+        
+        .flow-arrow { font-size: 1.5rem; color: var(--gray); }
+        
+        .qr-demo {
+            background: white;
+            border: 3px dashed var(--gray);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+        
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        .badge-done { background: #ecfdf5; color: var(--success); }
+        .badge-pending { background: #fef2f2; color: var(--danger); }
+        .badge-partial { background: #fffbeb; color: var(--warning); }
+        
+        .step-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border: 2px solid #86efac;
+        }
+        
+        .step-section h3 {
+            color: #166534;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .report-header h1 { font-size: 1.75rem; }
+            .part-badge { position: static; margin-top: 1rem; }
+            .flow-steps { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <span class="part-badge">🎁 Part 3 of 3</span>
+            <h1>🎁 Loyalty QR System</h1>
+            <p class="subtitle">How the QR Code Loyalty Program Works</p>
+            <span class="date">📅 Generated: December 19, 2025</span>
+        </header>
+        
+        <nav class="nav-links">
+            <a href="DEPLOYMENT_READINESS_PART1.html" class="nav-link">Part 1: Security</a>
+            <a href="DEPLOYMENT_READINESS_PART2.html" class="nav-link">Part 2: Payments</a>
+            <a href="#" class="nav-link active">Part 3: Loyalty QR</a>
+        </nav>
+        
+        <!-- Current Status -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon warning">⚠️</div>
+                <div>
+                    <h2>Current Loyalty System Status</h2>
+                    <p style="color: var(--gray);">What works and what doesn't</p>
+                </div>
+            </div>
+            
+            <div class="info-box warning">
+                <span class="info-box-icon">🎭</span>
+                <div>
+                    <strong>Frontend Only - No Backend Connection</strong>
+                    <p>Your loyalty system has a beautiful UI but it's using <strong>fake/sample data</strong>. The QR codes are placeholder images, and customer data is hardcoded in JavaScript instead of coming from the database.</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1.5rem 0 1rem;">Feature Status</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Status</th>
+                        <th>What's Missing</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>QR Code Generation UI</td>
+                        <td><span class="badge badge-done">✓ Works</span></td>
+                        <td>None - UI is complete</td>
+                    </tr>
+                    <tr>
+                        <td>Actual QR Code Generation</td>
+                        <td><span class="badge badge-pending">✗ Missing</span></td>
+                        <td>Uses ASCII art placeholder instead of real QR</td>
+                    </tr>
+                    <tr>
+                        <td>Customer Registration Form</td>
+                        <td><span class="badge badge-done">✓ Works</span></td>
+                        <td>None - form exists</td>
+                    </tr>
+                    <tr>
+                        <td>Save to Database</td>
+                        <td><span class="badge badge-pending">✗ Missing</span></td>
+                        <td>Data only saved to JavaScript array (lost on refresh)</td>
+                    </tr>
+                    <tr>
+                        <td>QR Scanning Input</td>
+                        <td><span class="badge badge-done">✓ Works</span></td>
+                        <td>None - input field exists</td>
+                    </tr>
+                    <tr>
+                        <td>Process Scanned QR</td>
+                        <td><span class="badge badge-partial">~ Simulated</span></td>
+                        <td>Just shows toast message, doesn't actually award points</td>
+                    </tr>
+                    <tr>
+                        <td>Customer List Display</td>
+                        <td><span class="badge badge-partial">~ Simulated</span></td>
+                        <td>Shows hardcoded sample data, not from database</td>
+                    </tr>
+                    <tr>
+                        <td>Points Earning</td>
+                        <td><span class="badge badge-pending">✗ Missing</span></td>
+                        <td>No actual point calculation or storage</td>
+                    </tr>
+                    <tr>
+                        <td>Points Redemption</td>
+                        <td><span class="badge badge-pending">✗ Missing</span></td>
+                        <td>Not implemented at all</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- How It Should Work -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon qr">💡</div>
+                <div>
+                    <h2>How the Loyalty QR System Should Work</h2>
+                    <p style="color: var(--gray);">The complete customer journey</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1rem 0;">🆕 New Customer Registration Flow</h3>
+            <div class="flow-container">
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <strong>Customer</strong>
+                        <p style="font-size: 0.85rem;">Wants to join loyalty program</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <strong>Staff</strong>
+                        <p style="font-size: 0.85rem;">Enters customer info</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <strong>System</strong>
+                        <p style="font-size: 0.85rem;">Creates unique member ID</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <strong>QR Generated</strong>
+                        <p style="font-size: 0.85rem;">Contains member ID</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step" style="border: 2px solid var(--success);">
+                        <div class="step-number" style="background: var(--success);">5</div>
+                        <strong>Card Given</strong>
+                        <p style="font-size: 0.85rem;">Print QR for customer</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">🛒 Earning Points Flow (At Checkout)</h3>
+            <div class="flow-container" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5);">
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--success);">1</div>
+                        <strong>Checkout</strong>
+                        <p style="font-size: 0.85rem;">Customer makes purchase</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--success);">2</div>
+                        <strong>Scan QR</strong>
+                        <p style="font-size: 0.85rem;">Staff scans loyalty card</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--success);">3</div>
+                        <strong>Calculate</strong>
+                        <p style="font-size: 0.85rem;">₱100 = 1 point (example)</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step" style="border: 2px solid var(--success);">
+                        <div class="step-number" style="background: var(--success);">4</div>
+                        <strong>Points Added!</strong>
+                        <p style="font-size: 0.85rem;">Saved to database</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">🎁 Redeeming Points Flow</h3>
+            <div class="flow-container" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--orange);">1</div>
+                        <strong>Scan QR</strong>
+                        <p style="font-size: 0.85rem;">Staff scans card</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--orange);">2</div>
+                        <strong>Check Balance</strong>
+                        <p style="font-size: 0.85rem;">System shows points</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--orange);">3</div>
+                        <strong>Customer Chooses</strong>
+                        <p style="font-size: 0.85rem;">Use 100 pts = ₱10 off</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step" style="border: 2px solid var(--orange);">
+                        <div class="step-number" style="background: var(--orange);">4</div>
+                        <strong>Discount Applied!</strong>
+                        <p style="font-size: 0.85rem;">Points deducted</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- What the QR Contains -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon info">📱</div>
+                <div>
+                    <h2>What Does the QR Code Contain?</h2>
+                    <p style="color: var(--gray);">Understanding QR code data</p>
+                </div>
+            </div>
+            
+            <div class="qr-demo">
+                <div class="qr-placeholder">📱</div>
+                <p style="color: var(--gray); margin-bottom: 1rem;">When scanned, a loyalty QR code contains:</p>
+                <div style="background: #1e293b; color: #34d399; padding: 1rem; border-radius: 8px; font-family: monospace; display: inline-block;">
+                    CALLOWAY-LOYALTY-MEM-00001234
+                </div>
+                <p style="margin-top: 1rem; color: var(--gray); font-size: 0.9rem;">
+                    This is just a unique identifier. Your system looks up this ID in the database to find the customer's information and points balance.
+                </p>
+            </div>
+            
+            <div class="info-box info">
+                <span class="info-box-icon">🔐</span>
+                <div>
+                    <strong>Security Note</strong>
+                    <p>The QR code should only contain the member ID, NOT sensitive information like name or phone number. All personal data stays safely in your database.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Implementation Guide -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon success">🔧</div>
+                <div>
+                    <h2>Making It Work: Implementation Guide</h2>
+                    <p style="color: var(--gray);">Step-by-step to connect frontend to backend</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1rem 0;">Step 1: Install QR Code Library</h3>
+            <div class="code-block">
+<span class="comment"># Install via Composer</span>
+composer require endroid/qr-code
+
+<span class="comment"># This library generates REAL QR code images</span>
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">Step 2: Create the Loyalty API File</h3>
+            <p>Create: <code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">loyalty_api.php</code></p>
+            
+            <div class="code-block">
+<span class="keyword">&lt;?php</span>
+<span class="comment">/**
+ * Loyalty System API
+ * Handles all loyalty-related operations
+ */</span>
+
+<span class="keyword">require_once</span> <span class="string">'db_connection.php'</span>;
+<span class="keyword">require_once</span> <span class="string">'Auth.php'</span>;
+<span class="keyword">require_once</span> <span class="string">'vendor/autoload.php'</span>;
+
+<span class="keyword">use</span> Endroid\QrCode\QrCode;
+<span class="keyword">use</span> Endroid\QrCode\Writer\PngWriter;
+
+<span class="variable">$auth</span> = <span class="keyword">new</span> <span class="function">Auth</span>(<span class="variable">$conn</span>);
+<span class="variable">$auth</span>-><span class="function">requireAuth</span>(<span class="string">'login.php'</span>);
+
+<span class="variable">$action</span> = <span class="variable">$_POST</span>[<span class="string">'action'</span>] ?? <span class="variable">$_GET</span>[<span class="string">'action'</span>] ?? <span class="string">''</span>;
+
+<span class="keyword">switch</span> (<span class="variable">$action</span>) {
+    <span class="keyword">case</span> <span class="string">'register_member'</span>:
+        <span class="function">registerMember</span>();
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">'get_members'</span>:
+        <span class="function">getMembers</span>();
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">'get_member'</span>:
+        <span class="function">getMemberByQR</span>();
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">'add_points'</span>:
+        <span class="function">addPoints</span>();
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">'redeem_points'</span>:
+        <span class="function">redeemPoints</span>();
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">'generate_qr'</span>:
+        <span class="function">generateQRCode</span>();
+        <span class="keyword">break</span>;
+    <span class="keyword">default</span>:
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Invalid action'</span>], 400);
+}
+
+<span class="comment">/**
+ * Register a new loyalty member
+ */</span>
+<span class="keyword">function</span> <span class="function">registerMember</span>() {
+    <span class="keyword">global</span> <span class="variable">$conn</span>;
+    
+    <span class="variable">$name</span> = <span class="function">trim</span>(<span class="variable">$_POST</span>[<span class="string">'name'</span>] ?? <span class="string">''</span>);
+    <span class="variable">$email</span> = <span class="function">trim</span>(<span class="variable">$_POST</span>[<span class="string">'email'</span>] ?? <span class="string">''</span>);
+    <span class="variable">$phone</span> = <span class="function">trim</span>(<span class="variable">$_POST</span>[<span class="string">'phone'</span>] ?? <span class="string">''</span>);
+    
+    <span class="keyword">if</span> (<span class="function">empty</span>(<span class="variable">$name</span>) || <span class="function">empty</span>(<span class="variable">$phone</span>)) {
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Name and phone are required'</span>], 400);
+        <span class="keyword">return</span>;
+    }
+    
+    <span class="comment">// Generate unique member code</span>
+    <span class="variable">$memberCode</span> = <span class="string">'CALLOWAY-LOYALTY-MEM-'</span> . <span class="function">str_pad</span>(<span class="function">mt_rand</span>(1, 99999999), 8, <span class="string">'0'</span>, STR_PAD_LEFT);
+    
+    <span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"
+        INSERT INTO loyalty_members (member_code, name, email, phone, points, created_at) 
+        VALUES (?, ?, ?, ?, 0, NOW())
+    "</span>);
+    <span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">'ssss'</span>, <span class="variable">$memberCode</span>, <span class="variable">$name</span>, <span class="variable">$email</span>, <span class="variable">$phone</span>);
+    
+    <span class="keyword">if</span> (<span class="variable">$stmt</span>-><span class="function">execute</span>()) {
+        <span class="function">jsonResponse</span>([
+            <span class="string">'success'</span> => <span class="keyword">true</span>,
+            <span class="string">'member_id'</span> => <span class="variable">$conn</span>->insert_id,
+            <span class="string">'member_code'</span> => <span class="variable">$memberCode</span>,
+            <span class="string">'message'</span> => <span class="string">'Member registered successfully'</span>
+        ]);
+    } <span class="keyword">else</span> {
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Failed to register member'</span>], 500);
+    }
+}
+
+<span class="comment">/**
+ * Get all loyalty members
+ */</span>
+<span class="keyword">function</span> <span class="function">getMembers</span>() {
+    <span class="keyword">global</span> <span class="variable">$conn</span>;
+    
+    <span class="variable">$result</span> = <span class="variable">$conn</span>-><span class="function">query</span>(<span class="string">"
+        SELECT member_id, member_code, name, email, phone, points, created_at 
+        FROM loyalty_members 
+        ORDER BY created_at DESC
+    "</span>);
+    
+    <span class="variable">$members</span> = [];
+    <span class="keyword">while</span> (<span class="variable">$row</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>()) {
+        <span class="variable">$members</span>[] = <span class="variable">$row</span>;
+    }
+    
+    <span class="function">jsonResponse</span>([<span class="string">'members'</span> => <span class="variable">$members</span>]);
+}
+
+<span class="comment">/**
+ * Look up member by QR code (member code)
+ */</span>
+<span class="keyword">function</span> <span class="function">getMemberByQR</span>() {
+    <span class="keyword">global</span> <span class="variable">$conn</span>;
+    
+    <span class="variable">$code</span> = <span class="function">trim</span>(<span class="variable">$_GET</span>[<span class="string">'code'</span>] ?? <span class="variable">$_POST</span>[<span class="string">'code'</span>] ?? <span class="string">''</span>);
+    
+    <span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"SELECT * FROM loyalty_members WHERE member_code = ?"</span>);
+    <span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">'s'</span>, <span class="variable">$code</span>);
+    <span class="variable">$stmt</span>-><span class="function">execute</span>();
+    <span class="variable">$result</span> = <span class="variable">$stmt</span>-><span class="function">get_result</span>();
+    
+    <span class="keyword">if</span> (<span class="variable">$member</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>()) {
+        <span class="function">jsonResponse</span>([<span class="string">'success'</span> => <span class="keyword">true</span>, <span class="string">'member'</span> => <span class="variable">$member</span>]);
+    } <span class="keyword">else</span> {
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Member not found'</span>], 404);
+    }
+}
+
+<span class="comment">/**
+ * Add points to member account
+ */</span>
+<span class="keyword">function</span> <span class="function">addPoints</span>() {
+    <span class="keyword">global</span> <span class="variable">$conn</span>;
+    
+    <span class="variable">$memberCode</span> = <span class="variable">$_POST</span>[<span class="string">'member_code'</span>] ?? <span class="string">''</span>;
+    <span class="variable">$saleAmount</span> = <span class="function">floatval</span>(<span class="variable">$_POST</span>[<span class="string">'sale_amount'</span>] ?? 0);
+    <span class="variable">$saleId</span> = <span class="function">intval</span>(<span class="variable">$_POST</span>[<span class="string">'sale_id'</span>] ?? 0);
+    
+    <span class="comment">// Calculate points: ₱100 = 1 point</span>
+    <span class="variable">$pointsEarned</span> = <span class="function">floor</span>(<span class="variable">$saleAmount</span> / 100);
+    
+    <span class="keyword">if</span> (<span class="variable">$pointsEarned</span> < 1) {
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Purchase amount too low for points'</span>], 400);
+        <span class="keyword">return</span>;
+    }
+    
+    <span class="comment">// Update member points</span>
+    <span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"UPDATE loyalty_members SET points = points + ? WHERE member_code = ?"</span>);
+    <span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">'is'</span>, <span class="variable">$pointsEarned</span>, <span class="variable">$memberCode</span>);
+    
+    <span class="keyword">if</span> (<span class="variable">$stmt</span>-><span class="function">execute</span>() && <span class="variable">$stmt</span>->affected_rows > 0) {
+        <span class="comment">// Log the transaction</span>
+        <span class="variable">$logStmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"
+            INSERT INTO loyalty_points_log (member_code, points, transaction_type, reference_id, created_at)
+            VALUES (?, ?, 'EARN', ?, NOW())
+        "</span>);
+        <span class="variable">$logStmt</span>-><span class="function">bind_param</span>(<span class="string">'sis'</span>, <span class="variable">$memberCode</span>, <span class="variable">$pointsEarned</span>, <span class="variable">$saleId</span>);
+        <span class="variable">$logStmt</span>-><span class="function">execute</span>();
+        
+        <span class="function">jsonResponse</span>([
+            <span class="string">'success'</span> => <span class="keyword">true</span>,
+            <span class="string">'points_earned'</span> => <span class="variable">$pointsEarned</span>,
+            <span class="string">'message'</span> => <span class="string">"Added $pointsEarned points!"</span>
+        ]);
+    } <span class="keyword">else</span> {
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Member not found'</span>], 404);
+    }
+}
+
+<span class="comment">/**
+ * Redeem points for discount
+ */</span>
+<span class="keyword">function</span> <span class="function">redeemPoints</span>() {
+    <span class="keyword">global</span> <span class="variable">$conn</span>;
+    
+    <span class="variable">$memberCode</span> = <span class="variable">$_POST</span>[<span class="string">'member_code'</span>] ?? <span class="string">''</span>;
+    <span class="variable">$pointsToRedeem</span> = <span class="function">intval</span>(<span class="variable">$_POST</span>[<span class="string">'points'</span>] ?? 0);
+    
+    <span class="comment">// Check current balance</span>
+    <span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"SELECT points FROM loyalty_members WHERE member_code = ?"</span>);
+    <span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">'s'</span>, <span class="variable">$memberCode</span>);
+    <span class="variable">$stmt</span>-><span class="function">execute</span>();
+    <span class="variable">$result</span> = <span class="variable">$stmt</span>-><span class="function">get_result</span>();
+    <span class="variable">$member</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>();
+    
+    <span class="keyword">if</span> (!<span class="variable">$member</span>) {
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Member not found'</span>], 404);
+        <span class="keyword">return</span>;
+    }
+    
+    <span class="keyword">if</span> (<span class="variable">$member</span>[<span class="string">'points'</span>] < <span class="variable">$pointsToRedeem</span>) {
+        <span class="function">jsonResponse</span>([<span class="string">'error'</span> => <span class="string">'Insufficient points'</span>], 400);
+        <span class="keyword">return</span>;
+    }
+    
+    <span class="comment">// Deduct points (100 points = ₱10 discount)</span>
+    <span class="variable">$discount</span> = (<span class="variable">$pointsToRedeem</span> / 100) * 10;
+    
+    <span class="variable">$updateStmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"UPDATE loyalty_members SET points = points - ? WHERE member_code = ?"</span>);
+    <span class="variable">$updateStmt</span>-><span class="function">bind_param</span>(<span class="string">'is'</span>, <span class="variable">$pointsToRedeem</span>, <span class="variable">$memberCode</span>);
+    <span class="variable">$updateStmt</span>-><span class="function">execute</span>();
+    
+    <span class="function">jsonResponse</span>([
+        <span class="string">'success'</span> => <span class="keyword">true</span>,
+        <span class="string">'points_redeemed'</span> => <span class="variable">$pointsToRedeem</span>,
+        <span class="string">'discount_amount'</span> => <span class="variable">$discount</span>,
+        <span class="string">'message'</span> => <span class="string">"Redeemed $pointsToRedeem points for ₱$discount discount!"</span>
+    ]);
+}
+
+<span class="comment">/**
+ * Generate QR code image
+ */</span>
+<span class="keyword">function</span> <span class="function">generateQRCode</span>() {
+    <span class="variable">$memberCode</span> = <span class="variable">$_GET</span>[<span class="string">'code'</span>] ?? <span class="string">''</span>;
+    
+    <span class="keyword">if</span> (<span class="function">empty</span>(<span class="variable">$memberCode</span>)) {
+        <span class="function">http_response_code</span>(400);
+        <span class="keyword">exit</span>;
+    }
+    
+    <span class="comment">// Create QR code</span>
+    <span class="variable">$qrCode</span> = <span class="keyword">new</span> <span class="function">QrCode</span>(<span class="variable">$memberCode</span>);
+    <span class="variable">$qrCode</span>-><span class="function">setSize</span>(300);
+    <span class="variable">$qrCode</span>-><span class="function">setMargin</span>(10);
+    
+    <span class="variable">$writer</span> = <span class="keyword">new</span> <span class="function">PngWriter</span>();
+    <span class="variable">$result</span> = <span class="variable">$writer</span>-><span class="function">write</span>(<span class="variable">$qrCode</span>);
+    
+    <span class="comment">// Output as image</span>
+    <span class="function">header</span>(<span class="string">'Content-Type: '</span> . <span class="variable">$result</span>-><span class="function">getMimeType</span>());
+    <span class="keyword">echo</span> <span class="variable">$result</span>-><span class="function">getString</span>();
+}
+
+<span class="comment">/**
+ * Helper function to send JSON response
+ */</span>
+<span class="keyword">function</span> <span class="function">jsonResponse</span>(<span class="variable">$data</span>, <span class="variable">$code</span> = 200) {
+    <span class="function">http_response_code</span>(<span class="variable">$code</span>);
+    <span class="function">header</span>(<span class="string">'Content-Type: application/json'</span>);
+    <span class="keyword">echo</span> <span class="function">json_encode</span>(<span class="variable">$data</span>);
+    <span class="keyword">exit</span>;
+}
+            </div>
+        </section>
+        
+        <!-- Database Setup -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon info">🗄️</div>
+                <div>
+                    <h2>Database Tables Needed</h2>
+                    <p style="color: var(--gray);">SQL to create loyalty tables</p>
+                </div>
+            </div>
+            
+            <div class="code-block">
+<span class="comment">-- Create loyalty_members table</span>
+<span class="keyword">CREATE TABLE IF NOT EXISTS</span> loyalty_members (
+    member_id <span class="keyword">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    member_code <span class="keyword">VARCHAR</span>(50) <span class="keyword">UNIQUE NOT NULL</span>,
+    name <span class="keyword">VARCHAR</span>(100) <span class="keyword">NOT NULL</span>,
+    email <span class="keyword">VARCHAR</span>(100),
+    phone <span class="keyword">VARCHAR</span>(20) <span class="keyword">NOT NULL</span>,
+    points <span class="keyword">INT DEFAULT</span> 0,
+    created_at <span class="keyword">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="keyword">INDEX</span> idx_member_code (member_code),
+    <span class="keyword">INDEX</span> idx_phone (phone)
+);
+
+<span class="comment">-- Create points transaction log</span>
+<span class="keyword">CREATE TABLE IF NOT EXISTS</span> loyalty_points_log (
+    log_id <span class="keyword">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    member_code <span class="keyword">VARCHAR</span>(50) <span class="keyword">NOT NULL</span>,
+    points <span class="keyword">INT NOT NULL</span>,
+    transaction_type <span class="keyword">ENUM</span>(<span class="string">'EARN'</span>, <span class="string">'REDEEM'</span>, <span class="string">'ADJUST'</span>) <span class="keyword">NOT NULL</span>,
+    reference_id <span class="keyword">VARCHAR</span>(50) <span class="keyword">NULL</span>,
+    notes <span class="keyword">TEXT NULL</span>,
+    created_at <span class="keyword">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="keyword">FOREIGN KEY</span> (member_code) <span class="keyword">REFERENCES</span> loyalty_members(member_code),
+    <span class="keyword">INDEX</span> idx_member (member_code),
+    <span class="keyword">INDEX</span> idx_type (transaction_type)
+);
+            </div>
+        </section>
+        
+        <!-- Connect to Frontend -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon success">🔗</div>
+                <div>
+                    <h2>Connecting the Frontend</h2>
+                    <p style="color: var(--gray);">Update loyalty_qr.php to use real data</p>
+                </div>
+            </div>
+            
+            <p>Replace the JavaScript functions in <code>loyalty_qr.php</code> with these API calls:</p>
+            
+            <div class="code-block">
+<span class="comment">// Replace loadLoyaltyMembers() with:</span>
+<span class="keyword">async function</span> <span class="function">loadLoyaltyMembers</span>() {
+    <span class="keyword">try</span> {
+        <span class="keyword">const</span> <span class="variable">response</span> = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'loyalty_api.php?action=get_members'</span>);
+        <span class="keyword">const</span> <span class="variable">data</span> = <span class="keyword">await</span> <span class="variable">response</span>.<span class="function">json</span>();
+        
+        <span class="keyword">if</span> (<span class="variable">data</span>.members) {
+            loyaltyMembers = <span class="variable">data</span>.members;
+            <span class="function">renderCustomersTable</span>();
+        }
+    } <span class="keyword">catch</span> (<span class="variable">error</span>) {
+        <span class="function">showToast</span>(<span class="string">'Failed to load members'</span>, <span class="string">'error'</span>);
+    }
+}
+
+<span class="comment">// Replace saveCustomer() with:</span>
+<span class="keyword">async function</span> <span class="function">saveCustomer</span>(<span class="variable">event</span>) {
+    <span class="variable">event</span>.<span class="function">preventDefault</span>();
+    
+    <span class="keyword">const</span> <span class="variable">formData</span> = <span class="keyword">new</span> <span class="function">FormData</span>();
+    <span class="variable">formData</span>.<span class="function">append</span>(<span class="string">'action'</span>, <span class="string">'register_member'</span>);
+    <span class="variable">formData</span>.<span class="function">append</span>(<span class="string">'name'</span>, <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'customerName'</span>).value);
+    <span class="variable">formData</span>.<span class="function">append</span>(<span class="string">'email'</span>, <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'customerEmail'</span>).value);
+    <span class="variable">formData</span>.<span class="function">append</span>(<span class="string">'phone'</span>, <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'customerPhone'</span>).value);
+    
+    <span class="keyword">try</span> {
+        <span class="keyword">const</span> <span class="variable">response</span> = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'loyalty_api.php'</span>, {
+            method: <span class="string">'POST'</span>,
+            body: <span class="variable">formData</span>
+        });
+        <span class="keyword">const</span> <span class="variable">data</span> = <span class="keyword">await</span> <span class="variable">response</span>.<span class="function">json</span>();
+        
+        <span class="keyword">if</span> (<span class="variable">data</span>.success) {
+            <span class="function">showToast</span>(<span class="string">'Member registered! Code: '</span> + <span class="variable">data</span>.member_code, <span class="string">'success'</span>);
+            <span class="function">closeCustomerModal</span>();
+            <span class="function">loadLoyaltyMembers</span>();
+            
+            <span class="comment">// Show the QR code</span>
+            <span class="function">showGeneratedQR</span>(<span class="variable">data</span>.member_code);
+        } <span class="keyword">else</span> {
+            <span class="function">showToast</span>(<span class="variable">data</span>.error, <span class="string">'error'</span>);
+        }
+    } <span class="keyword">catch</span> (<span class="variable">error</span>) {
+        <span class="function">showToast</span>(<span class="string">'Registration failed'</span>, <span class="string">'error'</span>);
+    }
+}
+
+<span class="comment">// Replace processQRScan() with:</span>
+<span class="keyword">async function</span> <span class="function">processQRScan</span>() {
+    <span class="keyword">const</span> <span class="variable">qrCode</span> = <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'qrInput'</span>).value.<span class="function">trim</span>();
+    
+    <span class="keyword">if</span> (!<span class="variable">qrCode</span>) {
+        <span class="function">alert</span>(<span class="string">'Please scan or enter a QR code'</span>);
+        <span class="keyword">return</span>;
+    }
+    
+    <span class="keyword">try</span> {
+        <span class="keyword">const</span> <span class="variable">response</span> = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'loyalty_api.php?action=get_member&code='</span> + <span class="function">encodeURIComponent</span>(<span class="variable">qrCode</span>));
+        <span class="keyword">const</span> <span class="variable">data</span> = <span class="keyword">await</span> <span class="variable">response</span>.<span class="function">json</span>();
+        
+        <span class="keyword">if</span> (<span class="variable">data</span>.success) {
+            <span class="keyword">const</span> <span class="variable">member</span> = <span class="variable">data</span>.member;
+            <span class="function">showToast</span>(<span class="string">`Welcome back, ${member.name}! Points: ${member.points}`</span>, <span class="string">'success'</span>);
+            
+            <span class="comment">// Show member details modal or integrate with POS</span>
+            <span class="function">showMemberDetails</span>(<span class="variable">member</span>);
+        } <span class="keyword">else</span> {
+            <span class="function">showToast</span>(<span class="string">'Member not found'</span>, <span class="string">'error'</span>);
+        }
+    } <span class="keyword">catch</span> (<span class="variable">error</span>) {
+        <span class="function">showToast</span>(<span class="string">'Scan failed'</span>, <span class="string">'error'</span>);
+    }
+    
+    <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'qrInput'</span>).value = <span class="string">''</span>;
+}
+
+<span class="comment">// New function to display QR code</span>
+<span class="keyword">function</span> <span class="function">showGeneratedQR</span>(<span class="variable">memberCode</span>) {
+    <span class="keyword">const</span> <span class="variable">qrDisplay</span> = <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'qrCodeDisplay'</span>);
+    <span class="variable">qrDisplay</span>.innerHTML = <span class="string">`&lt;img src="loyalty_api.php?action=generate_qr&code=${memberCode}" 
+                               alt="QR Code" style="max-width: 250px;"&gt;`</span>;
+    <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'qrDisplay'</span>).style.display = <span class="string">'block'</span>;
+    <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'qrId'</span>).textContent = <span class="variable">memberCode</span>;
+}
+            </div>
+        </section>
+        
+        <!-- Summary -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon success">✅</div>
+                <div>
+                    <h2>Summary: Making Loyalty QR Work</h2>
+                    <p style="color: var(--gray);">Quick checklist</p>
+                </div>
+            </div>
+            
+            <div class="step-section">
+                <h3>📋 Implementation Checklist</h3>
+                <ol style="padding-left: 1.5rem;">
+                    <li style="margin-bottom: 1rem;"><strong>Install QR library:</strong> <code>composer require endroid/qr-code</code></li>
+                    <li style="margin-bottom: 1rem;"><strong>Run SQL:</strong> Create loyalty_members and loyalty_points_log tables</li>
+                    <li style="margin-bottom: 1rem;"><strong>Create file:</strong> Add loyalty_api.php with the code above</li>
+                    <li style="margin-bottom: 1rem;"><strong>Update frontend:</strong> Replace JavaScript functions in loyalty_qr.php</li>
+                    <li style="margin-bottom: 1rem;"><strong>Integrate with POS:</strong> Add "Scan Loyalty Card" button to checkout</li>
+                    <li style="margin-bottom: 1rem;"><strong>Test:</strong> Register a member, scan their QR, make a purchase, verify points</li>
+                </ol>
+            </div>
+        </section>
+        
+        <!-- Navigation -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;">
+            <a href="DEPLOYMENT_READINESS_PART1.html" class="nav-link" style="flex: 1; text-align: center; min-width: 200px;">
+                ← Part 1: Security
+            </a>
+            <a href="DEPLOYMENT_READINESS_PART2.html" class="nav-link" style="flex: 1; text-align: center; min-width: 200px;">
+                ← Part 2: Payments
+            </a>
+            <a href="CODE_REVIEWER_PART1.html" class="nav-link" style="flex: 1; text-align: center; min-width: 200px; background: var(--success); color: white;">
+                📚 Beginner's Code Guide →
+            </a>
+        </div>
+        
+        <footer style="text-align: center; padding: 2rem; color: var(--gray); margin-top: 2rem;">
+            <p>Calloway Pharmacy IMS - Deployment Readiness Report</p>
+            <p style="font-size: 0.85rem;">Generated December 19, 2025 | Part 3 of 3</p>
+        </footer>
+    </div>
+</body>
+</html>

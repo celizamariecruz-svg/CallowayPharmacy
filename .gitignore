@@ -1,0 +1,63 @@
+# Calloway Pharmacy IMS - Git Ignore File
+# Files and folders listed here will NOT be uploaded to version control
+
+# ========================================
+# ENVIRONMENT & SECRETS (CRITICAL!)
+# ========================================
+.env
+config.local.php
+*.pem
+*.key
+
+# ========================================
+# LOGS & TEMPORARY FILES
+# ========================================
+logs/
+*.log
+error.log
+debug.log
+temp/
+cache/
+*.tmp
+*.swp
+*.bak
+*.backup
+*.old
+
+# ========================================
+# BACKUPS (Don't upload to git)
+# ========================================
+backups/
+*.sql
+*.sql.gz
+
+# ========================================
+# IDE & EDITOR FILES
+# ========================================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================================
+# COMPOSER (if used)
+# ========================================
+vendor/
+composer.lock
+
+# ========================================
+# UPLOADED FILES (may be sensitive)
+# ========================================
+uploads/user_uploads/
+uploads/receipts/
+
+# ========================================
+# DEVELOPMENT/TEST FILES
+# ========================================
+test_*.php
+debug_*.php
+check_*.php
+phpinfo.php

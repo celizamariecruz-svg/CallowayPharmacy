@@ -1,0 +1,71 @@
+// ═══ Sidebar & Theme Toggle ═══
+
+// --- Sidebar ---
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar && overlay) {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+  }
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+// Close sidebar on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSidebar();
+});
+
+// --- Theme Toggle ---
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  setTheme(next);
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('calloway_theme', theme);
+  updateThemeIcon(theme);
+}
+
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('themeIcon');
+  if (icon) {
+    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+  }
+}
+
+// Apply saved theme on load
+document.addEventListener('DOMContentLoaded', function() {
+  const savedTheme = localStorage.getItem('calloway_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+
+  // Legacy support: old pages that still have #theme-light / #theme-dark buttons
+  const lightBtn = document.getElementById('theme-light');
+  const darkBtn = document.getElementById('theme-dark');
+  if (lightBtn) lightBtn.addEventListener('click', function() { setTheme('light'); });
+  if (darkBtn) darkBtn.addEventListener('click', function() { setTheme('dark'); });
+
+  // Legacy support: old menu-toggle dropdown
+  const menuToggle = document.getElementById('menu-toggle');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+  if (menuToggle && dropdownMenu) {
+    menuToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', function(e) {
+      if (menuToggle && dropdownMenu && !menuToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        dropdownMenu.classList.remove('show');
+      }
+    });
+  }
+});

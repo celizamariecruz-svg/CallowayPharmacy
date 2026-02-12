@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Readiness Report - Part 1 | Calloway Pharmacy IMS</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Header */
+        .report-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .report-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        
+        .report-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+        
+        .report-header .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .report-header .date {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        
+        .part-badge {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        /* Navigation */
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Executive Summary */
+        .executive-summary {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .summary-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-card.critical {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 2px solid #fca5a5;
+        }
+        
+        .summary-card.warning {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 2px solid #fcd34d;
+        }
+        
+        .summary-card.success {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border: 2px solid #6ee7b7;
+        }
+        
+        .summary-card.info {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 2px solid #93c5fd;
+        }
+        
+        .summary-card .number {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        
+        .summary-card.critical .number { color: var(--danger); }
+        .summary-card.warning .number { color: var(--warning); }
+        .summary-card.success .number { color: var(--success); }
+        .summary-card.info .number { color: var(--info); }
+        
+        .summary-card .label {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+        
+        /* Progress Bar */
+        .readiness-meter {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f1f5f9;
+            border-radius: 12px;
+        }
+        
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .meter-bar {
+            height: 24px;
+            background: #e2e8f0;
+            border-radius: 50px;
+            overflow: hidden;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+            border-radius: 50px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        
+        /* Section Cards */
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .section-icon.critical { background: #fef2f2; }
+        .section-icon.warning { background: #fffbeb; }
+        .section-icon.success { background: #ecfdf5; }
+        .section-icon.info { background: #eff6ff; }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+        
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        /* Status Badges */
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .badge-critical {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+        
+        .badge-high {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+        
+        .badge-medium {
+            background: #fffbeb;
+            color: var(--warning);
+        }
+        
+        .badge-low {
+            background: #eff6ff;
+            color: var(--info);
+        }
+        
+        .badge-done {
+            background: #ecfdf5;
+            color: var(--success);
+        }
+        
+        /* Code Blocks */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+        
+        .code-block .comment {
+            color: #64748b;
+        }
+        
+        .code-block .keyword {
+            color: #f472b6;
+        }
+        
+        .code-block .string {
+            color: #34d399;
+        }
+        
+        .code-block .warning-text {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        
+        /* Info Box */
+        .info-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .info-box.danger {
+            background: #fef2f2;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .info-box.warning {
+            background: #fffbeb;
+            border-left: 4px solid var(--warning);
+        }
+        
+        .info-box.success {
+            background: #ecfdf5;
+            border-left: 4px solid var(--success);
+        }
+        
+        .info-box.info {
+            background: #eff6ff;
+            border-left: 4px solid var(--info);
+        }
+        
+        .info-box-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        /* Checklist */
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+        
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.8rem;
+        }
+        
+        .check-icon.pending {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+        
+        .check-icon.done {
+            background: #ecfdf5;
+            color: var(--success);
+        }
+        
+        .check-content h4 {
+            margin-bottom: 0.25rem;
+        }
+        
+        .check-content p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* File Path */
+        .file-path {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .report-header h1 {
+                font-size: 1.75rem;
+            }
+            
+            .part-badge {
+                position: static;
+                margin-top: 1rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="report-header">
+            <span class="part-badge">📄 Part 1 of 2</span>
+            <h1>🏥 Calloway Pharmacy IMS</h1>
+            <p class="subtitle">Deployment Readiness & Security Audit Report</p>
+            <span class="date">📅 Generated: December 19, 2025</span>
+        </header>
+        
+        <!-- Navigation -->
+        <nav class="nav-links">
+            <a href="#" class="nav-link active">Part 1: Security & Config</a>
+            <a href="DEPLOYMENT_READINESS_PART2.html" class="nav-link">Part 2: Payments & QR System</a>
+        </nav>
+        
+        <!-- Executive Summary -->
+        <section class="executive-summary">
+            <h2>📊 Executive Summary</h2>
+            <p style="margin-top: 0.5rem; color: var(--gray);">
+                This comprehensive audit analyzes the Calloway Pharmacy Inventory Management System for production deployment readiness.
+            </p>
+            
+            <div class="summary-grid">
+                <div class="summary-card critical">
+                    <div class="number">4</div>
+                    <div class="label">🚨 Critical Issues</div>
+                </div>
+                <div class="summary-card warning">
+                    <div class="number">8</div>
+                    <div class="label">⚠️ High Priority</div>
+                </div>
+                <div class="summary-card success">
+                    <div class="number">12</div>
+                    <div class="label">✅ Completed Features</div>
+                </div>
+                <div class="summary-card info">
+                    <div class="number">6</div>
+                    <div class="label">💡 Recommendations</div>
+                </div>
+            </div>
+            
+            <div class="readiness-meter">
+                <div class="meter-label">
+                    <span>Overall Deployment Readiness</span>
+                    <span style="color: var(--warning); font-weight: 700;">65%</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill" style="width: 65%;">NOT PRODUCTION READY</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 1: Critical Security Issues -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon critical">🚨</div>
+                <div>
+                    <h2>Critical Security Issues</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">Must be fixed BEFORE deployment</p>
+                </div>
+            </div>
+            
+            <div class="info-box danger">
+                <span class="info-box-icon">⛔</span>
+                <div>
+                    <strong>DEPLOYMENT BLOCKED</strong>
+                    <p>The following issues MUST be resolved before the system can safely go live. Deploying with these issues could lead to data breaches, system compromise, or financial loss.</p>
+                </div>
+            </div>
+            
+            <!-- Issue 1: Hardcoded Credentials -->
+            <h3 style="margin: 2rem 0 1rem; color: var(--danger);">1. Hardcoded Database Credentials</h3>
+            <p>The database credentials are hardcoded directly in the config file with an empty password.</p>
+            
+            <div class="code-block">
+<span class="comment">// File: config.php</span>
+<span class="keyword">define</span>(<span class="string">'DB_HOST'</span>, <span class="string">'localhost'</span>);
+<span class="keyword">define</span>(<span class="string">'DB_USER'</span>, <span class="string">'root'</span>);        <span class="warning-text">// ⚠️ Default username</span>
+<span class="keyword">define</span>(<span class="string">'DB_PASS'</span>, <span class="string">''</span>);            <span class="warning-text">// ⚠️ EMPTY PASSWORD!</span>
+<span class="keyword">define</span>(<span class="string">'DB_NAME'</span>, <span class="string">'calloway_pharmacy'</span>);
+            </div>
+            
+            <p><strong>🔧 Solution:</strong> Use environment variables with a <code>.env</code> file</p>
+            
+            <div class="code-block">
+<span class="comment">// Install: composer require vlucas/phpdotenv</span>
+
+<span class="comment">// .env file (NEVER commit to Git)</span>
+DB_HOST=localhost
+DB_USER=pharmacy_user
+DB_PASS=<span class="string">StrongP@ssw0rd!2025</span>
+DB_NAME=calloway_pharmacy
+
+<span class="comment">// config.php - Updated</span>
+<span class="keyword">require_once</span> <span class="string">'vendor/autoload.php'</span>;
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+<span class="keyword">define</span>(<span class="string">'DB_HOST'</span>, $_ENV[<span class="string">'DB_HOST'</span>]);
+<span class="keyword">define</span>(<span class="string">'DB_USER'</span>, $_ENV[<span class="string">'DB_USER'</span>]);
+<span class="keyword">define</span>(<span class="string">'DB_PASS'</span>, $_ENV[<span class="string">'DB_PASS'</span>]);
+<span class="keyword">define</span>(<span class="string">'DB_NAME'</span>, $_ENV[<span class="string">'DB_NAME'</span>]);
+            </div>
+            
+            <!-- Issue 2: Debug Mode -->
+            <h3 style="margin: 2rem 0 1rem; color: var(--danger);">2. Debug Mode Enabled</h3>
+            <p>Debug mode exposes detailed error messages to users, revealing system internals to potential attackers.</p>
+            
+            <div class="code-block">
+<span class="comment">// File: config.php - CURRENT (DANGEROUS)</span>
+<span class="keyword">define</span>(<span class="string">'DEBUG_MODE'</span>, <span class="keyword">true</span>);  <span class="warning-text">// ⚠️ Shows all errors!</span>
+            </div>
+            
+            <p><strong>🔧 Solution:</strong></p>
+            <div class="code-block">
+<span class="comment">// For PRODUCTION</span>
+<span class="keyword">define</span>(<span class="string">'DEBUG_MODE'</span>, <span class="keyword">false</span>);
+<span class="keyword">ini_set</span>(<span class="string">'display_errors'</span>, <span class="string">'0'</span>);
+<span class="keyword">ini_set</span>(<span class="string">'log_errors'</span>, <span class="string">'1'</span>);
+<span class="keyword">ini_set</span>(<span class="string">'error_log'</span>, <span class="string">'/var/log/pharmacy/error.log'</span>);
+            </div>
+            
+            <!-- Issue 3: Default Admin Password -->
+            <h3 style="margin: 2rem 0 1rem; color: var(--danger);">3. Default Admin Password</h3>
+            <p>The system ships with a well-known default password that attackers will try first.</p>
+            
+            <div class="code-block">
+<span class="comment">// File: create_admin.php</span>
+$password = <span class="string">'admin123'</span>;  <span class="warning-text">// ⚠️ Everyone knows this!</span>
+            </div>
+            
+            <p><strong>🔧 Solution:</strong></p>
+            <ul style="margin: 1rem 0; padding-left: 2rem;">
+                <li>Force password change on first login</li>
+                <li>Implement password complexity requirements</li>
+                <li>Generate random initial password and email to admin</li>
+            </ul>
+            
+            <!-- Issue 4: No HTTPS -->
+            <h3 style="margin: 2rem 0 1rem; color: var(--danger);">4. No HTTPS Enforcement</h3>
+            <p>The application does not force secure connections, allowing credentials to be intercepted.</p>
+            
+            <p><strong>🔧 Solution:</strong> Add to <code>.htaccess</code></p>
+            <div class="code-block">
+<span class="comment"># Force HTTPS</span>
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+<span class="comment"># Set secure cookie flag</span>
+php_flag session.cookie_secure On
+php_flag session.cookie_httponly On
+            </div>
+        </section>
+        
+        <!-- Section 2: Security Features Already Implemented -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon success">✅</div>
+                <div>
+                    <h2>Security Features (Implemented)</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">These security measures are already in place</p>
+                </div>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Implementation</th>
+                        <th>File Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Password Hashing</strong></td>
+                        <td>BCrypt with cost factor 12</td>
+                        <td><span class="file-path">Auth.php</span></td>
+                        <td><span class="badge badge-done">✓ SECURE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>CSRF Protection</strong></td>
+                        <td>Token-based with hash_equals()</td>
+                        <td><span class="file-path">CSRF.php</span></td>
+                        <td><span class="badge badge-done">✓ SECURE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Session Security</strong></td>
+                        <td>HttpOnly, SameSite=Strict, 30-min timeout</td>
+                        <td><span class="file-path">Auth.php</span></td>
+                        <td><span class="badge badge-done">✓ SECURE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rate Limiting</strong></td>
+                        <td>5 login attempts per 15 minutes</td>
+                        <td><span class="file-path">Auth.php</span></td>
+                        <td><span class="badge badge-done">✓ SECURE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>XSS Prevention</strong></td>
+                        <td>htmlspecialchars() on all output</td>
+                        <td><span class="file-path">All PHP files</span></td>
+                        <td><span class="badge badge-done">✓ SECURE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>SQL Injection</strong></td>
+                        <td>Prepared statements (mostly)</td>
+                        <td><span class="file-path">API files</span></td>
+                        <td><span class="badge badge-done">✓ GOOD</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Security Headers</strong></td>
+                        <td>X-Frame-Options, CSP, X-XSS-Protection</td>
+                        <td><span class="file-path">.htaccess</span></td>
+                        <td><span class="badge badge-done">✓ SECURE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>File Access Control</strong></td>
+                        <td>Blocks sensitive files (.sql, .log, config)</td>
+                        <td><span class="file-path">.htaccess</span></td>
+                        <td><span class="badge badge-done">✓ SECURE</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Error Logging</strong></td>
+                        <td>File-based with rotation</td>
+                        <td><span class="file-path">ErrorLogger.php</span></td>
+                        <td><span class="badge badge-done">✓ GOOD</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database Backups</strong></td>
+                        <td>Manual/auto with compression</td>
+                        <td><span class="file-path">BackupManager.php</span></td>
+                        <td><span class="badge badge-done">✓ GOOD</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Role-Based Access</strong></td>
+                        <td>Permissions system</td>
+                        <td><span class="file-path">Auth.php</span></td>
+                        <td><span class="badge badge-done">✓ GOOD</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email Service</strong></td>
+                        <td>PHPMailer with SMTP</td>
+                        <td><span class="file-path">email_service.php</span></td>
+                        <td><span class="badge badge-done">✓ READY</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- Section 3: Database Issues -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon warning">🗄️</div>
+                <div>
+                    <h2>Database Optimization Needed</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">Performance improvements for production</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1rem 0;">Missing Indexes (Recommended)</h3>
+            <p>These indexes will significantly improve search and reporting performance:</p>
+            
+            <div class="code-block">
+<span class="comment">-- Run these SQL commands to optimize performance</span>
+
+<span class="comment">-- Improve POS product search</span>
+<span class="keyword">ALTER TABLE</span> products <span class="keyword">ADD INDEX</span> idx_name_search (name(50));
+
+<span class="comment">-- Sales reporting performance</span>
+<span class="keyword">ALTER TABLE</span> sales <span class="keyword">ADD INDEX</span> idx_date_method (created_at, payment_method);
+
+<span class="comment">-- Stock alerts query optimization</span>
+<span class="keyword">ALTER TABLE</span> products <span class="keyword">ADD INDEX</span> idx_stock_reorder (stock_quantity, reorder_level);
+
+<span class="comment">-- Loyalty member lookup</span>
+<span class="keyword">ALTER TABLE</span> loyalty_members <span class="keyword">ADD INDEX</span> idx_email (email);
+
+<span class="comment">-- Sale items product lookup</span>
+<span class="keyword">ALTER TABLE</span> sale_items <span class="keyword">ADD INDEX</span> idx_product (product_id);
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">Current Table Structure</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Foreign Keys</th>
+                        <th>Indexes</th>
+                        <th>Issues</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>products</td>
+                        <td><span class="badge badge-done">✓</span> category_id, supplier_id</td>
+                        <td><span class="badge badge-done">✓</span> sku, barcode, expiry</td>
+                        <td>None</td>
+                    </tr>
+                    <tr>
+                        <td>sales</td>
+                        <td><span class="badge badge-high">✗</span> No FK</td>
+                        <td><span class="badge badge-done">✓</span> sale_reference</td>
+                        <td>Add cashier FK</td>
+                    </tr>
+                    <tr>
+                        <td>sale_items</td>
+                        <td><span class="badge badge-done">✓</span> sale_id, product_id</td>
+                        <td><span class="badge badge-high">✗</span> Missing</td>
+                        <td>Add product_id index</td>
+                    </tr>
+                    <tr>
+                        <td>users</td>
+                        <td><span class="badge badge-done">✓</span> role_id</td>
+                        <td><span class="badge badge-done">✓</span> username, email</td>
+                        <td>None</td>
+                    </tr>
+                    <tr>
+                        <td>loyalty_members</td>
+                        <td><span class="badge badge-high">✗</span> No FK</td>
+                        <td><span class="badge badge-medium">~</span> phone only</td>
+                        <td>Add email index</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- Section 4: Pre-Deployment Checklist -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon info">📋</div>
+                <div>
+                    <h2>Pre-Deployment Checklist</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">Complete these before going live</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1rem 0; color: var(--danger);">🔴 Critical (Must Do)</h3>
+            <ul class="checklist">
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Create .env file with environment variables</h4>
+                        <p>Move all sensitive credentials to environment variables</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Change database credentials</h4>
+                        <p>Create a dedicated database user with strong password (not root)</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Set DEBUG_MODE = false</h4>
+                        <p>Disable error display in config.php</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Change default admin password</h4>
+                        <p>Replace 'admin123' with a strong, unique password</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Install SSL certificate and force HTTPS</h4>
+                        <p>Get certificate from Let's Encrypt (free) or your hosting provider</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Configure proper error_log path</h4>
+                        <p>Set a valid path in php.ini or .htaccess</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Run composer install --no-dev</h4>
+                        <p>Install only production dependencies</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Delete debug/test files</h4>
+                        <p>Remove: test_*.php, debug_*.php, check_*.php, phpinfo.php</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Verify .htaccess is working</h4>
+                        <p>Ensure Apache's AllowOverride is set to All</p>
+                    </div>
+                </li>
+            </ul>
+            
+            <h3 style="margin: 2rem 0 1rem; color: var(--warning);">🟠 High Priority (Recommended)</h3>
+            <ul class="checklist">
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Implement payment gateway integration</h4>
+                        <p>See Part 2 for PayMongo integration guide</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Add password reset functionality</h4>
+                        <p>Email-based password reset flow</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Connect Loyalty QR to database</h4>
+                        <p>See Part 2 for implementation details</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Add missing database indexes</h4>
+                        <p>Run the SQL commands listed above</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Set up automated backups</h4>
+                        <p>Configure cron job for daily backups</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon pending">✗</span>
+                    <div class="check-content">
+                        <h4>Configure SMTP email settings</h4>
+                        <p>Set up with your email provider (Gmail, SendGrid, etc.)</p>
+                    </div>
+                </li>
+            </ul>
+        </section>
+        
+        <!-- Files to Delete -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon critical">🗑️</div>
+                <div>
+                    <h2>Files to Delete Before Deployment</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">These files expose sensitive information</p>
+                </div>
+            </div>
+            
+            <div class="info-box danger">
+                <span class="info-box-icon">⚠️</span>
+                <div>
+                    <strong>Security Risk</strong>
+                    <p>These files contain debugging information, test code, or system diagnostics that could help attackers understand your system.</p>
+                </div>
+            </div>
+            
+            <div class="code-block">
+<span class="comment"># Delete these files before deploying:</span>
+
+<span class="comment"># Debug files</span>
+debug_checkout.php
+debug_products.php
+debug_transactions.php
+diagnostic.php
+
+<span class="comment"># Test/Check files</span>
+check_data.php
+check_db.php
+check_products.php
+check_sales_setup.php
+check_sales_simple.php
+check_sales.php
+check_schema.php
+check_session_now.php
+check_table_structure.php
+check_transactions_table.php
+
+<span class="comment"># System info exposure</span>
+phpinfo.php
+
+<span class="comment"># Development files</span>
+create_admin.php        <span class="comment"># After initial setup</span>
+create_db.php           <span class="comment"># After database created</span>
+add_initial_employees.php
+add_initial_medicines.php
+
+<span class="comment"># Backup copies</span>
+posbackup.php
+posbackup1.php
+header-component.php.backup
+index.html.backup
+            </div>
+        </section>
+        
+        <!-- Continue to Part 2 -->
+        <div style="text-align: center; padding: 3rem; background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 16px; margin-top: 2rem;">
+            <h2 style="margin-bottom: 1rem;">📚 Continue to Part 2</h2>
+            <p style="color: var(--gray); margin-bottom: 1.5rem;">Learn about Payment Gateway Integration and the Loyalty QR System</p>
+            <a href="DEPLOYMENT_READINESS_PART2.html" class="nav-link" style="display: inline-block; background: var(--primary); color: white; padding: 1rem 2rem; font-size: 1.1rem;">
+                View Part 2: Payments & Loyalty QR →
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 2rem; color: var(--gray); margin-top: 2rem;">
+            <p>Calloway Pharmacy IMS - Deployment Readiness Report</p>
+            <p style="font-size: 0.85rem;">Generated December 19, 2025 | Part 1 of 2</p>
+        </footer>
+    </div>
+</body>
+</html>

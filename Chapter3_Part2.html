@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calloway Pharmacy IMS - Chapter 3 Part 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Calibri', Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 4px solid #0c5460;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #17a2b8;
+            border-bottom: 3px solid #17a2b8;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "▪";
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        .subsection-title {
+            font-size: 1.4em;
+            color: #138496;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .diagram-container {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table thead {
+            background: #17a2b8;
+            color: white;
+        }
+
+        table th,
+        table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        table tbody tr:hover {
+            background: #e7f3f5;
+        }
+
+        .highlight-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: #fff;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h4 {
+            color: #17a2b8;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #17a2b8;
+            padding-bottom: 10px;
+        }
+
+        .card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .card li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card li:last-child {
+            border-bottom: none;
+        }
+
+        .card li::before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+
+            table {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 30px;
+        }
+
+        .timeline-marker {
+            width: 120px;
+            font-weight: 600;
+            color: #17a2b8;
+            background: #d1ecf1;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            margin-right: 20px;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 3px solid #17a2b8;
+            border-radius: 4px;
+        }
+
+        .timeline-content h4 {
+            color: #138496;
+            margin-bottom: 8px;
+        }
+
+        .timeline-content p {
+            font-size: 0.95em;
+            color: #555;
+            margin: 5px 0;
+        }
+
+        .fig-number {
+            font-weight: bold;
+            color: #17a2b8;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>💊 Calloway Pharmacy IMS</h1>
+            <p>Chapter 3 - System Design & Architecture (Part 2)</p>
+            <p style="margin-top: 15px; font-size: 0.95em;">Data Flow Diagram, Testing & Procedures, Schedule, Project Team</p>
+        </div>
+
+        <div class="content">
+            <!-- SECTION 3.4: DATA FLOW DIAGRAM -->
+            <div class="section">
+                <div class="section-title">3.4 Data Flow Diagram (Page 33)</div>
+
+                <p style="margin-bottom: 20px; color: #555;">
+                    The Data Flow Diagram (DFD) illustrates how data moves through the Calloway Pharmacy IMS system, showing the relationships between processes, data stores, and external entities.
+                </p>
+
+                <div class="subsection-title">POS Transaction Data Flow</div>
+                <div class="diagram-container">
+                    <p style="text-align: center; margin-bottom: 20px; font-weight: 600;">Figure 5: POS Transaction Data Flow - Point of Sale Processing</p>
+                    <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" width="100%" height="600">
+                        <defs>
+                            <marker id="arrow1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#17a2b8" />
+                            </marker>
+                        </defs>
+
+                        <!-- P1.0 POS Process -->
+                        <rect x="350" y="20" width="140" height="80" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="420" y="50" text-anchor="middle" font-weight="bold" font-size="13">1.0 POS</text>
+                        <text x="420" y="70" text-anchor="middle" font-size="11">Transaction</text>
+                        <text x="420" y="85" text-anchor="middle" font-size="11">Processing</text>
+
+                        <!-- D1: Products Data Store -->
+                        <rect x="50" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="100" y="295" text-anchor="middle" font-weight="bold" font-size="12">D1:</text>
+                        <text x="100" y="315" text-anchor="middle" font-size="11">Products</text>
+
+                        <!-- D2: Sales Data Store -->
+                        <rect x="250" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="300" y="295" text-anchor="middle" font-weight="bold" font-size="12">D2:</text>
+                        <text x="300" y="315" text-anchor="middle" font-size="11">Sales</text>
+
+                        <!-- D3: Loyalty Data Store -->
+                        <rect x="450" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="500" y="295" text-anchor="middle" font-weight="bold" font-size="12">D3:</text>
+                        <text x="500" y="315" text-anchor="middle" font-size="11">Customers</text>
+
+                        <!-- P2.0 Inventory Update -->
+                        <rect x="700" y="20" width="140" height="80" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="770" y="50" text-anchor="middle" font-weight="bold" font-size="13">2.0</text>
+                        <text x="770" y="70" text-anchor="middle" font-weight="bold" font-size="13">Inventory</text>
+                        <text x="770" y="85" text-anchor="middle" font-size="11">Update</text>
+
+                        <!-- Data Flows -->
+                        <!-- POS to Products (read) -->
+                        <line x1="350" y1="100" x2="100" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow1)"/>
+                        <text x="180" y="150" font-size="11" fill="#17a2b8" font-weight="bold">Product ID</text>
+                        <text x="180" y="170" font-size="11" fill="#17a2b8" font-weight="bold">Price Check</text>
+
+                        <!-- Products to POS (product data) -->
+                        <line x1="100" y1="260" x2="380" y2="100" stroke="#28a745" stroke-width="2" marker-end="url(#arrow1)"/>
+                        <text x="140" y="200" font-size="11" fill="#28a745" font-weight="bold">Product</text>
+                        <text x="140" y="220" font-size="11" fill="#28a745" font-weight="bold">Details</text>
+
+                        <!-- POS to Sales (write) -->
+                        <line x1="420" y1="100" x2="300" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow1)"/>
+                        <text x="280" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Transaction</text>
+                        <text x="280" y="180" font-size="11" fill="#17a2b8" font-weight="bold">Data</text>
+
+                        <!-- POS to Loyalty (read) -->
+                        <line x1="490" y1="100" x2="500" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow1)"/>
+                        <text x="520" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Customer</text>
+                        <text x="520" y="180" font-size="11" fill="#17a2b8" font-weight="bold">ID</text>
+
+                        <!-- Loyalty to POS (points) -->
+                        <line x1="500" y1="260" x2="460" y2="100" stroke="#28a745" stroke-width="2" marker-end="url(#arrow1)"/>
+                        <text x="430" y="200" font-size="11" fill="#28a745" font-weight="bold">Points</text>
+                        <text x="430" y="220" font-size="11" fill="#28a745" font-weight="bold">& QR</text>
+
+                        <!-- POS to Inventory (stock update) -->
+                        <line x1="490" y1="60" x2="700" y2="60" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow1)"/>
+                        <text x="570" y="40" font-size="11" fill="#17a2b8" font-weight="bold">Sold Qty</text>
+
+                        <!-- Inventory to Products (update stock) -->
+                        <line x1="700" y1="100" x2="150" y2="260" stroke="#138496" stroke-width="2" marker-end="url(#arrow1)"/>
+                        <text x="340" y="170" font-size="11" fill="#138496" font-weight="bold">Update Stock</text>
+
+                        <!-- Legend -->
+                        <g>
+                            <rect x="50" y="400" width="900" height="160" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="5"/>
+                            <text x="70" y="428" font-weight="bold" font-size="12">Data Flow Details:</text>
+
+                            <text x="70" y="460" font-size="11" font-weight="bold" fill="#17a2b8">➤ Input Data (Blue):</text>
+                            <text x="320" y="460" font-size="11">Product ID, Quantity, Payment info, Customer ID</text>
+
+                            <text x="70" y="495" font-size="11" font-weight="bold" fill="#28a745">➤ Output Data (Green):</text>
+                            <text x="320" y="495" font-size="11">Receipt, Updated stock, Points balance</text>
+
+                            <text x="70" y="530" font-size="11" font-weight="bold" fill="#138496">➤ Database Updates (Teal):</text>
+                            <text x="320" y="530" font-size="11">sales table, sale_items table, products table, customers table</text>
+                        </g>
+                    </svg>
+                    <p class="fig-number">Figure 5: POS transaction flow showing data movement from product lookup through inventory update.</p>
+                </div>
+
+                <div class="subsection-title">Inventory Management Data Flow</div>
+                <div class="diagram-container">
+                    <p style="text-align: center; margin-bottom: 20px; font-weight: 600;">Figure 6: Inventory Management Data Flow</p>
+                    <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" width="100%" height="600">
+                        <defs>
+                            <marker id="arrow2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#17a2b8" />
+                            </marker>
+                        </defs>
+
+                        <!-- P2.0 Inventory Management Process -->
+                        <rect x="350" y="20" width="140" height="80" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="420" y="50" text-anchor="middle" font-weight="bold" font-size="13">2.0</text>
+                        <text x="420" y="70" text-anchor="middle" font-weight="bold" font-size="13">Inventory</text>
+                        <text x="420" y="85" text-anchor="middle" font-size="11">Management</text>
+
+                        <!-- D1: Products Data Store -->
+                        <rect x="50" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="100" y="295" text-anchor="middle" font-weight="bold" font-size="12">D1:</text>
+                        <text x="100" y="315" text-anchor="middle" font-size="11">Products</text>
+
+                        <!-- D2: Inventory Logs Data Store -->
+                        <rect x="250" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="300" y="295" text-anchor="middle" font-weight="bold" font-size="12">D2:</text>
+                        <text x="300" y="315" text-anchor="middle" font-size="11">Inv Logs</text>
+
+                        <!-- D3: Alert Notifications -->
+                        <rect x="450" y="260" width="100" height="70" fill="#ffc107" stroke="#ff9800" stroke-width="2" rx="5"/>
+                        <text x="500" y="295" text-anchor="middle" font-weight="bold" font-size="12">D3:</text>
+                        <text x="500" y="315" text-anchor="middle" font-size="11">Alerts</text>
+
+                        <!-- P3.0 Expiry Check Sub-process -->
+                        <rect x="700" y="20" width="140" height="80" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="770" y="50" text-anchor="middle" font-weight="bold" font-size="13">3.0</text>
+                        <text x="770" y="70" text-anchor="middle" font-weight="bold" font-size="13">Expiry</text>
+                        <text x="770" y="85" text-anchor="middle" font-size="11">Monitoring</text>
+
+                        <!-- Data Flows -->
+                        <!-- Inventory reads Products -->
+                        <line x1="350" y1="100" x2="100" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow2)"/>
+                        <text x="180" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Query: Stock,</text>
+                        <text x="180" y="175" font-size="11" fill="#17a2b8" font-weight="bold">Expiry Date</text>
+
+                        <!-- Products returns data -->
+                        <line x1="100" y1="260" x2="380" y2="100" stroke="#28a745" stroke-width="2" marker-end="url(#arrow2)"/>
+                        <text x="160" y="200" font-size="11" fill="#28a745" font-weight="bold">Product Data,</text>
+                        <text x="160" y="215" font-size="11" fill="#28a745" font-weight="bold">Quantities</text>
+
+                        <!-- Inventory writes to Logs -->
+                        <line x1="420" y1="100" x2="300" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow2)"/>
+                        <text x="310" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Stock Change</text>
+                        <text x="310" y="175" font-size="11" fill="#17a2b8" font-weight="bold">Events</text>
+
+                        <!-- Inventory generates Alerts -->
+                        <line x1="490" y1="100" x2="500" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow2)"/>
+                        <text x="510" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Low Stock,</text>
+                        <text x="510" y="175" font-size="11" fill="#17a2b8" font-weight="bold">Expired Items</text>
+
+                        <!-- Expiry to Products -->
+                        <line x1="700" y1="60" x2="490" y2="60" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow2)"/>
+                        <text x="570" y="45" font-size="11" fill="#17a2b8" font-weight="bold">Scan Expiry Dates</text>
+
+                        <!-- Products to Expiry (expired items) -->
+                        <line x1="490" y1="60" x2="700" y2="100" stroke="#138496" stroke-width="2" marker-end="url(#arrow2)"/>
+                        <text x="530" y="75" font-size="11" fill="#138496" font-weight="bold">Expired Items</text>
+
+                        <!-- Legend -->
+                        <g>
+                            <rect x="50" y="400" width="900" height="160" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="5"/>
+                            <text x="70" y="425" font-weight="bold" font-size="12">Data Elements:</text>
+
+                            <text x="70" y="450" font-size="11" font-weight="bold" fill="#17a2b8">➤ Stock Tracking:</text>
+                            <text x="300" y="450" font-size="11">Product ID, Current QTY, Reorder Point, Expiry Date, Location</text>
+
+                            <text x="70" y="475" font-size="11" font-weight="bold" fill="#28a745">➤ Log Records:</text>
+                            <text x="300" y="475" font-size="11">Timestamp, Quantity Change, Reason (Sale/Restock/Adjustment), User</text>
+
+                            <text x="70" y="500" font-size="11" font-weight="bold" fill="#ff9800">➤ Alert Types:</text>
+                            <text x="300" y="500" font-size="11">Low Stock Alert, Expiry Warning (30 days), Out of Stock, Overstock</text>
+
+                            <text x="70" y="530" font-size="11" font-weight="bold" fill="#138496">➤ Monitoring:</text>
+                            <text x="300" y="530" font-size="11">Real-time stock level tracking, Automated expiry date scanning, Alert generation system</text>
+                        </g>
+                    </svg>
+                    <p class="fig-number">Figure 6: Inventory flow showing stock tracking, expiry monitoring, and alert generation.</p>
+                </div>
+
+                <div class="subsection-title">Online Ordering & Fulfillment Data Flow</div>
+                <div class="diagram-container">
+                    <p style="text-align: center; margin-bottom: 20px; font-weight: 600;">Figure 7: Online Ordering Data Flow</p>
+                    <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" width="100%" height="600">
+                        <defs>
+                            <marker id="arrow3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#17a2b8" />
+                            </marker>
+                        </defs>
+
+                        <!-- P4.0 Online Ordering Process -->
+                        <rect x="350" y="20" width="140" height="80" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="420" y="50" text-anchor="middle" font-weight="bold" font-size="13">4.0</text>
+                        <text x="420" y="70" text-anchor="middle" font-weight="bold" font-size="13">Online</text>
+                        <text x="420" y="85" text-anchor="middle" font-size="11">Ordering</text>
+
+                        <!-- D1: Products Data Store -->
+                        <rect x="50" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="100" y="295" text-anchor="middle" font-weight="bold" font-size="12">D1:</text>
+                        <text x="100" y="315" text-anchor="middle" font-size="11">Products</text>
+
+                        <!-- D2: Orders Data Store -->
+                        <rect x="250" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="300" y="295" text-anchor="middle" font-weight="bold" font-size="12">D2:</text>
+                        <text x="300" y="315" text-anchor="middle" font-size="11">Orders</text>
+
+                        <!-- D3: Customers Data Store -->
+                        <rect x="450" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="500" y="295" text-anchor="middle" font-weight="bold" font-size="12">D3:</text>
+                        <text x="500" y="315" text-anchor="middle" font-size="11">Customers</text>
+
+                        <!-- D4: Payment Gateway (External) -->
+                        <rect x="700" y="260" width="100" height="70" fill="#ffc107" stroke="#ff9800" stroke-width="2" rx="5"/>
+                        <text x="750" y="295" text-anchor="middle" font-weight="bold" font-size="12">D4:</text>
+                        <text x="750" y="315" text-anchor="middle" font-size="11">Payment GW</text>
+
+                        <!-- Data Flows -->
+                        <!-- Online Order reads Products -->
+                        <line x1="350" y1="100" x2="100" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow3)"/>
+                        <text x="180" y="150" font-size="11" fill="#17a2b8" font-weight="bold">Browse: Search,</text>
+                        <text x="180" y="170" font-size="11" fill="#17a2b8" font-weight="bold">Filter, Catalog</text>
+
+                        <!-- Products returns catalog -->
+                        <line x1="100" y1="260" x2="380" y2="100" stroke="#28a745" stroke-width="2" marker-end="url(#arrow3)"/>
+                        <text x="140" y="200" font-size="11" fill="#28a745" font-weight="bold">Product List,</text>
+                        <text x="140" y="220" font-size="11" fill="#28a745" font-weight="bold">Availability</text>
+
+                        <!-- Online Order writes to Orders -->
+                        <line x1="420" y1="100" x2="300" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow3)"/>
+                        <text x="310" y="150" font-size="11" fill="#17a2b8" font-weight="bold">Create Order:</text>
+                        <text x="310" y="170" font-size="11" fill="#17a2b8" font-weight="bold">Items, Address</text>
+
+                        <!-- Online Order reads Customers -->
+                        <line x1="490" y1="100" x2="500" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow3)"/>
+                        <text x="520" y="150" font-size="11" fill="#17a2b8" font-weight="bold">Get Customer</text>
+                        <text x="520" y="170" font-size="11" fill="#17a2b8" font-weight="bold">Profile</text>
+
+                        <!-- Online Order to Payment Gateway -->
+                        <line x1="490" y1="60" x2="700" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow3)"/>
+                        <text x="545" y="130" font-size="11" fill="#17a2b8" font-weight="bold">Process</text>
+                        <text x="545" y="150" font-size="11" fill="#17a2b8" font-weight="bold">Payment</text>
+
+                        <!-- Payment response -->
+                        <line x1="700" y1="260" x2="490" y2="100" stroke="#138496" stroke-width="2" marker-end="url(#arrow3)"/>
+                        <text x="545" y="200" font-size="11" fill="#138496" font-weight="bold">Payment Status,</text>
+                        <text x="545" y="220" font-size="11" fill="#138496" font-weight="bold">Txn ID</text>
+
+                        <!-- Legend -->
+                        <g>
+                            <rect x="50" y="400" width="900" height="160" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="5"/>
+                            <text x="70" y="428" font-weight="bold" font-size="12">Order Processing Flow:</text>
+
+                            <text x="70" y="460" font-size="11" font-weight="bold" fill="#17a2b8">➤ Input:</text>
+                            <text x="320" y="460" font-size="11">Product search, Cart items, Customer login, Delivery address</text>
+
+                            <text x="70" y="495" font-size="11" font-weight="bold" fill="#28a745">➤ Processing:</text>
+                            <text x="320" y="495" font-size="11">Verify stock availability, Calculate total, Validate address</text>
+
+                            <text x="70" y="530" font-size="11" font-weight="bold" fill="#ff9800">➤ Output:</text>
+                            <text x="320" y="530" font-size="11">Order confirmation, Invoice, Tracking ID, Email notification</text>
+                        </g>
+                    </svg>
+
+                        <!-- Legend -->
+                        <g>
+                            <rect x="50" y="350" width="900" height="120" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="5"/>
+                            <text x="70" y="375" font-weight="bold" font-size="12">Order Processing Flow:</text>
+
+                            <text x="70" y="400" font-size="10" font-weight="bold" fill="#17a2b8">➤ Input:</text>
+                            <text x="300" y="400" font-size="10">Product search, Cart items, Customer login, Delivery address</text>
+
+                            <text x="70" y="420" font-size="10" font-weight="bold" fill="#28a745">➤ Processing:</text>
+                            <text x="300" y="420" font-size="10">Verify stock availability, Calculate total, Validate address</text>
+
+                            <text x="70" y="440" font-size="10" font-weight="bold" fill="#ff9800">➤ Output:</text>
+                            <text x="300" y="440" font-size="10">Order confirmation, Invoice, Tracking ID, Email notification</text>
+                        </g>
+                    </svg>
+                    <p class="fig-number">Figure 7: Online ordering flow from catalog browse through payment processing.</p>
+                </div>
+
+                <div class="subsection-title">Loyalty QR & Rewards Data Flow</div>
+                <div class="diagram-container">
+                    <p style="text-align: center; margin-bottom: 20px; font-weight: 600;">Figure 8: Loyalty QR System Data Flow</p>
+                    <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" width="100%" height="600">
+                        <defs>
+                            <marker id="arrow4" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#17a2b8" />
+                            </marker>
+                        </defs>
+
+                        <!-- P5.0 Loyalty QR Process -->
+                        <rect x="350" y="20" width="140" height="80" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="420" y="50" text-anchor="middle" font-weight="bold" font-size="13">5.0</text>
+                        <text x="420" y="70" text-anchor="middle" font-weight="bold" font-size="13">Loyalty QR</text>
+                        <text x="420" y="85" text-anchor="middle" font-size="11">System</text>
+
+                        <!-- D1: Customers Data Store -->
+                        <rect x="50" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="100" y="295" text-anchor="middle" font-weight="bold" font-size="12">D1:</text>
+                        <text x="100" y="315" text-anchor="middle" font-size="11">Customers</text>
+
+                        <!-- D2: Loyalty Transactions Data Store -->
+                        <rect x="250" y="260" width="120" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="310" y="295" text-anchor="middle" font-weight="bold" font-size="12">D2:</text>
+                        <text x="310" y="315" text-anchor="middle" font-size="11">Loyalty Txn</text>
+
+                        <!-- D3: Sales Data Store (for points calc) -->
+                        <rect x="450" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="500" y="295" text-anchor="middle" font-weight="bold" font-size="12">D3:</text>
+                        <text x="500" y="315" text-anchor="middle" font-size="11">Sales</text>
+
+                        <!-- D4: Rewards Catalog -->
+                        <rect x="700" y="260" width="100" height="70" fill="#d4edda" stroke="#28a745" stroke-width="2" rx="5"/>
+                        <text x="750" y="295" text-anchor="middle" font-weight="bold" font-size="12">D4:</text>
+                        <text x="750" y="315" text-anchor="middle" font-size="11">Rewards</text>
+
+                        <!-- Data Flows -->
+                        <!-- Loyalty reads/writes Customers -->
+                        <line x1="350" y1="100" x2="100" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow4)"/>
+                        <text x="180" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Register/Query:</text>
+                        <text x="180" y="175" font-size="11" fill="#17a2b8" font-weight="bold">Customer ID</text>
+
+                        <!-- Customers returns member data -->
+                        <line x1="100" y1="260" x2="380" y2="100" stroke="#28a745" stroke-width="2" marker-end="url(#arrow4)"/>
+                        <text x="160" y="200" font-size="11" fill="#28a745" font-weight="bold">Member Profile,</text>
+                        <text x="160" y="215" font-size="11" fill="#28a745" font-weight="bold">Points Balance</text>
+
+                        <!-- Loyalty writes to Loyalty Txn -->
+                        <line x1="420" y1="100" x2="310" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow4)"/>
+                        <text x="310" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Log QR Scan:</text>
+                        <text x="310" y="175" font-size="11" fill="#17a2b8" font-weight="bold">Date, Amount</text>
+
+                        <!-- Loyalty reads Sales -->
+                        <line x1="490" y1="100" x2="500" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow4)"/>
+                        <text x="510" y="160" font-size="11" fill="#17a2b8" font-weight="bold">Get Transaction</text>
+                        <text x="510" y="175" font-size="11" fill="#17a2b8" font-weight="bold">Total</text>
+
+                        <!-- Loyalty reads Rewards -->
+                        <line x1="490" y1="60" x2="700" y2="260" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrow4)"/>
+                        <text x="545" y="140" font-size="11" fill="#17a2b8" font-weight="bold">Check</text>
+                        <text x="545" y="155" font-size="11" fill="#17a2b8" font-weight="bold">Redemption</text>
+
+                        <!-- Rewards response -->
+                        <line x1="700" y1="260" x2="490" y2="100" stroke="#138496" stroke-width="2" marker-end="url(#arrow4)"/>
+                        <text x="545" y="220" font-size="11" fill="#138496" font-weight="bold">Available Rewards,</text>
+                        <text x="545" y="235" font-size="11" fill="#138496" font-weight="bold">Point Values</text>
+
+                        <!-- Legend -->
+                        <g>
+                            <rect x="50" y="400" width="900" height="160" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1" rx="5"/>
+                            <text x="70" y="425" font-weight="bold" font-size="12">Loyalty Program Flow:</text>
+
+                            <text x="70" y="450" font-size="11" font-weight="bold" fill="#17a2b8">➤ QR Scanning:</text>
+                            <text x="300" y="450" font-size="11">Customer ID encoded in QR, Scanned at POS, Discount applied immediately</text>
+
+                            <text x="70" y="475" font-size="11" font-weight="bold" fill="#28a745">➤ Points Calculation:</text>
+                            <text x="300" y="475" font-size="11">Formula: (Transaction Total / 100) × Points Multiplier = Points Earned</text>
+
+                            <text x="70" y="500" font-size="11" font-weight="bold" fill="#ff9800">➤ Redemption:</text>
+                            <text x="300" y="500" font-size="11">Customer can redeem points for discounts or free products from rewards catalog</text>
+
+                            <text x="70" y="530" font-size="11" font-weight="bold" fill="#ff9800">➤ Output:</text>
+                            <text x="300" y="530" font-size="11">Points balance updated, Transaction logged, Rewards checked, Redemption status returned</text>
+                        </g>
+                    </svg>
+                    <p class="fig-number">Figure 8: Loyalty QR flow showing registration, scanning, points calculation, and reward redemption.</p>
+                </div>
+
+                <div class="info-box">
+                    <strong>🔄 Key Data Flows:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>Synchronous:</strong> POS transactions, payment processing, QR scanning (real-time)</li>
+                        <li><strong>Asynchronous:</strong> Email notifications, report generation, batch processing</li>
+                        <li><strong>Real-time:</strong> Stock level updates, order status, inventory alerts</li>
+                        <li><strong>Batch:</strong> End-of-day reconciliation, expiry checks, analytics</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 3.5: TESTING AND OPERATIONAL PROCEDURES -->
+            <div class="section">
+                <div class="section-title">3.5 Testing and Operational Procedures (Page 34)</div>
+
+                <div class="subsection-title">Testing Strategy</div>
+                <p style="margin-bottom: 20px; color: #555;">
+                    Comprehensive testing ensures the Calloway Pharmacy IMS meets functional, performance, security, and usability requirements.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Type</th>
+                            <th>Scope</th>
+                            <th>Test Cases</th>
+                            <th>Success Criteria</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Unit Testing</strong></td>
+                            <td>Individual functions & methods</td>
+                            <td>Price calculations, stock updates, user auth</td>
+                            <td>100% of functions pass with edge cases handled</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Integration Testing</strong></td>
+                            <td>Module interactions</td>
+                            <td>POS ↔ Inventory, Online ↔ Payment Gateway</td>
+                            <td>All data flows correctly between modules</td>
+                        </tr>
+                        <tr>
+                            <td><strong>System Testing</strong></td>
+                            <td>End-to-end workflows</td>
+                            <td>Complete POS transaction, online order to delivery</td>
+                            <td>All workflows execute without errors</td>
+                        </tr>
+                        <tr>
+                            <td><strong>UAT</strong></td>
+                            <td>User scenarios</td>
+                            <td>Staff POS usage, customer online ordering</td>
+                            <td>Users confirm system meets requirements</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Performance Testing</strong></td>
+                            <td>Load & response times</td>
+                            <td>100+ concurrent users, report generation</td>
+                            <td>Response time &lt;2s, zero downtime</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Security Testing</strong></td>
+                            <td>Vulnerability & access control</td>
+                            <td>SQL injection, XSS, unauthorized access</td>
+                            <td>All vulnerabilities resolved, auth validated</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="subsection-title">System Characteristics</div>
+                <div class="grid-2">
+                    <div class="card">
+                        <h4>Functionality</h4>
+                        <ul>
+                            <li>All 6 modules operational</li>
+                            <li>POS transactions process</li>
+                            <li>Inventory updates correctly</li>
+                            <li>Loyalty QR scans work</li>
+                            <li>Reports generate accurately</li>
+                            <li>Online orders fulfill</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Reliability</h4>
+                        <ul>
+                            <li>99.5% uptime target</li>
+                            <li>Data backup daily</li>
+                            <li>Error recovery automated</li>
+                            <li>Redundant database</li>
+                            <li>Transaction rollback</li>
+                            <li>Failover mechanism</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Usability</h4>
+                        <ul>
+                            <li>Intuitive POS interface</li>
+                            <li>Mobile-responsive design</li>
+                            <li>Minimal training required</li>
+                            <li>Clear error messages</li>
+                            <li>Help documentation</li>
+                            <li>User-friendly navigation</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Efficiency</h4>
+                        <ul>
+                            <li>POS transaction &lt;30s</li>
+                            <li>Report generation &lt;5min</li>
+                            <li>Search results &lt;1s</li>
+                            <li>Database indexed</li>
+                            <li>Query optimized</li>
+                            <li>Batch processing</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Maintainability</h4>
+                        <ul>
+                            <li>Documented code</li>
+                            <li>Database schema docs</li>
+                            <li>API documentation</li>
+                            <li>Version control (Git)</li>
+                            <li>Code standards</li>
+                            <li>Audit logs</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Security</h4>
+                        <ul>
+                            <li>User authentication</li>
+                            <li>Role-based access</li>
+                            <li>Encrypted passwords</li>
+                            <li>CSRF token protection</li>
+                            <li>Input validation</li>
+                            <li>SSL/TLS encryption</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="subsection-title">Daily Operational Procedures</div>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker">Morning (8:00 AM)</div>
+                        <div class="timeline-content">
+                            <h4>System Startup & Verification</h4>
+                            <p>✓ Start web server and MySQL database</p>
+                            <p>✓ Verify all 6 modules accessible</p>
+                            <p>✓ Check backup status from previous night</p>
+                            <p>✓ Monitor database connection pool</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">Daytime (9:00 AM - 5:00 PM)</div>
+                        <div class="timeline-content">
+                            <h4>Normal Operations & Monitoring</h4>
+                            <p>✓ Staff process POS transactions</p>
+                            <p>✓ Monitor inventory alerts for low stock</p>
+                            <p>✓ Handle online order fulfillment</p>
+                            <p>✓ Track loyalty QR scan transactions</p>
+                            <p>✓ Monitor system performance metrics</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">Evening (5:00 PM - 6:00 PM)</div>
+                        <div class="timeline-content">
+                            <h4>End-of-Day Reconciliation</h4>
+                            <p>✓ Generate daily sales report</p>
+                            <p>✓ Reconcile POS transactions with database</p>
+                            <p>✓ Verify cash drawer balance</p>
+                            <p>✓ Check inventory counts against system</p>
+                            <p>✓ Identify and resolve discrepancies</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">Night (6:00 PM - 8:00 AM)</div>
+                        <div class="timeline-content">
+                            <h4>Automated Maintenance & Backup</h4>
+                            <p>✓ Full database backup (11:00 PM)</p>
+                            <p>✓ Database optimization & cleanup</p>
+                            <p>✓ Generate overnight analytics</p>
+                            <p>✓ Check for expired medications (automated)</p>
+                            <p>✓ Generate reorder list for low items</p>
+                            <p>✓ System health check & error logs review</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <strong>🔧 Maintenance Schedule:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>Daily:</strong> Backup, log review, performance check</li>
+                        <li><strong>Weekly:</strong> Database optimization, security scan</li>
+                        <li><strong>Monthly:</strong> Code review, performance analysis, capacity planning</li>
+                        <li><strong>Quarterly:</strong> Security audit, disaster recovery test, training</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 3.6: SCHEDULE AND TIMELINE -->
+            <div class="section">
+                <div class="section-title">3.6 Schedule and Timeline (Page 37)</div>
+
+                <p style="margin-bottom: 20px; color: #555;">
+                    The project timeline spans from December 2024 through April 2025, structured in distinct phases with clear milestones.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Activities</th>
+                            <th>Duration</th>
+                            <th>Timeline</th>
+                            <th>Deliverables</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Phase 1:</strong><br/>Planning</td>
+                            <td>Requirements gathering, analysis, project scope definition</td>
+                            <td>2 weeks</td>
+                            <td>Dec 2-13, 2024</td>
+                            <td>Requirements doc, project charter, scope statement</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 2:</strong><br/>Design</td>
+                            <td>System design, database schema, UI/UX mockups, architecture planning</td>
+                            <td>3 weeks</td>
+                            <td>Dec 16 - Jan 3, 2025</td>
+                            <td>System design doc, ER diagram, mockups, architecture doc</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 3:</strong><br/>Development Sprint 1</td>
+                            <td>Core modules (POS, Inventory, Reports)</td>
+                            <td>4 weeks</td>
+                            <td>Jan 6-31, 2025</td>
+                            <td>POS module, Inventory module, database implementation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 4:</strong><br/>Development Sprint 2</td>
+                            <td>Supporting modules (Online Ordering, Medicine Locator)</td>
+                            <td>4 weeks</td>
+                            <td>Feb 3-28, 2025</td>
+                            <td>Online Ordering module, Medicine Locator module</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 5:</strong><br/>Development Sprint 3</td>
+                            <td>Loyalty QR system, integrations, refinements</td>
+                            <td>3 weeks</td>
+                            <td>Mar 3-21, 2025</td>
+                            <td>Loyalty QR module, full system integration, bug fixes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 6:</strong><br/>Testing</td>
+                            <td>Unit, integration, system, security, performance testing</td>
+                            <td>3 weeks</td>
+                            <td>Mar 24 - Apr 11, 2025</td>
+                            <td>Test cases, test results, bug reports, fixes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 7:</strong><br/>UAT & Deployment</td>
+                            <td>User acceptance testing, staff training, production deployment</td>
+                            <td>2 weeks</td>
+                            <td>Apr 14-25, 2025</td>
+                            <td>UAT approval, training docs, deployment guide</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 8:</strong><br/>Support</td>
+                            <td>Post-launch support, monitoring, issue resolution</td>
+                            <td>Ongoing</td>
+                            <td>Apr 28 onwards</td>
+                            <td>Support tickets, incident reports, enhancements</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="highlight-box">
+                    <strong>📅 Key Milestones:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>Dec 13:</strong> Project Kickoff & Requirements Approval</li>
+                        <li><strong>Jan 3:</strong> Design Phase Complete - Technical Specification Ready</li>
+                        <li><strong>Feb 28:</strong> Core & Supporting Modules Complete</li>
+                        <li><strong>Mar 21:</strong> All Development Complete - Integration Testing Begins</li>
+                        <li><strong>Apr 11:</strong> Testing Phase Complete - System Ready for UAT</li>
+                        <li><strong>Apr 25:</strong> Go-Live & Production Deployment</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SECTION 3.7: PROJECT TEAM -->
+            <div class="section">
+                <div class="section-title">3.7 Project Team and Their Responsibilities (Page 38)</div>
+
+                <div class="subsection-title">Team Structure & Roles</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Team Members</th>
+                            <th>Key Responsibilities</th>
+                            <th>Required Skills</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Project Manager</strong></td>
+                            <td>Alex, Andrei, Pamplona</td>
+                            <td>Overall project coordination, timeline management, stakeholder communication, risk management</td>
+                            <td>Project Management, Communication, Leadership, Organization</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lead Developer / Backend</strong></td>
+                            <td>Alex, Andrei, Pamplona</td>
+                            <td>System architecture, code quality, technical decisions, POS & Inventory module development, database implementation</td>
+                            <td>PHP, MySQL, Design Patterns, Laravel/CI, REST APIs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Frontend Developer</strong></td>
+                            <td>Hendry, Evan, Mojares</td>
+                            <td>UI/UX implementation, responsive design, user interactions, browser compatibility, Medicine Locator interface</td>
+                            <td>HTML5, CSS3, JavaScript, jQuery, Bootstrap, UI/UX Design</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Database Administrator</strong></td>
+                            <td>Alex, Andrei, Pamplona</td>
+                            <td>Database design, optimization, backup/recovery, performance tuning, security, schema management</td>
+                            <td>MySQL, Indexing, Database Optimization, Security</td>
+                        </tr>
+                        <tr>
+                            <td><strong>QA Engineer / Tester</strong></td>
+                            <td>Hendry, Evan, Mojares</td>
+                            <td>Test case development, test execution, bug reporting, UAT coordination, system validation</td>
+                            <td>Manual Testing, Test Planning, Domain Knowledge, Quality Assurance</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Business Analyst / Documentation</strong></td>
+                            <td>All Team Members</td>
+                            <td>Requirements analysis, documentation, acceptance criteria, stakeholder liaison, training materials</td>
+                            <td>Requirements Gathering, Documentation, Analysis, Communication</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="subsection-title">Team Competencies</div>
+                <div class="grid-3">
+                    <div class="card">
+                        <h4>💻 Technical Skills</h4>
+                        <ul>
+                            <li>PHP 7+ programming</li>
+                            <li>MySQL database design</li>
+                            <li>Frontend: HTML5/CSS3/JS</li>
+                            <li>RESTful APIs</li>
+                            <li>Version control (Git)</li>
+                            <li>Linux/Windows servers</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>🔧 Domain Knowledge</h4>
+                        <ul>
+                            <li>Pharmacy operations</li>
+                            <li>POS systems</li>
+                            <li>Inventory management</li>
+                            <li>Loyalty programs</li>
+                            <li>E-commerce processes</li>
+                            <li>Healthcare compliance</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>📊 Soft Skills</h4>
+                        <ul>
+                            <li>Team collaboration</li>
+                            <li>Communication</li>
+                            <li>Problem-solving</li>
+                            <li>Time management</li>
+                            <li>Client engagement</li>
+                            <li>Adaptability</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="subsection-title">Communication Plan</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Frequency</th>
+                            <th>Participants</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Daily Standup</strong></td>
+                            <td>9:00 AM Daily</td>
+                            <td>All team members (Alex, Andrei, Pamplona, Hendry, Evan, Mojares)</td>
+                            <td>Status updates, blockers, coordination, knowledge sharing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Development Sync</strong></td>
+                            <td>Every 2 weeks (Mon)</td>
+                            <td>Backend team (Alex, Andrei, Pamplona) + Frontend team (Hendry, Evan, Mojares)</td>
+                            <td>Sprint planning, task assignment, technical decisions, estimation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Integration Testing Meeting</strong></td>
+                            <td>Every 2 weeks (Fri)</td>
+                            <td>All team members</td>
+                            <td>Demo completed modules, integration testing results, feedback</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Code Review Session</strong></td>
+                            <td>Every 2 weeks (Wed)</td>
+                            <td>Backend team (Alex, Andrei, Pamplona)</td>
+                            <td>Code quality, best practices, documentation, standards</td>
+                        </tr>
+                        <tr>
+                            <td><strong>QA Testing Report</strong></td>
+                            <td>Weekly (Thursday)</td>
+                            <td>QA team (Hendry, Evan, Mojares) + Backend leads (Alex, Andrei)</td>
+                            <td>Bug reports, test results, issues, resolutions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Project Status Report</strong></td>
+                            <td>Weekly (Friday)</td>
+                            <td>All team members</td>
+                            <td>Progress tracking, risks, issues, metrics, upcoming tasks</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box">
+                    <strong>👥 Team Development & Training:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>Week 1:</strong> Pharmacy domain training (POS operations, inventory management, loyalty programs)</li>
+                        <li><strong>Week 2:</strong> Technology stack overview (PHP, MySQL, JavaScript frameworks)</li>
+                        <li><strong>Week 3:</strong> QA/Testing best practices and test case development methodology</li>
+                        <li><strong>Week 4:</strong> Security standards, code review practices, database optimization</li>
+                        <li><strong>Mid-project:</strong> Performance optimization techniques and debugging strategies</li>
+                        <li><strong>End-project:</strong> Documentation standards and knowledge transfer sessions</li>
+                        <li><strong>Ongoing:</strong> Pair programming sessions between backend and frontend teams</li>
+                    </ul>
+                </div>
+
+                <div class="subsection-title">System Design Questionnaire & Validation</div>
+                <p style="margin-bottom: 20px; color: #555;">
+                    The following questionnaire uses a 5-point scale (5=Strongly Agree, 4=Agree, 3=Neutral, 2=Disagree, 1=Strongly Disagree) to evaluate system design and functionality.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Evaluation Criteria</th>
+                            <th style="text-align: center;">5</th>
+                            <th style="text-align: center;">4</th>
+                            <th style="text-align: center;">3</th>
+                            <th style="text-align: center;">2</th>
+                            <th style="text-align: center;">1</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #f0fff4; font-weight: bold;">
+                            <td colspan="6">FUNCTIONALITY</td>
+                        </tr>
+                        <tr>
+                            <td>Users cannot access the system without a valid login</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The data is appropriately displayed by the system using division by subject</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>Users can create, edit, delete, and update any record using the system</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The technology enables users to print and export data in the appropriate forms</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>Real-time inventory updates occur immediately after transactions</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The POS system processes transactions accurately and completely</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr style="background: #f0fff4; font-weight: bold;">
+                            <td colspan="6">USABILITY</td>
+                        </tr>
+                        <tr>
+                            <td>The layout is both aesthetically pleasing and easy to use</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The procedure of recording all product and customer information is automated by the system</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>All the buttons, inputs, links and icons are doing their respective functionalities</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The system is easy to understand and is good for beginners</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>Navigation between different modules is intuitive and seamless</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The system provides clear error messages and guidance to users</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr style="background: #f0fff4; font-weight: bold;">
+                            <td colspan="6">MAINTAINABILITY</td>
+                        </tr>
+                        <tr>
+                            <td>The system allows users to be productive and do more tasks in a day</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>Users can enter data into the system fast, and it will instantly convert it to information</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The system makes processing store records simpler</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>System maintenance and updates can be performed without disrupting operations</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                        <tr>
+                            <td>The system documentation is clear and helpful for staff training</td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                            <td style="text-align: center;"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <strong>📊 Rating Scale Guide:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>5 = Strongly Agree:</strong> Feature works excellently, fully meets expectations</li>
+                        <li><strong>4 = Agree:</strong> Feature works well with minor issues</li>
+                        <li><strong>3 = Neutral:</strong> Feature is adequate, neither good nor poor</li>
+                        <li><strong>2 = Disagree:</strong> Feature has significant issues</li>
+                        <li><strong>1 = Strongly Disagree:</strong> Feature does not work or is not implemented</li>
+                    </ul>
+                </div>
+
+                <div class="subsection-title">Risk Management</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Risk</th>
+                            <th>Impact</th>
+                            <th>Likelihood</th>
+                            <th>Mitigation Strategy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scope creep</td>
+                            <td>High</td>
+                            <td>Medium</td>
+                            <td>Strict change control, requirements sign-off</td>
+                        </tr>
+                        <tr>
+                            <td>Resource shortage</td>
+                            <td>High</td>
+                            <td>Low</td>
+                            <td>Buffer time, contingency resources identified</td>
+                        </tr>
+                        <tr>
+                            <td>Technology issues</td>
+                            <td>Medium</td>
+                            <td>Low</td>
+                            <td>Technical POC testing, vendor support</td>
+                        </tr>
+                        <tr>
+                            <td>Client availability</td>
+                            <td>Medium</td>
+                            <td>Medium</td>
+                            <td>Schedule meetings in advance, async updates</td>
+                        </tr>
+                        <tr>
+                            <td>Integration delays</td>
+                            <td>Medium</td>
+                            <td>Medium</td>
+                            <td>Early integration testing, mockups</td>
+                        </tr>
+                        <tr>
+                            <td>Data migration issues</td>
+                            <td>High</td>
+                            <td>Low</td>
+                            <td>Backup plans, parallel running period</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- SUMMARY -->
+            <div class="section">
+                <div class="success-box">
+                    <h3 style="margin-top: 0; color: #28a745;">✓ Chapter 3 Summary</h3>
+                    <p style="margin-top: 10px;">
+                        Chapter 3 comprehensively documents the Calloway Pharmacy IMS system design, covering:
+                    </p>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li><strong>Part 1:</strong> System Design, System Architecture, and Database Schema (Pages 29-31)</li>
+                        <li><strong>Part 2:</strong> Data Flow Diagram (Page 33), Testing Procedures (Page 34), Schedule (Page 37), and Project Team (Page 38)</li>
+                        <li>Complete DFD with context and level 1 decomposition diagrams</li>
+                        <li>Comprehensive testing strategy covering 6 test types and system characteristics</li>
+                        <li>8-phase project timeline from Dec 2024 to Apr 2025 with clear milestones</li>
+                        <li>7-member team with defined roles, responsibilities, and communication plan</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💊 <strong>Calloway Pharmacy IMS</strong> | Chapter 3 Part 2 - System Design Documentation</p>
+            <p>Data Flow Diagram, Testing, Schedule, Project Team | December 2024</p>
+        </div>
+    </div>
+</body>
+</html>

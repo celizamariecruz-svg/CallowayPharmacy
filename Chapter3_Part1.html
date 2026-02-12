@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 3 Part 1 - System Design & Architecture | Calloway Pharmacy IMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Calibri', 'Times New Roman', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 40px 20px;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 4px solid #0c5460;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section-number {
+            color: #17a2b8;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .section-title {
+            font-size: 1.9em;
+            color: #17a2b8;
+            border-bottom: 3px solid #17a2b8;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "▌";
+            margin-right: 15px;
+            font-size: 1.3em;
+        }
+
+        .subsection-title {
+            font-size: 1.4em;
+            color: #17a2b8;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+            color: #555;
+            font-size: 1em;
+            line-height: 1.8;
+        }
+
+        /* Figure Container */
+        .figure-container {
+            background: white;
+            border: 3px solid #17a2b8;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .figure-title {
+            font-weight: bold;
+            color: #17a2b8;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin: 30px 0;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        table thead {
+            background: #17a2b8;
+            color: white;
+        }
+
+        table th,
+        table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        table tbody tr:hover {
+            background: #e7f3f5;
+        }
+
+        table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: #f0f8ff;
+            border-left: 4px solid #17a2b8;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .highlight-box h4 {
+            color: #17a2b8;
+            margin-bottom: 10px;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .content {
+                padding: 20px;
+            }
+            .section-title {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>💊 CHAPTER III - PART 1</h1>
+            <p>System Design, Architecture & Database Schema</p>
+            <p style="margin-top: 15px; font-size: 0.95em;">Calloway Pharmacy Inventory Management System</p>
+        </div>
+
+        <div class="content">
+
+            <!-- ============ SYSTEM DESIGN (Page 29) ============ -->
+            <div class="section">
+                <div class="section-number">Page 29</div>
+                <div class="section-title">System Design</div>
+
+                <p>This figure demonstrates how the Calloway Pharmacy IMS processes system functionality in order for the computer to automate processes and return them to the users. The system design also shows how various user levels interact and transact with the machine. The overall aspect of the website system is represented by the procedures as a whole in this architecture.</p>
+
+                <!-- FIGURE 3: SYSTEM DESIGN -->
+                <div class="figure-container">
+                    <div class="figure-title">Figure 3: System Design</div>
+                    <svg width="100%" height="700" viewBox="0 0 1400 700" style="min-height: 600px; background: #fafafa; border-radius: 6px;">
+                        <!-- Title -->
+                        <text x="700" y="35" text-anchor="middle" font-size="22" font-weight="bold" fill="#17a2b8">
+                            CALLOWAY PHARMACY IMS - SYSTEM DESIGN
+                        </text>
+                        <line x1="100" y1="45" x2="1300" y2="45" stroke="#17a2b8" stroke-width="2"/>
+                        
+                        <!-- LAYER 1: USERS -->
+                        <text x="50" y="90" font-size="13" font-weight="bold" fill="#17a2b8">USER LAYER</text>
+                        
+                        <!-- Admin -->
+                        <circle cx="100" cy="160" r="45" fill="#ffc107" stroke="#ff9800" stroke-width="3"/>
+                        <text x="100" y="155" text-anchor="middle" font-size="28">👨‍💼</text>
+                        <text x="100" y="220" text-anchor="middle" font-size="12" font-weight="bold">Admin</text>
+                        <text x="100" y="235" text-anchor="middle" font-size="10">Full Access</text>
+                        
+                        <!-- Staff -->
+                        <circle cx="100" cy="400" r="45" fill="#ffc107" stroke="#ff9800" stroke-width="3"/>
+                        <text x="100" y="395" text-anchor="middle" font-size="28">💼</text>
+                        <text x="100" y="460" text-anchor="middle" font-size="12" font-weight="bold">Staff/Cashier</text>
+                        <text x="100" y="475" text-anchor="middle" font-size="10">POS Access</text>
+                        
+                        <!-- Customers -->
+                        <circle cx="100" cy="640" r="45" fill="#ffc107" stroke="#ff9800" stroke-width="3"/>
+                        <text x="100" y="635" text-anchor="middle" font-size="28">👥</text>
+                        <text x="100" y="700" text-anchor="middle" font-size="12" font-weight="bold">Customers</text>
+                        
+                        <!-- LAYER 2: SYSTEM MODULES -->
+                        <text x="250" y="90" font-size="13" font-weight="bold" fill="#17a2b8">SYSTEM MODULES</text>
+                        
+                        <!-- POS Module -->
+                        <rect x="200" y="120" width="160" height="90" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="280" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0c5460">🏪 POS Module</text>
+                        <text x="280" y="162" text-anchor="middle" font-size="9" fill="#555">Sales • Payments</text>
+                        <text x="280" y="175" text-anchor="middle" font-size="9" fill="#555">Receipts</text>
+                        <text x="280" y="200" text-anchor="middle" font-size="9" fill="#555">Stock Update</text>
+                        
+                        <!-- Inventory Module -->
+                        <rect x="400" y="120" width="160" height="90" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="480" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0c5460">📦 Inventory</text>
+                        <text x="480" y="162" text-anchor="middle" font-size="9" fill="#555">Stock Tracking</text>
+                        <text x="480" y="175" text-anchor="middle" font-size="9" fill="#555">Expiry Monitor</text>
+                        <text x="480" y="200" text-anchor="middle" font-size="9" fill="#555">Alerts</text>
+                        
+                        <!-- Medicine Locator -->
+                        <rect x="600" y="120" width="160" height="90" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="680" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0c5460">🔍 Med Locator</text>
+                        <text x="680" y="162" text-anchor="middle" font-size="9" fill="#555">Product Search</text>
+                        <text x="680" y="175" text-anchor="middle" font-size="9" fill="#555">Filter Category</text>
+                        <text x="680" y="200" text-anchor="middle" font-size="9" fill="#555">Location</text>
+                        
+                        <!-- Online Ordering -->
+                        <rect x="800" y="120" width="160" height="90" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="880" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0c5460">🛒 Online Order</text>
+                        <text x="880" y="162" text-anchor="middle" font-size="9" fill="#555">Browse Products</text>
+                        <text x="880" y="175" text-anchor="middle" font-size="9" fill="#555">Cart • Checkout</text>
+                        <text x="880" y="200" text-anchor="middle" font-size="9" fill="#555">Tracking</text>
+                        
+                        <!-- Loyalty QR -->
+                        <rect x="1000" y="120" width="160" height="90" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="1080" y="145" text-anchor="middle" font-size="12" font-weight="bold" fill="#0c5460">🎟️ Loyalty QR</text>
+                        <text x="1080" y="162" text-anchor="middle" font-size="9" fill="#555">QR Code Scan</text>
+                        <text x="1080" y="175" text-anchor="middle" font-size="9" fill="#555">Points Tracking</text>
+                        <text x="1080" y="200" text-anchor="middle" font-size="9" fill="#555">Discounts</text>
+                        
+                        <!-- Reports Module -->
+                        <rect x="500" y="250" width="350" height="70" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="5"/>
+                        <text x="675" y="275" text-anchor="middle" font-size="12" font-weight="bold" fill="#0c5460">📊 Reports & Analytics</text>
+                        <text x="675" y="295" text-anchor="middle" font-size="9" fill="#555">Sales • Inventory • Customer Reports • Performance Dashboards</text>
+                        
+                        <!-- LAYER 3: WEB SERVER -->
+                        <text x="250" y="385" font-size="13" font-weight="bold" fill="#17a2b8">PROCESSING LAYER</text>
+                        
+                        <rect x="250" y="420" width="900" height="90" fill="#e8f4f8" stroke="#17a2b8" stroke-width="3" rx="8"/>
+                        <text x="700" y="450" text-anchor="middle" font-size="14" font-weight="bold" fill="#0c5460">🌐 WEB SERVER (PHP Backend)</text>
+                        <text x="700" y="472" text-anchor="middle" font-size="10" fill="#555">Request Handler • Session Management • Business Logic</text>
+                        <text x="700" y="490" text-anchor="middle" font-size="10" fill="#555">Data Validation • Transaction Processing • Authentication</text>
+                        
+                        <!-- LAYER 4: DATABASE -->
+                        <text x="1200" y="385" font-size="13" font-weight="bold" fill="#28a745">DATA LAYER</text>
+                        
+                        <rect x="1140" y="420" width="220" height="180" fill="#d4edda" stroke="#28a745" stroke-width="3" rx="8"/>
+                        <text x="1250" y="450" text-anchor="middle" font-size="13" font-weight="bold" fill="#155724">🗄️ DATABASE</text>
+                        <text x="1250" y="468" text-anchor="middle" font-size="10" fill="#555">MySQL/MariaDB</text>
+                        <line x1="1160" y1="475" x2="1340" y2="475" stroke="#999" stroke-width="1"/>
+                        
+                        <text x="1250" y="498" text-anchor="middle" font-size="9" fill="#555">✓ Products</text>
+                        <text x="1250" y="514" text-anchor="middle" font-size="9" fill="#555">✓ Sales/Orders</text>
+                        <text x="1250" y="530" text-anchor="middle" font-size="9" fill="#555">✓ Customers</text>
+                        <text x="1250" y="546" text-anchor="middle" font-size="9" fill="#555">✓ Inventory Logs</text>
+                        <text x="1250" y="562" text-anchor="middle" font-size="9" fill="#555">✓ Loyalty Data</text>
+                        <text x="1250" y="578" text-anchor="middle" font-size="9" fill="#555">✓ Transactions</text>
+                        
+                        <!-- ARROWS -->
+                        <defs>
+                            <marker id="arrowblue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#17a2b8"/>
+                            </marker>
+                            <marker id="arrowgreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#28a745"/>
+                            </marker>
+                        </defs>
+                        
+                        <!-- User to Module arrows -->
+                        <path d="M 145 160 Q 170 160, 200 160" stroke="#17a2b8" stroke-width="2" fill="none" marker-end="url(#arrowblue)"/>
+                        <path d="M 145 400 Q 170 350, 200 250" stroke="#17a2b8" stroke-width="2" fill="none" marker-end="url(#arrowblue)"/>
+                        <path d="M 145 640 Q 350 640, 600 210" stroke="#17a2b8" stroke-width="2" fill="none" marker-end="url(#arrowblue)"/>
+                        
+                        <!-- Module to WebServer arrows -->
+                        <line x1="280" y1="210" x2="380" y2="420" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowblue)"/>
+                        <line x1="480" y1="210" x2="550" y2="420" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowblue)"/>
+                        <line x1="680" y1="210" x2="680" y2="420" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowblue)"/>
+                        <line x1="880" y1="210" x2="800" y2="420" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowblue)"/>
+                        <line x1="1080" y1="210" x2="950" y2="420" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowblue)"/>
+                        <line x1="675" y1="320" x2="700" y2="420" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowblue)"/>
+                        
+                        <!-- WebServer to Database -->
+                        <path d="M 1150 465 Q 1100 465, 1070 465" stroke="#28a745" stroke-width="3" marker-end="url(#arrowgreen)"/>
+                        <text x="1090" y="460" font-size="10" fill="#28a745" font-weight="bold">READ/WRITE</text>
+                    </svg>
+                </div>
+
+                <p style="margin-top: 20px;">The admin table is used to store ADMIN account information including a unique admin ID, a username, and a password. Additional details about the administrator, such as their first and last names, gender, email address, and phone number, are maintained in the admin_info table.</p>
+
+                <p>The item-info table is used to store detailed information about medicines and products. This includes the product name, category classification, pricing information, stock quantity available, expiry dates for batch tracking, shelf location numbers, and supplier details. The system automatically updates stock levels when transactions occur in the POS module and generates alerts when stock falls below reorder thresholds.</p>
+            </div>
+
+            <!-- ============ SYSTEM ARCHITECTURE (Page 30) ============ -->
+            <div class="section">
+                <div class="section-number">Page 30</div>
+                <div class="section-title">System Architecture</div>
+
+                <p>The system architecture illustrates how the Calloway Pharmacy IMS operates. The Pharmacy Information serves as the central source of operational data, such as product catalogs, inventory levels, pricing, and availability. The system is accessed by two primary types of users: Admin Users and Staff Users (Cashiers).</p>
+
+                <!-- FIGURE 4: SYSTEM ARCHITECTURE -->
+                <div class="figure-container">
+                    <div class="figure-title">Figure 4: System Architecture</div>
+                    <svg width="100%" height="600" viewBox="0 0 1200 600" style="min-height: 500px; background: #fafafa; border-radius: 6px;">
+                        <!-- Title -->
+                        <text x="600" y="35" text-anchor="middle" font-size="20" font-weight="bold" fill="#17a2b8">
+                            SYSTEM ARCHITECTURE DIAGRAM
+                        </text>
+                        <line x1="100" y1="45" x2="1100" y2="45" stroke="#17a2b8" stroke-width="2"/>
+                        
+                        <!-- Users Row -->
+                        <text x="50" y="90" font-size="12" font-weight="bold" fill="#17a2b8">USERS</text>
+                        
+                        <circle cx="200" cy="130" r="40" fill="#ffc107" stroke="#ff9800" stroke-width="2"/>
+                        <text x="200" y="135" text-anchor="middle" font-size="24">👨‍💼</text>
+                        <text x="200" y="185" text-anchor="middle" font-size="11" font-weight="bold">Admin Users</text>
+                        <text x="200" y="200" text-anchor="middle" font-size="9">(Full Access)</text>
+                        
+                        <circle cx="600" cy="130" r="40" fill="#ffc107" stroke="#ff9800" stroke-width="2"/>
+                        <text x="600" y="135" text-anchor="middle" font-size="24">💼</text>
+                        <text x="600" y="185" text-anchor="middle" font-size="11" font-weight="bold">Staff Users</text>
+                        <text x="600" y="200" text-anchor="middle" font-size="9">(Limited Access)</text>
+                        
+                        <circle cx="1000" cy="130" r="40" fill="#ffc107" stroke="#ff9800" stroke-width="2"/>
+                        <text x="1000" y="135" text-anchor="middle" font-size="24">👥</text>
+                        <text x="1000" y="185" text-anchor="middle" font-size="11" font-weight="bold">Customers</text>
+                        <text x="1000" y="200" text-anchor="middle" font-size="9">(Public Portal)</text>
+                        
+                        <!-- Interface Row -->
+                        <text x="50" y="260" font-size="12" font-weight="bold" fill="#17a2b8">INTERFACES</text>
+                        
+                        <rect x="120" y="280" width="160" height="70" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="4"/>
+                        <text x="200" y="305" text-anchor="middle" font-size="11" font-weight="bold" fill="#0c5460">Admin Visual</text>
+                        <text x="200" y="320" text-anchor="middle" font-size="10" fill="#555">Interface</text>
+                        <text x="200" y="333" text-anchor="middle" font-size="9" fill="#555">Full System Access</text>
+                        
+                        <rect x="520" y="280" width="160" height="70" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="4"/>
+                        <text x="600" y="305" text-anchor="middle" font-size="11" font-weight="bold" fill="#0c5460">Staff Visual</text>
+                        <text x="600" y="320" text-anchor="middle" font-size="10" fill="#555">Interface</text>
+                        <text x="600" y="333" text-anchor="middle" font-size="9" fill="#555">POS & Tasks</text>
+                        
+                        <rect x="920" y="280" width="160" height="70" fill="#d1ecf1" stroke="#17a2b8" stroke-width="2" rx="4"/>
+                        <text x="1000" y="305" text-anchor="middle" font-size="11" font-weight="bold" fill="#0c5460">Customer Portal</text>
+                        <text x="1000" y="320" text-anchor="middle" font-size="10" fill="#555">Interface</text>
+                        <text x="1000" y="333" text-anchor="middle" font-size="9" fill="#555">Public Access</text>
+                        
+                        <!-- Web Server -->
+                        <text x="50" y="410" font-size="12" font-weight="bold" fill="#17a2b8">PROCESSING</text>
+                        
+                        <rect x="200" y="430" width="800" height="80" fill="#e8f4f8" stroke="#17a2b8" stroke-width="3" rx="6"/>
+                        <text x="600" y="460" text-anchor="middle" font-size="13" font-weight="bold" fill="#0c5460">🌐 WEB SERVER (PHP Backend)</text>
+                        <text x="600" y="480" text-anchor="middle" font-size="10" fill="#555">Handles requests • Processes business logic • Manages sessions</text>
+                        <text x="600" y="495" text-anchor="middle" font-size="10" fill="#555">Communicates directly with the Database</text>
+                        
+                        <!-- Database -->
+                        <text x="50" y="560" font-size="12" font-weight="bold" fill="#28a745">DATA STORAGE</text>
+                        
+                        <rect x="250" y="520" width="700" height="60" fill="#d4edda" stroke="#28a745" stroke-width="3" rx="6"/>
+                        <text x="600" y="545" text-anchor="middle" font-size="12" font-weight="bold" fill="#155724">🗄️ DATABASE (MySQL/MariaDB)</text>
+                        <text x="600" y="563" text-anchor="middle" font-size="10" fill="#555">Stores: Pharmacy Information • Product Records • Transactions</text>
+                        
+                        <!-- Arrows -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#17a2b8"/>
+                            </marker>
+                        </defs>
+                        
+                        <line x1="200" y1="170" x2="200" y2="280" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <line x1="600" y1="170" x2="600" y2="280" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <line x1="1000" y1="170" x2="1000" y2="280" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        
+                        <line x1="200" y1="350" x2="350" y2="430" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <line x1="600" y1="350" x2="600" y2="430" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        <line x1="1000" y1="350" x2="850" y2="430" stroke="#17a2b8" stroke-width="2" marker-end="url(#arrowhead)"/>
+                        
+                        <line x1="600" y1="510" x2="600" y2="520" stroke="#28a745" stroke-width="3" marker-end="url(#arrowhead)"/>
+                    </svg>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>🏗️ Architecture Components</h4>
+                    <ul>
+                        <li><strong>Admin Users:</strong> Have full access to manage all system aspects including user management, inventory adjustments, and comprehensive reporting</li>
+                        <li><strong>Staff Users (Cashiers):</strong> Have limited access through the Staff Visual Interface to perform POS transactions, manage bookings, and access assigned reports</li>
+                        <li><strong>Admin Visual Interface:</strong> Comprehensive dashboard for system administration and monitoring</li>
+                        <li><strong>Staff Visual Interface:</strong> Simplified interface focused on POS operations and daily tasks</li>
+                        <li><strong>Web Server:</strong> Acts as the main processing unit, handles user requests, processes operations, and ensures correct execution</li>
+                        <li><strong>Database:</strong> Securely stores all data including product information, transaction records, customer profiles, and operational history</li>
+                    </ul>
+                </div>
+
+                <p style="margin-top: 20px;">Whenever users make a request such as adding a new product, updating stock levels, or processing a sale, the Web Server retrieves or updates the necessary information from the Database in real-time. This setup ensures smooth, secure, and efficient management of pharmacy operations while allowing both administrators and staff to access the system according to their role-based permissions.</p>
+            </div>
+
+            <!-- ============ DATABASE SCHEMA (Page 31) ============ -->
+            <div class="section">
+                <div class="section-number">Page 31</div>
+                <div class="section-title">Database Schema</div>
+
+                <p>Tables are the primary structure used to organize the data in a relational database. Each table denotes a particular kind of data, and each column denotes a particular quality of that data. This facilitates data organization, search, and retrieval, enabling users to locate the information they require in a timely manner.</p>
+
+                <div class="subsection-title">Core Database Tables</div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Table Name</th>
+                                <th>Purpose</th>
+                                <th>Key Fields</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>admin</strong></td>
+                                <td>Admin Account Credentials</td>
+                                <td>admin_id (PK), username, password, created_at</td>
+                            </tr>
+                            <tr>
+                                <td><strong>admin_info</strong></td>
+                                <td>Admin Profile Details</td>
+                                <td>admin_id (FK), first_name, last_name, gender, email, phone_number</td>
+                            </tr>
+                            <tr>
+                                <td><strong>products</strong></td>
+                                <td>Medicine/Product Catalog</td>
+                                <td>product_id (PK), name, category, price, stock_quantity, expiry_date, location</td>
+                            </tr>
+                            <tr>
+                                <td><strong>sales</strong></td>
+                                <td>POS Transaction Records</td>
+                                <td>sale_id (PK), sale_reference, total, payment_method, cashier, timestamp</td>
+                            </tr>
+                            <tr>
+                                <td><strong>sale_items</strong></td>
+                                <td>Transaction Line Items</td>
+                                <td>sale_item_id (PK), sale_id (FK), product_id (FK), quantity, unit_price</td>
+                            </tr>
+                            <tr>
+                                <td><strong>customers</strong></td>
+                                <td>Customer & Loyalty Data</td>
+                                <td>customer_id (PK), name, email, phone, qr_code, loyalty_points</td>
+                            </tr>
+                            <tr>
+                                <td><strong>orders</strong></td>
+                                <td>Online Order Information</td>
+                                <td>order_id (PK), customer_id (FK), total, status, delivery_address, created_at</td>
+                            </tr>
+                            <tr>
+                                <td><strong>order_items</strong></td>
+                                <td>Online Order Line Items</td>
+                                <td>order_item_id (PK), order_id (FK), product_id (FK), quantity, unit_price</td>
+                            </tr>
+                            <tr>
+                                <td><strong>loyalty_transactions</strong></td>
+                                <td>QR Scan & Points Log</td>
+                                <td>transaction_id (PK), customer_id (FK), qr_code, discount_applied, points_earned</td>
+                            </tr>
+                            <tr>
+                                <td><strong>inventory_logs</strong></td>
+                                <td>Stock Movement History</td>
+                                <td>log_id (PK), product_id (FK), quantity_change, reason, created_by, timestamp</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="subsection-title">Database Relationships</div>
+
+                <p>The database follows a normalized structure with the following key relationships:</p>
+
+                <ul>
+                    <li><strong>One-to-Many (1:N):</strong> One customer has many orders; one sale has many sale_items; one product appears in many transactions</li>
+                    <li><strong>Foreign Keys:</strong> Ensure referential integrity and maintain data consistency across related tables</li>
+                    <li><strong>Primary Keys:</strong> Uniquely identify each record in a table</li>
+                    <li><strong>Indexes:</strong> Applied to frequently queried columns (product_id, customer_id, sale_id) for optimized performance</li>
+                    <li><strong>Constraints:</strong> NOT NULL, UNIQUE, CHECK constraints enforced at the database level for data quality</li>
+                </ul>
+
+                <div class="subsection-title">Data Integrity & Normalization</div>
+
+                <p>The database schema follows relational database normalization principles:</p>
+
+                <ul>
+                    <li><strong>First Normal Form (1NF):</strong> All tables contain atomic values with no repeating groups</li>
+                    <li><strong>Second Normal Form (2NF):</strong> All non-key attributes are fully dependent on the primary key</li>
+                    <li><strong>Third Normal Form (3NF):</strong> No transitive dependencies between non-key attributes</li>
+                    <li><strong>Referential Integrity:</strong> Foreign keys maintain relationships between tables without orphaned records</li>
+                    <li><strong>Data Validation:</strong> Constraints prevent invalid data entry at the database level</li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            <p>💊 <strong>Calloway Pharmacy Inventory Management System</strong> | Chapter 3 Part 1: System Design, Architecture & Database Schema</p>
+            <p>Academic Thesis Documentation | December 2024</p>
+        </div>
+    </div>
+</body>
+</html>

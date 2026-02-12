@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP Beginner's Code Guide - Part 3 | Functions & Control Flow</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #059669;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --gray: #64748b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            color: var(--dark);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+            text-align: center;
+        }
+        
+        .report-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .report-header .emoji { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        
+        .part-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .part-nav a {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            color: var(--gray);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .part-nav a:hover { background: var(--primary); color: white; }
+        .part-nav a.active { background: var(--primary); color: white; }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #d1fae5;
+        }
+        
+        .section h3 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin: 1.5rem 0 1rem;
+        }
+        
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        
+        .code-example .comment { color: #64748b; font-style: italic; }
+        .code-example .keyword { color: #f472b6; font-weight: 600; }
+        .code-example .string { color: #34d399; }
+        .code-example .variable { color: #60a5fa; }
+        .code-example .function { color: #fbbf24; }
+        .code-example .number { color: #fb923c; }
+        
+        .flow-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .flow-card h4 {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .analogy {
+            background: linear-gradient(135deg, #fef3c7, #fef9c3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--warning);
+            margin: 1rem 0;
+        }
+        
+        .analogy .title {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tip-box {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            margin: 1rem 0;
+        }
+        
+        .tip-box .title {
+            font-weight: 700;
+            color: #065f46;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--danger);
+            margin: 1rem 0;
+        }
+        
+        .warning-box .title {
+            font-weight: 700;
+            color: #991b1b;
+        }
+        
+        .visual-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+        
+        .flow-box {
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            min-width: 120px;
+        }
+        
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            color: var(--gray);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .report-header h1 { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <span class="emoji">⚙️</span>
+            <h1>Functions & Control Flow</h1>
+            <p class="subtitle">Part 3: Making Decisions and Reusing Code</p>
+        </header>
+        
+        <nav class="part-nav">
+            <a href="CODE_REVIEWER_PART1.html">Part 1: Basics</a>
+            <a href="CODE_REVIEWER_PART2.html">Part 2: Variables</a>
+            <a href="#" class="active">Part 3: Functions</a>
+            <a href="CODE_REVIEWER_PART4.html">Part 4: Database</a>
+            <a href="CODE_REVIEWER_PART5.html">Part 5: Your System</a>
+        </nav>
+        
+        <!-- If Statements -->
+        <section class="section">
+            <h2>🔀 If Statements (Making Decisions)</h2>
+            
+            <p>The <code>if</code> statement lets your code make decisions. "If this is true, do this."</p>
+            
+            <div class="analogy">
+                <div class="title">💡 Real World Analogy</div>
+                <p>Like a pharmacist checking prescriptions:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><strong>IF</strong> customer has valid ID → sell the medicine</li>
+                    <li><strong>ELSE IF</strong> customer has expired ID → ask for valid one</li>
+                    <li><strong>ELSE</strong> → cannot proceed with sale</li>
+                </ul>
+            </div>
+            
+            <h3>Basic If Statement</h3>
+            <div class="code-example">
+<span class="variable">$stock</span> = <span class="number">50</span>;
+
+<span class="keyword">if</span> (<span class="variable">$stock</span> > <span class="number">0</span>) {
+    <span class="keyword">echo</span> <span class="string">"Product is available!"</span>;
+}
+
+<span class="comment">// Translation:
+// "IF stock is greater than 0, show the message"</span>
+            </div>
+            
+            <h3>If-Else Statement</h3>
+            <div class="code-example">
+<span class="variable">$stock</span> = <span class="number">0</span>;
+
+<span class="keyword">if</span> (<span class="variable">$stock</span> > <span class="number">0</span>) {
+    <span class="keyword">echo</span> <span class="string">"In stock! You can buy."</span>;
+} <span class="keyword">else</span> {
+    <span class="keyword">echo</span> <span class="string">"Sorry, out of stock."</span>;
+}
+
+<span class="comment">// Translation:
+// "IF stock is greater than 0, say in stock
+//  OTHERWISE (else), say out of stock"</span>
+            </div>
+            
+            <h3>If-Else If-Else (Multiple Conditions)</h3>
+            <div class="code-example">
+<span class="variable">$stock</span> = <span class="number">15</span>;
+
+<span class="keyword">if</span> (<span class="variable">$stock</span> >= <span class="number">100</span>) {
+    <span class="variable">$status</span> = <span class="string">"Well Stocked"</span>;
+    <span class="variable">$color</span> = <span class="string">"green"</span>;
+} <span class="keyword">else if</span> (<span class="variable">$stock</span> >= <span class="number">20</span>) {
+    <span class="variable">$status</span> = <span class="string">"Normal Stock"</span>;
+    <span class="variable">$color</span> = <span class="string">"blue"</span>;
+} <span class="keyword">else if</span> (<span class="variable">$stock</span> > <span class="number">0</span>) {
+    <span class="variable">$status</span> = <span class="string">"Low Stock - Reorder Soon!"</span>;
+    <span class="variable">$color</span> = <span class="string">"orange"</span>;
+} <span class="keyword">else</span> {
+    <span class="variable">$status</span> = <span class="string">"OUT OF STOCK"</span>;
+    <span class="variable">$color</span> = <span class="string">"red"</span>;
+}
+
+<span class="keyword">echo</span> <span class="variable">$status</span>;  <span class="comment">// Output: "Low Stock - Reorder Soon!"</span>
+            </div>
+            
+            <div class="tip-box">
+                <div class="title">💡 How It Works</div>
+                <p>PHP checks conditions from top to bottom. Once it finds a TRUE condition, it runs that code and skips the rest. Like going through a checklist and stopping at the first match!</p>
+            </div>
+        </section>
+        
+        <!-- Combining Conditions -->
+        <section class="section">
+            <h2>🔗 Combining Conditions</h2>
+            
+            <p>Sometimes you need to check multiple things at once.</p>
+            
+            <h3>AND (&&) - Both Must Be True</h3>
+            <div class="code-example">
+<span class="variable">$age</span> = <span class="number">25</span>;
+<span class="variable">$hasID</span> = <span class="keyword">true</span>;
+
+<span class="comment">// Both conditions must be true</span>
+<span class="keyword">if</span> (<span class="variable">$age</span> >= <span class="number">18</span> <span class="keyword">&&</span> <span class="variable">$hasID</span>) {
+    <span class="keyword">echo</span> <span class="string">"Can purchase restricted medicine"</span>;
+}
+
+<span class="comment">// Checks:
+// Is age >= 18? YES ✓
+// Has ID? YES ✓
+// Both true = Runs the code</span>
+            </div>
+            
+            <h3>OR (||) - At Least One Must Be True</h3>
+            <div class="code-example">
+<span class="variable">$paymentMethod</span> = <span class="string">"gcash"</span>;
+
+<span class="comment">// At least one condition must be true</span>
+<span class="keyword">if</span> (<span class="variable">$paymentMethod</span> === <span class="string">"cash"</span> <span class="keyword">||</span> <span class="variable">$paymentMethod</span> === <span class="string">"gcash"</span>) {
+    <span class="keyword">echo</span> <span class="string">"Payment accepted!"</span>;
+}
+
+<span class="comment">// Checks:
+// Is payment cash? NO ✗
+// Is payment gcash? YES ✓
+// At least one true = Runs the code</span>
+            </div>
+            
+            <h3>NOT (!) - Flip True/False</h3>
+            <div class="code-example">
+<span class="variable">$isExpired</span> = <span class="keyword">false</span>;
+
+<span class="comment">// The ! flips the value</span>
+<span class="keyword">if</span> (!<span class="variable">$isExpired</span>) {
+    <span class="keyword">echo</span> <span class="string">"Product is still good!"</span>;
+}
+
+<span class="comment">// Translation:
+// IF NOT expired (meaning: if fresh/valid)</span>
+
+<span class="comment">// Same as:</span>
+<span class="keyword">if</span> (<span class="variable">$isExpired</span> === <span class="keyword">false</span>) {
+    <span class="keyword">echo</span> <span class="string">"Product is still good!"</span>;
+}
+            </div>
+        </section>
+        
+        <!-- Loops -->
+        <section class="section">
+            <h2>🔄 Loops (Repeating Actions)</h2>
+            
+            <p>Loops let you repeat code multiple times without writing it over and over.</p>
+            
+            <div class="analogy">
+                <div class="title">💡 Real World Analogy</div>
+                <p>Like a pharmacist counting pills:</p>
+                <p><em>"Keep counting pills WHILE the count is less than 30"</em></p>
+                <p>or</p>
+                <p><em>"FOR each item in the order, add it to the receipt"</em></p>
+            </div>
+            
+            <h3>Foreach Loop (Most Common!)</h3>
+            <p>Best for going through arrays. Used EVERYWHERE in your pharmacy system.</p>
+            
+            <div class="code-example">
+<span class="variable">$medicines</span> = [<span class="string">"Biogesic"</span>, <span class="string">"Neozep"</span>, <span class="string">"Bioflu"</span>];
+
+<span class="comment">// Go through each item in the array</span>
+<span class="keyword">foreach</span> (<span class="variable">$medicines</span> <span class="keyword">as</span> <span class="variable">$medicine</span>) {
+    <span class="keyword">echo</span> <span class="variable">$medicine</span> . <span class="string">"&lt;br&gt;"</span>;
+}
+
+<span class="comment">// Output:
+// Biogesic
+// Neozep
+// Bioflu</span>
+
+<span class="comment">// Translation:
+// "FOR EACH item in $medicines, call it $medicine and print it"</span>
+            </div>
+            
+            <h3>Foreach with Key-Value</h3>
+            <div class="code-example">
+<span class="variable">$product</span> = [
+    <span class="string">'name'</span> => <span class="string">"Biogesic"</span>,
+    <span class="string">'price'</span> => <span class="number">5.50</span>,
+    <span class="string">'stock'</span> => <span class="number">100</span>
+];
+
+<span class="comment">// Get both the key and value</span>
+<span class="keyword">foreach</span> (<span class="variable">$product</span> <span class="keyword">as</span> <span class="variable">$key</span> => <span class="variable">$value</span>) {
+    <span class="keyword">echo</span> <span class="variable">$key</span> . <span class="string">": "</span> . <span class="variable">$value</span> . <span class="string">"&lt;br&gt;"</span>;
+}
+
+<span class="comment">// Output:
+// name: Biogesic
+// price: 5.50
+// stock: 100</span>
+            </div>
+            
+            <h3>For Loop (When You Know The Count)</h3>
+            <div class="code-example">
+<span class="comment">// Print numbers 1 to 5</span>
+<span class="keyword">for</span> (<span class="variable">$i</span> = <span class="number">1</span>; <span class="variable">$i</span> <= <span class="number">5</span>; <span class="variable">$i</span>++) {
+    <span class="keyword">echo</span> <span class="string">"Count: "</span> . <span class="variable">$i</span> . <span class="string">"&lt;br&gt;"</span>;
+}
+
+<span class="comment">// Output:
+// Count: 1
+// Count: 2
+// Count: 3
+// Count: 4
+// Count: 5</span>
+
+<span class="comment">// The for loop has 3 parts:
+// $i = 1       → Start at 1
+// $i <= 5      → Keep going while i is 5 or less
+// $i++         → Add 1 after each loop</span>
+            </div>
+            
+            <h3>While Loop (Condition-Based)</h3>
+            <div class="code-example">
+<span class="variable">$pills</span> = <span class="number">0</span>;
+<span class="variable">$prescription</span> = <span class="number">30</span>;
+
+<span class="keyword">while</span> (<span class="variable">$pills</span> < <span class="variable">$prescription</span>) {
+    <span class="variable">$pills</span>++;  <span class="comment">// Add one pill</span>
+    <span class="keyword">echo</span> <span class="string">"Added pill #"</span> . <span class="variable">$pills</span> . <span class="string">"&lt;br&gt;"</span>;
+}
+
+<span class="keyword">echo</span> <span class="string">"Done! Total pills: "</span> . <span class="variable">$pills</span>;
+
+<span class="comment">// Translation:
+// "WHILE pills is less than prescription, keep adding pills"</span>
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Infinite Loop Warning!</div>
+                <p>A while loop without a proper exit condition will run forever and crash your server!</p>
+                <div class="code-example" style="padding: 1rem; margin-top: 0.5rem;">
+<span class="comment">// ❌ BAD - Infinite loop!</span>
+<span class="keyword">while</span> (<span class="keyword">true</span>) {
+    <span class="keyword">echo</span> <span class="string">"Forever..."</span>;  <span class="comment">// Never stops!</span>
+}
+
+<span class="comment">// ✓ GOOD - Has exit condition</span>
+<span class="keyword">while</span> (<span class="variable">$count</span> < <span class="number">10</span>) {
+    <span class="variable">$count</span>++;  <span class="comment">// Will eventually be >= 10 and stop</span>
+}
+                </div>
+            </div>
+        </section>
+        
+        <!-- Functions -->
+        <section class="section">
+            <h2>🔧 Functions (Reusable Code Blocks)</h2>
+            
+            <p>Functions are like recipes - write once, use many times!</p>
+            
+            <div class="analogy">
+                <div class="title">💡 Real World Analogy</div>
+                <p>Think of functions like a coffee machine:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><strong>Input (Parameters):</strong> Coffee beans, water</li>
+                    <li><strong>Process (Function Body):</strong> Grind, brew, heat</li>
+                    <li><strong>Output (Return):</strong> Hot coffee</li>
+                </ul>
+                <p style="margin-top: 0.5rem;">You don't rebuild the machine each time - you just use it!</p>
+            </div>
+            
+            <h3>Creating a Function</h3>
+            <div class="code-example">
+<span class="comment">// Define a function</span>
+<span class="keyword">function</span> <span class="function">sayHello</span>() {
+    <span class="keyword">echo</span> <span class="string">"Hello, welcome to Calloway Pharmacy!"</span>;
+}
+
+<span class="comment">// Call/use the function</span>
+<span class="function">sayHello</span>();  <span class="comment">// Output: Hello, welcome to Calloway Pharmacy!</span>
+<span class="function">sayHello</span>();  <span class="comment">// Can use it again!</span>
+            </div>
+            
+            <h3>Function with Parameters (Inputs)</h3>
+            <div class="code-example">
+<span class="comment">// $name is a parameter - input that the function needs</span>
+<span class="keyword">function</span> <span class="function">greetCustomer</span>(<span class="variable">$name</span>) {
+    <span class="keyword">echo</span> <span class="string">"Hello, "</span> . <span class="variable">$name</span> . <span class="string">"! Welcome!"</span>;
+}
+
+<span class="comment">// Call with different inputs</span>
+<span class="function">greetCustomer</span>(<span class="string">"Maria"</span>);  <span class="comment">// Output: Hello, Maria! Welcome!</span>
+<span class="function">greetCustomer</span>(<span class="string">"Juan"</span>);   <span class="comment">// Output: Hello, Juan! Welcome!</span>
+            </div>
+            
+            <h3>Function with Return Value (Output)</h3>
+            <div class="code-example">
+<span class="comment">// Calculate total price with tax</span>
+<span class="keyword">function</span> <span class="function">calculateTotal</span>(<span class="variable">$price</span>, <span class="variable">$quantity</span>) {
+    <span class="variable">$subtotal</span> = <span class="variable">$price</span> * <span class="variable">$quantity</span>;
+    <span class="variable">$tax</span> = <span class="variable">$subtotal</span> * <span class="number">0.12</span>;  <span class="comment">// 12% VAT</span>
+    <span class="variable">$total</span> = <span class="variable">$subtotal</span> + <span class="variable">$tax</span>;
+    
+    <span class="keyword">return</span> <span class="variable">$total</span>;  <span class="comment">// Send back the result</span>
+}
+
+<span class="comment">// Use the function</span>
+<span class="variable">$orderTotal</span> = <span class="function">calculateTotal</span>(<span class="number">100</span>, <span class="number">5</span>);  <span class="comment">// Returns 560</span>
+<span class="keyword">echo</span> <span class="string">"Your total is: ₱"</span> . <span class="variable">$orderTotal</span>;
+
+<span class="comment">// The function:
+// 1. Takes price (100) and quantity (5)
+// 2. Calculates subtotal: 100 × 5 = 500
+// 3. Calculates tax: 500 × 0.12 = 60
+// 4. Returns total: 500 + 60 = 560</span>
+            </div>
+            
+            <h3>Function with Default Parameters</h3>
+            <div class="code-example">
+<span class="comment">// $discount has a default value of 0</span>
+<span class="keyword">function</span> <span class="function">calculatePrice</span>(<span class="variable">$price</span>, <span class="variable">$quantity</span>, <span class="variable">$discount</span> = <span class="number">0</span>) {
+    <span class="variable">$subtotal</span> = <span class="variable">$price</span> * <span class="variable">$quantity</span>;
+    <span class="variable">$discountAmount</span> = <span class="variable">$subtotal</span> * (<span class="variable">$discount</span> / <span class="number">100</span>);
+    <span class="keyword">return</span> <span class="variable">$subtotal</span> - <span class="variable">$discountAmount</span>;
+}
+
+<span class="comment">// Call without discount - uses default (0)</span>
+<span class="keyword">echo</span> <span class="function">calculatePrice</span>(<span class="number">100</span>, <span class="number">2</span>);        <span class="comment">// Output: 200</span>
+
+<span class="comment">// Call with discount</span>
+<span class="keyword">echo</span> <span class="function">calculatePrice</span>(<span class="number">100</span>, <span class="number">2</span>, <span class="number">10</span>);   <span class="comment">// Output: 180 (10% off)</span>
+            </div>
+        </section>
+        
+        <!-- Built-in Functions -->
+        <section class="section">
+            <h2>📚 Common Built-in Functions</h2>
+            
+            <p>PHP comes with thousands of ready-to-use functions. Here are the most common ones:</p>
+            
+            <h3>String Functions</h3>
+            <div class="code-example">
+<span class="variable">$text</span> = <span class="string">"  Hello World  "</span>;
+
+<span class="function">strlen</span>(<span class="variable">$text</span>);           <span class="comment">// 17 - Get length</span>
+<span class="function">trim</span>(<span class="variable">$text</span>);             <span class="comment">// "Hello World" - Remove spaces from ends</span>
+<span class="function">strtoupper</span>(<span class="variable">$text</span>);       <span class="comment">// "  HELLO WORLD  " - Uppercase</span>
+<span class="function">strtolower</span>(<span class="variable">$text</span>);       <span class="comment">// "  hello world  " - Lowercase</span>
+<span class="function">str_replace</span>(<span class="string">"World"</span>, <span class="string">"PHP"</span>, <span class="variable">$text</span>);  <span class="comment">// "  Hello PHP  " - Replace</span>
+<span class="function">substr</span>(<span class="variable">$text</span>, <span class="number">2</span>, <span class="number">5</span>);     <span class="comment">// "Hello" - Get part of string</span>
+<span class="function">explode</span>(<span class="string">" "</span>, <span class="variable">$text</span>);     <span class="comment">// ["", "", "Hello", "World", "", ""] - Split to array</span>
+            </div>
+            
+            <h3>Array Functions</h3>
+            <div class="code-example">
+<span class="variable">$items</span> = [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"cherry"</span>];
+
+<span class="function">count</span>(<span class="variable">$items</span>);           <span class="comment">// 3 - How many items</span>
+<span class="function">in_array</span>(<span class="string">"banana"</span>, <span class="variable">$items</span>);  <span class="comment">// true - Check if exists</span>
+<span class="function">array_push</span>(<span class="variable">$items</span>, <span class="string">"date"</span>);   <span class="comment">// Add to end</span>
+<span class="function">array_pop</span>(<span class="variable">$items</span>);        <span class="comment">// Remove from end, returns removed item</span>
+<span class="function">sort</span>(<span class="variable">$items</span>);             <span class="comment">// Sort alphabetically</span>
+<span class="function">array_reverse</span>(<span class="variable">$items</span>);    <span class="comment">// Reverse order</span>
+<span class="function">implode</span>(<span class="string">", "</span>, <span class="variable">$items</span>);   <span class="comment">// "apple, banana, cherry" - Join to string</span>
+            </div>
+            
+            <h3>Number Functions</h3>
+            <div class="code-example">
+<span class="variable">$price</span> = <span class="number">99.456</span>;
+
+<span class="function">round</span>(<span class="variable">$price</span>);           <span class="comment">// 99 - Round to nearest integer</span>
+<span class="function">round</span>(<span class="variable">$price</span>, <span class="number">2</span>);        <span class="comment">// 99.46 - Round to 2 decimal places</span>
+<span class="function">floor</span>(<span class="variable">$price</span>);           <span class="comment">// 99 - Round down</span>
+<span class="function">ceil</span>(<span class="variable">$price</span>);            <span class="comment">// 100 - Round up</span>
+<span class="function">number_format</span>(<span class="variable">$price</span>, <span class="number">2</span>); <span class="comment">// "99.46" - Format with commas and decimals</span>
+
+<span class="variable">$numbers</span> = [<span class="number">10</span>, <span class="number">5</span>, <span class="number">20</span>, <span class="number">15</span>];
+<span class="function">max</span>(<span class="variable">$numbers</span>);           <span class="comment">// 20 - Highest value</span>
+<span class="function">min</span>(<span class="variable">$numbers</span>);           <span class="comment">// 5 - Lowest value</span>
+<span class="function">array_sum</span>(<span class="variable">$numbers</span>);     <span class="comment">// 50 - Add all together</span>
+            </div>
+            
+            <h3>Date/Time Functions</h3>
+            <div class="code-example">
+<span class="comment">// Current date/time</span>
+<span class="keyword">echo</span> <span class="function">date</span>(<span class="string">"Y-m-d"</span>);        <span class="comment">// "2025-12-19"</span>
+<span class="keyword">echo</span> <span class="function">date</span>(<span class="string">"H:i:s"</span>);        <span class="comment">// "14:30:45"</span>
+<span class="keyword">echo</span> <span class="function">date</span>(<span class="string">"F j, Y"</span>);      <span class="comment">// "December 19, 2025"</span>
+
+<span class="comment">// Common format codes:</span>
+<span class="comment">// Y = 4-digit year (2025)</span>
+<span class="comment">// m = Month number (01-12)</span>
+<span class="comment">// d = Day number (01-31)</span>
+<span class="comment">// H = Hour 24-format (00-23)</span>
+<span class="comment">// i = Minutes (00-59)</span>
+<span class="comment">// s = Seconds (00-59)</span>
+<span class="comment">// F = Full month name (December)</span>
+<span class="comment">// j = Day without leading zero (1-31)</span>
+
+<span class="comment">// Get current timestamp (seconds since 1970)</span>
+<span class="variable">$now</span> = <span class="function">time</span>();
+
+<span class="comment">// Convert string to timestamp</span>
+<span class="variable">$expiry</span> = <span class="function">strtotime</span>(<span class="string">"2026-06-30"</span>);
+            </div>
+        </section>
+        
+        <!-- Switch Statement -->
+        <section class="section">
+            <h2>🔀 Switch Statement (Multiple Options)</h2>
+            
+            <p>When you have many possible values to check, switch is cleaner than many if-else.</p>
+            
+            <div class="code-example">
+<span class="variable">$paymentMethod</span> = <span class="string">"gcash"</span>;
+
+<span class="keyword">switch</span> (<span class="variable">$paymentMethod</span>) {
+    <span class="keyword">case</span> <span class="string">"cash"</span>:
+        <span class="keyword">echo</span> <span class="string">"Please pay at counter"</span>;
+        <span class="keyword">break</span>;
+    
+    <span class="keyword">case</span> <span class="string">"gcash"</span>:
+        <span class="keyword">echo</span> <span class="string">"Scan the GCash QR code"</span>;
+        <span class="keyword">break</span>;
+    
+    <span class="keyword">case</span> <span class="string">"maya"</span>:
+        <span class="keyword">echo</span> <span class="string">"Open your Maya app"</span>;
+        <span class="keyword">break</span>;
+    
+    <span class="keyword">case</span> <span class="string">"card"</span>:
+        <span class="keyword">echo</span> <span class="string">"Insert or tap your card"</span>;
+        <span class="keyword">break</span>;
+    
+    <span class="keyword">default</span>:
+        <span class="keyword">echo</span> <span class="string">"Unknown payment method"</span>;
+}
+
+<span class="comment">// Output: "Scan the GCash QR code"</span>
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Don't Forget break!</div>
+                <p>Without <code>break</code>, PHP will continue running the next cases! This is a common bug.</p>
+            </div>
+        </section>
+        
+        <!-- Ternary Operator -->
+        <section class="section">
+            <h2>❓ Ternary Operator (Short If-Else)</h2>
+            
+            <p>A one-line way to write simple if-else statements.</p>
+            
+            <div class="code-example">
+<span class="comment">// Normal if-else</span>
+<span class="keyword">if</span> (<span class="variable">$stock</span> > <span class="number">0</span>) {
+    <span class="variable">$status</span> = <span class="string">"Available"</span>;
+} <span class="keyword">else</span> {
+    <span class="variable">$status</span> = <span class="string">"Out of Stock"</span>;
+}
+
+<span class="comment">// Same thing using ternary</span>
+<span class="variable">$status</span> = (<span class="variable">$stock</span> > <span class="number">0</span>) ? <span class="string">"Available"</span> : <span class="string">"Out of Stock"</span>;
+<span class="comment">//         ↑ condition   ↑ if true     ↑ if false</span>
+
+<span class="comment">// Read as:
+// "Is stock > 0? If yes, use 'Available'. If no, use 'Out of Stock'."</span>
+            </div>
+            
+            <h3>More Examples</h3>
+            <div class="code-example">
+<span class="comment">// Show discount badge</span>
+<span class="variable">$discount</span> = <span class="number">15</span>;
+<span class="variable">$badge</span> = (<span class="variable">$discount</span> > <span class="number">0</span>) ? <span class="string">"$discount% OFF!"</span> : <span class="string">""</span>;
+
+<span class="comment">// Choose button color</span>
+<span class="variable">$isExpired</span> = <span class="keyword">true</span>;
+<span class="variable">$buttonClass</span> = <span class="variable">$isExpired</span> ? <span class="string">"btn-danger"</span> : <span class="string">"btn-success"</span>;
+
+<span class="comment">// Default value (use ?? instead for null check)</span>
+<span class="variable">$name</span> = <span class="variable">$_GET</span>[<span class="string">'name'</span>] ?? <span class="string">"Guest"</span>;
+            </div>
+        </section>
+        
+        <!-- Navigation -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 2rem;">
+            <a href="CODE_REVIEWER_PART2.html" style="padding: 1rem 2rem; background: white; color: var(--gray); text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                ← Part 2: Variables
+            </a>
+            <a href="CODE_REVIEWER_PART4.html" style="padding: 1rem 2rem; background: var(--primary); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 8px 20px rgba(16,185,129,0.3);">
+                Part 4: Database Operations →
+            </a>
+        </div>
+        
+        <footer>
+            <p>PHP Beginner's Code Guide - Part 3 of 5</p>
+            <p style="font-size: 0.85rem;">Made with ❤️ for Calloway Pharmacy IMS</p>
+        </footer>
+    </div>
+</body>
+</html>

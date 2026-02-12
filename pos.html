@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Point of Sale</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+<h1>Point of Sale</h1>
+</header>
+<main>
+  <form action="process_transaction.php" method="POST">
+    <label for="medicine">Medicine:</label>
+    <select id="medicine" name="medicine" required>
+      <?php
+      include 'db_connection.php';
+      $query = "SELECT id, name FROM medicines";
+      $result = $conn->query($query);
+      while ($row = $result->fetch_assoc()) {
+        echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
+      }
+      ?>
+    </select>
+
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" name="quantity" min="1" required>
+
+    <label for="customer">Customer Name:</label>
+    <input type="text" id="customer" name="customer" required>
+
+    <button type="submit">Process Transaction</button>
+  </form>
+</main>
+<footer>
+&copy; 2025 Calloway Pharmacy. All rights reserved.
+</footer>
+</body>
+</html>

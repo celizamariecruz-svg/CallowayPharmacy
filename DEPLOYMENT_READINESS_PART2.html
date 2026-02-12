@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Readiness Report - Part 2 | Payment System Integration</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Header */
+        .report-header {
+            background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .report-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        
+        .report-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+        
+        .report-header .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .report-header .date {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        
+        .part-badge {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        /* Navigation */
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: var(--purple);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .nav-link.active {
+            background: var(--purple);
+            color: white;
+        }
+        
+        /* Section Cards */
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .section-icon.payment { background: linear-gradient(135deg, #ecfdf5, #d1fae5); }
+        .section-icon.warning { background: #fffbeb; }
+        .section-icon.info { background: #eff6ff; }
+        .section-icon.purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+        
+        /* Code Blocks */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+        
+        .code-block .comment { color: #64748b; }
+        .code-block .keyword { color: #f472b6; }
+        .code-block .string { color: #34d399; }
+        .code-block .variable { color: #60a5fa; }
+        .code-block .function { color: #fbbf24; }
+        
+        /* Info Box */
+        .info-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .info-box.danger {
+            background: #fef2f2;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .info-box.warning {
+            background: #fffbeb;
+            border-left: 4px solid var(--warning);
+        }
+        
+        .info-box.success {
+            background: #ecfdf5;
+            border-left: 4px solid var(--success);
+        }
+        
+        .info-box.info {
+            background: #eff6ff;
+            border-left: 4px solid var(--info);
+        }
+        
+        .info-box.purple {
+            background: #faf5ff;
+            border-left: 4px solid var(--purple);
+        }
+        
+        .info-box-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        /* Payment Cards */
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .payment-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        
+        .payment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: var(--purple);
+        }
+        
+        .payment-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .payment-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .payment-card h4 {
+            font-size: 1.1rem;
+        }
+        
+        .payment-card p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .payment-card .status {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status.implemented {
+            background: #ecfdf5;
+            color: var(--success);
+        }
+        
+        .status.partial {
+            background: #fffbeb;
+            color: var(--warning);
+        }
+        
+        .status.missing {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+        
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .badge-done { background: #ecfdf5; color: var(--success); }
+        .badge-pending { background: #fef2f2; color: var(--danger); }
+        .badge-partial { background: #fffbeb; color: var(--warning); }
+        
+        /* Flow Diagram */
+        .flow-container {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .flow-step {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .flow-step .step-number {
+            width: 30px;
+            height: 30px;
+            background: var(--purple);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: 700;
+        }
+        
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--gray);
+        }
+        
+        /* Step by Step */
+        .step-section {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border: 2px solid #86efac;
+        }
+        
+        .step-section h3 {
+            color: #166534;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .step-section .step-number-badge {
+            background: #166534;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .report-header h1 { font-size: 1.75rem; }
+            .part-badge { position: static; margin-top: 1rem; }
+            .flow-steps { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="report-header">
+            <span class="part-badge">💳 Part 2 of 3</span>
+            <h1>💳 Payment System Integration</h1>
+            <p class="subtitle">Real-World Payment Gateway Implementation Guide</p>
+            <span class="date">📅 Generated: December 19, 2025</span>
+        </header>
+        
+        <!-- Navigation -->
+        <nav class="nav-links">
+            <a href="DEPLOYMENT_READINESS_PART1.html" class="nav-link">Part 1: Security & Config</a>
+            <a href="#" class="nav-link active">Part 2: Payment System</a>
+            <a href="DEPLOYMENT_READINESS_PART3.html" class="nav-link">Part 3: Loyalty QR System</a>
+        </nav>
+        
+        <!-- Current Payment State -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon warning">⚠️</div>
+                <div>
+                    <h2>Current Payment System Status</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">Analysis of existing implementation</p>
+                </div>
+            </div>
+            
+            <div class="info-box warning">
+                <span class="info-box-icon">💡</span>
+                <div>
+                    <strong>Important Finding</strong>
+                    <p>Your system currently supports payment method <em>labels</em> (Cash, GCash, Maya, Card) but has <strong>no actual payment gateway integration</strong>. Digital payments are recorded but not verified.</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1.5rem 0 1rem;">Current Payment Methods in Database</h3>
+            <div class="code-block">
+<span class="comment">-- From database_migrations.sql</span>
+<span class="keyword">CREATE TABLE</span> sale_payments (
+    payment_id <span class="keyword">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    sale_id <span class="keyword">INT NOT NULL</span>,
+    payment_method <span class="keyword">ENUM</span>(<span class="string">'CASH'</span>, <span class="string">'GCASH'</span>, <span class="string">'MAYA'</span>, <span class="string">'CARD'</span>, <span class="string">'BANK_TRANSFER'</span>) <span class="keyword">NOT NULL</span>,
+    amount <span class="keyword">DECIMAL</span>(10,2) <span class="keyword">NOT NULL</span>,
+    reference_number <span class="keyword">VARCHAR</span>(100) <span class="keyword">NULL</span> <span class="comment">-- Manual entry only!</span>
+);
+            </div>
+            
+            <div class="payment-grid">
+                <div class="payment-card">
+                    <div class="payment-card-header">
+                        <div class="payment-logo" style="background: #22c55e; color: white;">💵</div>
+                        <div>
+                            <h4>Cash Payments</h4>
+                            <p>Traditional cash transactions</p>
+                        </div>
+                    </div>
+                    <p>Works perfectly for in-store POS transactions. No integration needed.</p>
+                    <span class="status implemented">✓ Fully Working</span>
+                </div>
+                
+                <div class="payment-card">
+                    <div class="payment-card-header">
+                        <div class="payment-logo" style="background: #0066FF; color: white;">G</div>
+                        <div>
+                            <h4>GCash</h4>
+                            <p>Philippine e-wallet</p>
+                        </div>
+                    </div>
+                    <p>Label only. No API integration. Reference numbers entered manually.</p>
+                    <span class="status partial">⚠️ Label Only</span>
+                </div>
+                
+                <div class="payment-card">
+                    <div class="payment-card-header">
+                        <div class="payment-logo" style="background: #00D632; color: white;">M</div>
+                        <div>
+                            <h4>Maya (PayMaya)</h4>
+                            <p>Philippine e-wallet</p>
+                        </div>
+                    </div>
+                    <p>Label only. No API integration. No payment verification.</p>
+                    <span class="status partial">⚠️ Label Only</span>
+                </div>
+                
+                <div class="payment-card">
+                    <div class="payment-card-header">
+                        <div class="payment-logo" style="background: #1a1a2e; color: white;">💳</div>
+                        <div>
+                            <h4>Credit/Debit Card</h4>
+                            <p>Visa, Mastercard, etc.</p>
+                        </div>
+                    </div>
+                    <p>No card processing. Would need a payment terminal or online gateway.</p>
+                    <span class="status missing">✗ Not Implemented</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- The Problem -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon warning">🤔</div>
+                <div>
+                    <h2>The Problem with Current Implementation</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">Why you can't accept real digital payments yet</p>
+                </div>
+            </div>
+            
+            <div class="info-box danger">
+                <span class="info-box-icon">⛔</span>
+                <div>
+                    <strong>Critical Issue: No Payment Verification</strong>
+                    <p>When a customer says "I paid via GCash", your staff manually enters a reference number. There's no way to verify if the payment actually happened!</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1.5rem 0 1rem;">Current Flow (Risky)</h3>
+            <div class="flow-container">
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <strong>Customer</strong>
+                        <p style="font-size: 0.85rem;">Claims to pay via GCash</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <strong>Staff</strong>
+                        <p style="font-size: 0.85rem;">Trusts customer & enters reference</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step" style="border: 2px solid var(--danger);">
+                        <div class="step-number" style="background: var(--danger);">3</div>
+                        <strong style="color: var(--danger);">Problem!</strong>
+                        <p style="font-size: 0.85rem;">No verification if payment is real</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1.5rem 0 1rem;">What You Need: Integrated Flow</h3>
+            <div class="flow-container" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5);">
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--success);">1</div>
+                        <strong>Customer</strong>
+                        <p style="font-size: 0.85rem;">Scans QR or enters amount</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--success);">2</div>
+                        <strong>Payment Gateway</strong>
+                        <p style="font-size: 0.85rem;">Processes via GCash/Maya</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-number" style="background: var(--success);">3</div>
+                        <strong>Webhook</strong>
+                        <p style="font-size: 0.85rem;">Confirms payment to your system</p>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-step" style="border: 2px solid var(--success);">
+                        <div class="step-number" style="background: var(--success);">4</div>
+                        <strong style="color: var(--success);">Verified!</strong>
+                        <p style="font-size: 0.85rem;">Sale completes automatically</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- PayMongo Solution -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon payment">💳</div>
+                <div>
+                    <h2>Recommended Solution: PayMongo</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">The best payment gateway for Philippine businesses</p>
+                </div>
+            </div>
+            
+            <div class="info-box success">
+                <span class="info-box-icon">🇵🇭</span>
+                <div>
+                    <strong>Why PayMongo?</strong>
+                    <p>PayMongo is a Philippine-based payment gateway that supports GCash, Maya, credit cards, and bank transfers - all in one integration. It's designed for Philippine businesses and has reasonable fees.</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1.5rem 0 1rem;">PayMongo Features</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Supported</th>
+                        <th>Fees</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>GCash</strong></td>
+                        <td><span class="badge badge-done">✓ Yes</span></td>
+                        <td>2.5% per transaction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Maya</strong></td>
+                        <td><span class="badge badge-done">✓ Yes</span></td>
+                        <td>2.5% per transaction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Credit/Debit Cards</strong></td>
+                        <td><span class="badge badge-done">✓ Yes</span></td>
+                        <td>3.5% + ₱15 per transaction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bank Transfer</strong></td>
+                        <td><span class="badge badge-done">✓ Yes</span></td>
+                        <td>₱15 flat fee</td>
+                    </tr>
+                    <tr>
+                        <td><strong>GrabPay</strong></td>
+                        <td><span class="badge badge-done">✓ Yes</span></td>
+                        <td>2.5% per transaction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Payment Links</strong></td>
+                        <td><span class="badge badge-done">✓ Yes</span></td>
+                        <td>Same as payment method</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 style="margin: 2rem 0 1rem;">📝 Step 1: Create PayMongo Account</h3>
+            <div class="step-section">
+                <ol style="padding-left: 1.5rem;">
+                    <li style="margin-bottom: 0.5rem;">Go to <a href="https://paymongo.com" target="_blank" style="color: var(--purple);">https://paymongo.com</a></li>
+                    <li style="margin-bottom: 0.5rem;">Click "Get Started" and create a business account</li>
+                    <li style="margin-bottom: 0.5rem;">Submit required documents:
+                        <ul style="margin-top: 0.5rem; color: var(--gray);">
+                            <li>DTI/SEC registration</li>
+                            <li>Valid government ID</li>
+                            <li>Business permit (if applicable)</li>
+                        </ul>
+                    </li>
+                    <li style="margin-bottom: 0.5rem;">Wait for account approval (usually 1-3 business days)</li>
+                    <li>Get your API keys from the dashboard (test keys available immediately)</li>
+                </ol>
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">📝 Step 2: Install PayMongo PHP SDK</h3>
+            <div class="code-block">
+<span class="comment"># Run in your project directory</span>
+composer require paymongo/paymongo-php
+
+<span class="comment"># Or add to composer.json</span>
+{
+    <span class="string">"require"</span>: {
+        <span class="string">"paymongo/paymongo-php"</span>: <span class="string">"^1.0"</span>
+    }
+}
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">📝 Step 3: Add API Keys to .env</h3>
+            <div class="code-block">
+<span class="comment"># .env file - NEVER commit to Git!</span>
+
+<span class="comment"># Test Keys (use during development)</span>
+PAYMONGO_PUBLIC_KEY=pk_test_xxxxxxxxxxxxxxxx
+PAYMONGO_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxx
+
+<span class="comment"># Live Keys (use in production)</span>
+<span class="comment"># PAYMONGO_PUBLIC_KEY=pk_live_xxxxxxxxxxxxxxxx</span>
+<span class="comment"># PAYMONGO_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxx</span>
+
+PAYMONGO_WEBHOOK_SECRET=whsk_xxxxxxxxxxxxxxxx
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">📝 Step 4: Create Payment Service File</h3>
+            <p>Create a new file: <code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">PaymentService.php</code></p>
+            
+            <div class="code-block">
+<span class="keyword">&lt;?php</span>
+<span class="comment">/**
+ * PayMongo Payment Service
+ * Handles all payment gateway integrations
+ */</span>
+
+<span class="keyword">class</span> <span class="function">PaymentService</span> {
+    <span class="keyword">private</span> <span class="variable">$publicKey</span>;
+    <span class="keyword">private</span> <span class="variable">$secretKey</span>;
+    <span class="keyword">private</span> <span class="variable">$baseUrl</span> = <span class="string">'https://api.paymongo.com/v1'</span>;
+    
+    <span class="keyword">public function</span> <span class="function">__construct</span>() {
+        <span class="variable">$this</span>->publicKey = <span class="variable">$_ENV</span>[<span class="string">'PAYMONGO_PUBLIC_KEY'</span>];
+        <span class="variable">$this</span>->secretKey = <span class="variable">$_ENV</span>[<span class="string">'PAYMONGO_SECRET_KEY'</span>];
+    }
+    
+    <span class="comment">/**
+     * Create a GCash/Maya payment source
+     * Customer will be redirected to authorize payment
+     */</span>
+    <span class="keyword">public function</span> <span class="function">createEWalletPayment</span>(<span class="variable">$amount</span>, <span class="variable">$type</span>, <span class="variable">$saleReference</span>) {
+        <span class="comment">// $type can be 'gcash' or 'grab_pay'</span>
+        <span class="variable">$data</span> = [
+            <span class="string">'data'</span> => [
+                <span class="string">'attributes'</span> => [
+                    <span class="string">'amount'</span> => <span class="variable">$amount</span> * 100, <span class="comment">// Convert to centavos</span>
+                    <span class="string">'redirect'</span> => [
+                        <span class="string">'success'</span> => BASE_URL . <span class="string">'payment_success.php?ref='</span> . <span class="variable">$saleReference</span>,
+                        <span class="string">'failed'</span> => BASE_URL . <span class="string">'payment_failed.php?ref='</span> . <span class="variable">$saleReference</span>
+                    ],
+                    <span class="string">'type'</span> => <span class="variable">$type</span>,
+                    <span class="string">'currency'</span> => <span class="string">'PHP'</span>
+                ]
+            ]
+        ];
+        
+        <span class="keyword">return</span> <span class="variable">$this</span>-><span class="function">makeRequest</span>(<span class="string">'/sources'</span>, <span class="variable">$data</span>);
+    }
+    
+    <span class="comment">/**
+     * Create a payment link (works for all payment methods)
+     * Best for online ordering
+     */</span>
+    <span class="keyword">public function</span> <span class="function">createPaymentLink</span>(<span class="variable">$amount</span>, <span class="variable">$description</span>, <span class="variable">$saleReference</span>) {
+        <span class="variable">$data</span> = [
+            <span class="string">'data'</span> => [
+                <span class="string">'attributes'</span> => [
+                    <span class="string">'amount'</span> => <span class="variable">$amount</span> * 100,
+                    <span class="string">'description'</span> => <span class="variable">$description</span>,
+                    <span class="string">'remarks'</span> => <span class="variable">$saleReference</span>
+                ]
+            ]
+        ];
+        
+        <span class="keyword">return</span> <span class="variable">$this</span>-><span class="function">makeRequest</span>(<span class="string">'/links'</span>, <span class="variable">$data</span>);
+    }
+    
+    <span class="comment">/**
+     * Check payment status
+     */</span>
+    <span class="keyword">public function</span> <span class="function">checkPaymentStatus</span>(<span class="variable">$paymentId</span>) {
+        <span class="keyword">return</span> <span class="variable">$this</span>-><span class="function">makeRequest</span>(<span class="string">'/payments/'</span> . <span class="variable">$paymentId</span>, <span class="keyword">null</span>, <span class="string">'GET'</span>);
+    }
+    
+    <span class="comment">/**
+     * Make API request to PayMongo
+     */</span>
+    <span class="keyword">private function</span> <span class="function">makeRequest</span>(<span class="variable">$endpoint</span>, <span class="variable">$data</span> = <span class="keyword">null</span>, <span class="variable">$method</span> = <span class="string">'POST'</span>) {
+        <span class="variable">$ch</span> = <span class="function">curl_init</span>();
+        
+        <span class="function">curl_setopt_array</span>(<span class="variable">$ch</span>, [
+            CURLOPT_URL => <span class="variable">$this</span>->baseUrl . <span class="variable">$endpoint</span>,
+            CURLOPT_RETURNTRANSFER => <span class="keyword">true</span>,
+            CURLOPT_HTTPHEADER => [
+                <span class="string">'Content-Type: application/json'</span>,
+                <span class="string">'Authorization: Basic '</span> . <span class="function">base64_encode</span>(<span class="variable">$this</span>->secretKey . <span class="string">':'</span>)
+            ]
+        ]);
+        
+        <span class="keyword">if</span> (<span class="variable">$method</span> === <span class="string">'POST'</span> && <span class="variable">$data</span>) {
+            <span class="function">curl_setopt</span>(<span class="variable">$ch</span>, CURLOPT_POST, <span class="keyword">true</span>);
+            <span class="function">curl_setopt</span>(<span class="variable">$ch</span>, CURLOPT_POSTFIELDS, <span class="function">json_encode</span>(<span class="variable">$data</span>));
+        }
+        
+        <span class="variable">$response</span> = <span class="function">curl_exec</span>(<span class="variable">$ch</span>);
+        <span class="function">curl_close</span>(<span class="variable">$ch</span>);
+        
+        <span class="keyword">return</span> <span class="function">json_decode</span>(<span class="variable">$response</span>, <span class="keyword">true</span>);
+    }
+}
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">📝 Step 5: Create Webhook Handler</h3>
+            <p>Create: <code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">payment_webhook.php</code></p>
+            
+            <div class="code-block">
+<span class="keyword">&lt;?php</span>
+<span class="comment">/**
+ * PayMongo Webhook Handler
+ * Receives payment confirmations from PayMongo
+ */</span>
+
+<span class="keyword">require_once</span> <span class="string">'db_connection.php'</span>;
+<span class="keyword">require_once</span> <span class="string">'vendor/autoload.php'</span>;
+
+<span class="comment">// Get webhook payload</span>
+<span class="variable">$payload</span> = <span class="function">file_get_contents</span>(<span class="string">'php://input'</span>);
+<span class="variable">$signature</span> = <span class="variable">$_SERVER</span>[<span class="string">'HTTP_PAYMONGO_SIGNATURE'</span>] ?? <span class="string">''</span>;
+
+<span class="comment">// Verify webhook signature (important for security!)</span>
+<span class="variable">$webhookSecret</span> = <span class="variable">$_ENV</span>[<span class="string">'PAYMONGO_WEBHOOK_SECRET'</span>];
+<span class="variable">$expectedSignature</span> = <span class="function">hash_hmac</span>(<span class="string">'sha256'</span>, <span class="variable">$payload</span>, <span class="variable">$webhookSecret</span>);
+
+<span class="keyword">if</span> (!<span class="function">hash_equals</span>(<span class="variable">$expectedSignature</span>, <span class="variable">$signature</span>)) {
+    <span class="function">http_response_code</span>(401);
+    <span class="keyword">exit</span>(<span class="string">'Invalid signature'</span>);
+}
+
+<span class="variable">$event</span> = <span class="function">json_decode</span>(<span class="variable">$payload</span>, <span class="keyword">true</span>);
+<span class="variable">$eventType</span> = <span class="variable">$event</span>[<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'type'</span>];
+
+<span class="keyword">switch</span> (<span class="variable">$eventType</span>) {
+    <span class="keyword">case</span> <span class="string">'payment.paid'</span>:
+        <span class="comment">// Payment successful!</span>
+        <span class="variable">$paymentData</span> = <span class="variable">$event</span>[<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'data'</span>];
+        <span class="variable">$amount</span> = <span class="variable">$paymentData</span>[<span class="string">'attributes'</span>][<span class="string">'amount'</span>] / 100;
+        <span class="variable">$reference</span> = <span class="variable">$paymentData</span>[<span class="string">'attributes'</span>][<span class="string">'description'</span>];
+        <span class="variable">$paymentId</span> = <span class="variable">$paymentData</span>[<span class="string">'id'</span>];
+        
+        <span class="comment">// Update sale as paid</span>
+        <span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"
+            UPDATE sales 
+            SET payment_status = 'paid', 
+                payment_reference = ?,
+                paid_at = NOW() 
+            WHERE sale_reference = ?
+        "</span>);
+        <span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">'ss'</span>, <span class="variable">$paymentId</span>, <span class="variable">$reference</span>);
+        <span class="variable">$stmt</span>-><span class="function">execute</span>();
+        
+        <span class="comment">// Log successful payment</span>
+        <span class="function">error_log</span>(<span class="string">"Payment received: $reference - ₱$amount"</span>);
+        <span class="keyword">break</span>;
+        
+    <span class="keyword">case</span> <span class="string">'payment.failed'</span>:
+        <span class="comment">// Payment failed - notify staff</span>
+        <span class="variable">$reference</span> = <span class="variable">$event</span>[<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'description'</span>];
+        <span class="function">error_log</span>(<span class="string">"Payment failed: $reference"</span>);
+        <span class="keyword">break</span>;
+}
+
+<span class="function">http_response_code</span>(200);
+<span class="keyword">echo</span> <span class="string">'OK'</span>;
+            </div>
+        </section>
+        
+        <!-- Integration with POS -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon purple">🛒</div>
+                <div>
+                    <h2>Integrating with Your POS</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">How to add PayMongo to the checkout flow</p>
+                </div>
+            </div>
+            
+            <h3 style="margin: 1rem 0;">Option A: QR Code Payment (In-Store)</h3>
+            <p>Best for walk-in customers paying via GCash/Maya at your physical store.</p>
+            
+            <div class="code-block">
+<span class="comment">// In pos.php - When customer selects GCash/Maya payment</span>
+
+<span class="keyword">function</span> <span class="function">initiateGCashPayment</span>(<span class="variable">$saleId</span>, <span class="variable">$amount</span>) {
+    <span class="variable">$payment</span> = <span class="keyword">new</span> <span class="function">PaymentService</span>();
+    <span class="variable">$result</span> = <span class="variable">$payment</span>-><span class="function">createEWalletPayment</span>(<span class="variable">$amount</span>, <span class="string">'gcash'</span>, <span class="variable">$saleId</span>);
+    
+    <span class="keyword">if</span> (<span class="variable">$result</span> && isset(<span class="variable">$result</span>[<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'redirect'</span>][<span class="string">'checkout_url'</span>])) {
+        <span class="comment">// Generate QR code from this URL</span>
+        <span class="variable">$checkoutUrl</span> = <span class="variable">$result</span>[<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'redirect'</span>][<span class="string">'checkout_url'</span>];
+        
+        <span class="comment">// Display QR code for customer to scan</span>
+        <span class="keyword">return</span> [
+            <span class="string">'success'</span> => <span class="keyword">true</span>,
+            <span class="string">'qr_data'</span> => <span class="variable">$checkoutUrl</span>,
+            <span class="string">'source_id'</span> => <span class="variable">$result</span>[<span class="string">'data'</span>][<span class="string">'id'</span>]
+        ];
+    }
+    
+    <span class="keyword">return</span> [<span class="string">'success'</span> => <span class="keyword">false</span>, <span class="string">'error'</span> => <span class="string">'Failed to create payment'</span>];
+}
+            </div>
+            
+            <h3 style="margin: 2rem 0 1rem;">Option B: Payment Link (Online Orders)</h3>
+            <p>Best for the online ordering system - send payment link to customer.</p>
+            
+            <div class="code-block">
+<span class="comment">// In online_ordering.php - After order is placed</span>
+
+<span class="keyword">function</span> <span class="function">sendPaymentLink</span>(<span class="variable">$orderId</span>, <span class="variable">$amount</span>, <span class="variable">$customerEmail</span>) {
+    <span class="variable">$payment</span> = <span class="keyword">new</span> <span class="function">PaymentService</span>();
+    <span class="variable">$description</span> = <span class="string">"Calloway Pharmacy - Order #$orderId"</span>;
+    
+    <span class="variable">$result</span> = <span class="variable">$payment</span>-><span class="function">createPaymentLink</span>(<span class="variable">$amount</span>, <span class="variable">$description</span>, <span class="variable">$orderId</span>);
+    
+    <span class="keyword">if</span> (<span class="variable">$result</span> && isset(<span class="variable">$result</span>[<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'checkout_url'</span>])) {
+        <span class="variable">$paymentUrl</span> = <span class="variable">$result</span>[<span class="string">'data'</span>][<span class="string">'attributes'</span>][<span class="string">'checkout_url'</span>];
+        
+        <span class="comment">// Send email to customer with payment link</span>
+        <span class="variable">$emailService</span> = <span class="keyword">new</span> <span class="function">EmailService</span>();
+        <span class="variable">$emailService</span>-><span class="function">send</span>(
+            <span class="variable">$customerEmail</span>,
+            <span class="string">'Complete Your Payment - Calloway Pharmacy'</span>,
+            <span class="string">"Click here to pay: $paymentUrl"</span>
+        );
+        
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    }
+    
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+            </div>
+        </section>
+        
+        <!-- Alternative Solutions -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon info">🔄</div>
+                <div>
+                    <h2>Alternative Payment Solutions</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">Other options if PayMongo doesn't fit your needs</p>
+                </div>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Best For</th>
+                        <th>Supports</th>
+                        <th>Setup Complexity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Dragonpay</strong></td>
+                        <td>Bank transfers, OTC payments</td>
+                        <td>Banks, 7-Eleven, etc.</td>
+                        <td>Medium</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Xendit</strong></td>
+                        <td>SE Asia expansion</td>
+                        <td>E-wallets, Cards, Banks</td>
+                        <td>Medium</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stripe</strong></td>
+                        <td>International cards</td>
+                        <td>Cards only (PH)</td>
+                        <td>Easy</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Direct GCash API</strong></td>
+                        <td>GCash-only integration</td>
+                        <td>GCash only</td>
+                        <td>Complex (requires business partnership)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Maya Business</strong></td>
+                        <td>Maya-focused business</td>
+                        <td>Maya, Cards</td>
+                        <td>Medium</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="info-box info" style="margin-top: 1.5rem;">
+                <span class="info-box-icon">💡</span>
+                <div>
+                    <strong>Recommendation</strong>
+                    <p>For a Philippine pharmacy, <strong>PayMongo</strong> is the best all-in-one solution. It handles GCash, Maya, cards, and bank transfers through a single integration, with reasonable fees and good documentation.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Database Updates Needed -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon warning">🗄️</div>
+                <div>
+                    <h2>Database Updates for Payment Integration</h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;">SQL changes needed to support payment verification</p>
+                </div>
+            </div>
+            
+            <div class="code-block">
+<span class="comment">-- Add payment tracking columns to sales table</span>
+<span class="keyword">ALTER TABLE</span> sales 
+<span class="keyword">ADD COLUMN</span> payment_status <span class="keyword">ENUM</span>(<span class="string">'pending'</span>, <span class="string">'paid'</span>, <span class="string">'failed'</span>, <span class="string">'refunded'</span>) <span class="keyword">DEFAULT</span> <span class="string">'pending'</span>,
+<span class="keyword">ADD COLUMN</span> payment_reference <span class="keyword">VARCHAR</span>(100) <span class="keyword">NULL</span>,
+<span class="keyword">ADD COLUMN</span> payment_gateway <span class="keyword">VARCHAR</span>(50) <span class="keyword">NULL</span>,
+<span class="keyword">ADD COLUMN</span> paid_at <span class="keyword">DATETIME NULL</span>,
+<span class="keyword">ADD INDEX</span> idx_payment_status (payment_status);
+
+<span class="comment">-- Create payment logs table for audit trail</span>
+<span class="keyword">CREATE TABLE</span> payment_logs (
+    log_id <span class="keyword">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    sale_id <span class="keyword">INT NOT NULL</span>,
+    gateway <span class="keyword">VARCHAR</span>(50) <span class="keyword">NOT NULL</span>,
+    gateway_reference <span class="keyword">VARCHAR</span>(100),
+    amount <span class="keyword">DECIMAL</span>(10,2) <span class="keyword">NOT NULL</span>,
+    status <span class="keyword">VARCHAR</span>(50) <span class="keyword">NOT NULL</span>,
+    raw_response <span class="keyword">TEXT</span>,
+    created_at <span class="keyword">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="keyword">FOREIGN KEY</span> (sale_id) <span class="keyword">REFERENCES</span> sales(sale_id)
+);
+
+<span class="comment">-- Index for webhook lookups</span>
+<span class="keyword">ALTER TABLE</span> payment_logs <span class="keyword">ADD INDEX</span> idx_gateway_ref (gateway_reference);
+            </div>
+        </section>
+        
+        <!-- Continue to Part 3 -->
+        <div style="text-align: center; padding: 3rem; background: linear-gradient(135deg, #faf5ff, #f3e8ff); border-radius: 16px; margin-top: 2rem;">
+            <h2 style="margin-bottom: 1rem;">🎁 Continue to Part 3</h2>
+            <p style="color: var(--gray); margin-bottom: 1.5rem;">Learn how the Loyalty QR System works and how to make it functional</p>
+            <a href="DEPLOYMENT_READINESS_PART3.html" class="nav-link" style="display: inline-block; background: var(--purple); color: white; padding: 1rem 2rem; font-size: 1.1rem;">
+                View Part 3: Loyalty QR System →
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <footer style="text-align: center; padding: 2rem; color: var(--gray); margin-top: 2rem;">
+            <p>Calloway Pharmacy IMS - Deployment Readiness Report</p>
+            <p style="font-size: 0.85rem;">Generated December 19, 2025 | Part 2 of 3</p>
+        </footer>
+    </div>
+</body>
+</html>

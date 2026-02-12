@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP Beginner's Code Guide - Part 5 | Your Pharmacy System</title>
+    <style>
+        :root {
+            --primary: #ef4444;
+            --secondary: #dc2626;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --purple: #8b5cf6;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            color: var(--dark);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(239, 68, 68, 0.3);
+            text-align: center;
+        }
+        
+        .report-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .report-header .emoji { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        
+        .part-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .part-nav a {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            color: var(--gray);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .part-nav a:hover { background: var(--primary); color: white; }
+        .part-nav a.active { background: var(--primary); color: white; }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #fee2e2;
+        }
+        
+        .section h3 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin: 1.5rem 0 1rem;
+        }
+        
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        
+        .code-example .comment { color: #64748b; font-style: italic; }
+        .code-example .keyword { color: #f472b6; font-weight: 600; }
+        .code-example .string { color: #34d399; }
+        .code-example .variable { color: #60a5fa; }
+        .code-example .function { color: #fbbf24; }
+        .code-example .number { color: #fb923c; }
+        
+        .file-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 5px solid var(--info);
+        }
+        
+        .file-card h4 {
+            color: var(--info);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .file-card p {
+            color: var(--gray);
+            margin-bottom: 0.75rem;
+        }
+        
+        .file-card .purpose {
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .tip-box {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--success);
+            margin: 1rem 0;
+        }
+        
+        .tip-box .title {
+            font-weight: 700;
+            color: #065f46;
+        }
+        
+        .concept-box {
+            background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--purple);
+            margin: 1rem 0;
+        }
+        
+        .concept-box .title {
+            font-weight: 700;
+            color: #6d28d9;
+            margin-bottom: 0.5rem;
+        }
+        
+        .flow-diagram {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .flow-step {
+            display: inline-block;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin: 0.5rem;
+            vertical-align: middle;
+        }
+        
+        .flow-arrow {
+            display: inline-block;
+            font-size: 1.5rem;
+            color: var(--gray);
+            margin: 0 0.5rem;
+            vertical-align: middle;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .report-header h1 { font-size: 1.75rem; }
+            .flow-step { display: block; margin: 1rem auto; }
+            .flow-arrow { transform: rotate(90deg); display: block; margin: 0.5rem auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <span class="emoji">🏥</span>
+            <h1>Understanding Your System</h1>
+            <p class="subtitle">Part 5: How Calloway Pharmacy IMS Works</p>
+        </header>
+        
+        <nav class="part-nav">
+            <a href="CODE_REVIEWER_PART1.html">Part 1: Basics</a>
+            <a href="CODE_REVIEWER_PART2.html">Part 2: Variables</a>
+            <a href="CODE_REVIEWER_PART3.html">Part 3: Functions</a>
+            <a href="CODE_REVIEWER_PART4.html">Part 4: Database</a>
+            <a href="#" class="active">Part 5: Your System</a>
+        </nav>
+        
+        <!-- System Overview -->
+        <section class="section">
+            <h2>🏗️ System Overview</h2>
+            
+            <p>Your Calloway Pharmacy IMS is built with a standard PHP architecture. Let's understand the key files and how they work together.</p>
+            
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>👤 User</strong><br>
+                    <small>Opens browser</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <strong>🌐 Web Server</strong><br>
+                    <small>Apache (XAMPP)</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <strong>📄 PHP Files</strong><br>
+                    <small>Process requests</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <strong>🗄️ Database</strong><br>
+                    <small>MySQL</small>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Key Files -->
+        <section class="section">
+            <h2>📁 Key Files Explained</h2>
+            
+            <div class="file-card">
+                <h4>📂 config.php</h4>
+                <p>The settings file - contains all configuration options</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> Stores database credentials, site settings, and constants used throughout the system.
+                </div>
+            </div>
+            
+            <div class="file-card">
+                <h4>📂 db_connection.php</h4>
+                <p>Creates the database connection</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> Establishes connection to MySQL. Every file that needs database access includes this file.
+                </div>
+            </div>
+            
+            <div class="file-card">
+                <h4>📂 Auth.php</h4>
+                <p>Handles user authentication</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> Contains the Auth class with methods for login, logout, password verification, and session management.
+                </div>
+            </div>
+            
+            <div class="file-card">
+                <h4>📂 login.php / login_handler.php</h4>
+                <p>Login form and processing</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> login.php shows the form, login_handler.php verifies credentials and creates the session.
+                </div>
+            </div>
+            
+            <div class="file-card">
+                <h4>📂 dashboard.php</h4>
+                <p>Main dashboard after login</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> Shows overview stats, recent activity, and navigation to other features.
+                </div>
+            </div>
+            
+            <div class="file-card">
+                <h4>📂 pos.php</h4>
+                <p>Point of Sale system</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> Where sales happen - search products, add to cart, process payments, generate receipts.
+                </div>
+            </div>
+            
+            <div class="file-card">
+                <h4>📂 inventory.php</h4>
+                <p>Inventory management</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> View, add, edit, delete products. Manage stock levels and categories.
+                </div>
+            </div>
+            
+            <div class="file-card">
+                <h4>📂 expiry-monitoring.php</h4>
+                <p>Expiry date tracking</p>
+                <div class="purpose">
+                    <strong>Purpose:</strong> Shows products by expiry status (expired, expiring soon, valid) to prevent selling expired items.
+                </div>
+            </div>
+        </section>
+        
+        <!-- Authentication Flow -->
+        <section class="section">
+            <h2>🔐 How Login Works</h2>
+            
+            <p>Let's trace through what happens when a user logs in:</p>
+            
+            <div class="code-example">
+<span class="comment">// STEP 1: User submits login form</span>
+<span class="comment">// Form sends POST request to login_handler.php with:</span>
+<span class="comment">// - $_POST['username'] = "admin"</span>
+<span class="comment">// - $_POST['password'] = "password123"</span>
+
+<span class="comment">// STEP 2: login_handler.php receives the data</span>
+<span class="variable">$username</span> = <span class="variable">$_POST</span>[<span class="string">'username'</span>];
+<span class="variable">$password</span> = <span class="variable">$_POST</span>[<span class="string">'password'</span>];
+
+<span class="comment">// STEP 3: Look up user in database</span>
+<span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"SELECT * FROM users WHERE username = ?"</span>);
+<span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"s"</span>, <span class="variable">$username</span>);
+<span class="variable">$stmt</span>-><span class="function">execute</span>();
+<span class="variable">$result</span> = <span class="variable">$stmt</span>-><span class="function">get_result</span>();
+<span class="variable">$user</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>();
+
+<span class="comment">// STEP 4: Verify password (passwords are hashed for security)</span>
+<span class="keyword">if</span> (<span class="variable">$user</span> && <span class="function">password_verify</span>(<span class="variable">$password</span>, <span class="variable">$user</span>[<span class="string">'password'</span>])) {
+    <span class="comment">// Password correct!</span>
+    
+    <span class="comment">// STEP 5: Create session (remember user is logged in)</span>
+    <span class="variable">$_SESSION</span>[<span class="string">'user_id'</span>] = <span class="variable">$user</span>[<span class="string">'id'</span>];
+    <span class="variable">$_SESSION</span>[<span class="string">'username'</span>] = <span class="variable">$user</span>[<span class="string">'username'</span>];
+    <span class="variable">$_SESSION</span>[<span class="string">'role'</span>] = <span class="variable">$user</span>[<span class="string">'role'</span>];
+    
+    <span class="comment">// STEP 6: Redirect to dashboard</span>
+    <span class="function">header</span>(<span class="string">"Location: dashboard.php"</span>);
+} <span class="keyword">else</span> {
+    <span class="comment">// Wrong username or password</span>
+    <span class="function">header</span>(<span class="string">"Location: login.php?error=invalid"</span>);
+}
+            </div>
+            
+            <div class="concept-box">
+                <div class="title">🔑 Key Concepts</div>
+                <ul style="margin-left: 1.5rem;">
+                    <li><strong>password_hash()</strong> - When creating users, passwords are hashed (encrypted) before storing</li>
+                    <li><strong>password_verify()</strong> - Compares entered password with stored hash</li>
+                    <li><strong>$_SESSION</strong> - Stores user info across pages (until they logout or close browser)</li>
+                    <li><strong>header("Location:")</strong> - Redirects user to another page</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Page Protection -->
+        <section class="section">
+            <h2>🛡️ How Pages Are Protected</h2>
+            
+            <p>Protected pages check if user is logged in at the very top:</p>
+            
+            <div class="code-example">
+<span class="keyword">&lt;?php</span>
+<span class="comment">// At the TOP of every protected page (like dashboard.php)</span>
+
+<span class="function">session_start</span>();  <span class="comment">// Required to access $_SESSION</span>
+
+<span class="comment">// Check if user is logged in</span>
+<span class="keyword">if</span> (!<span class="function">isset</span>(<span class="variable">$_SESSION</span>[<span class="string">'user_id'</span>])) {
+    <span class="comment">// Not logged in - send to login page</span>
+    <span class="function">header</span>(<span class="string">"Location: login.php"</span>);
+    <span class="keyword">exit</span>;  <span class="comment">// Stop executing rest of page</span>
+}
+
+<span class="comment">// If we get here, user is logged in!</span>
+<span class="variable">$currentUser</span> = <span class="variable">$_SESSION</span>[<span class="string">'username'</span>];
+<span class="variable">$userRole</span> = <span class="variable">$_SESSION</span>[<span class="string">'role'</span>];
+<span class="keyword">?&gt;</span>
+            </div>
+            
+            <div class="tip-box">
+                <div class="title">💡 Why session_start() is Important</div>
+                <p><code>session_start()</code> must be called before using $_SESSION and before any HTML output. That's why it's always at the very top of PHP files!</p>
+            </div>
+        </section>
+        
+        <!-- How POS Works -->
+        <section class="section">
+            <h2>🛒 How The POS Works</h2>
+            
+            <p>The Point of Sale system uses JavaScript for the cart and PHP for database operations:</p>
+            
+            <div class="code-example">
+<span class="comment">// JAVASCRIPT (Frontend - runs in browser)</span>
+
+<span class="comment">// Cart is stored as JavaScript array</span>
+<span class="keyword">let</span> <span class="variable">cart</span> = [];
+
+<span class="comment">// Add product to cart</span>
+<span class="keyword">function</span> <span class="function">addToCart</span>(<span class="variable">productId</span>, <span class="variable">name</span>, <span class="variable">price</span>) {
+    <span class="comment">// Check if already in cart</span>
+    <span class="keyword">let</span> <span class="variable">existing</span> = <span class="variable">cart</span>.<span class="function">find</span>(<span class="variable">item</span> => <span class="variable">item</span>.id === <span class="variable">productId</span>);
+    
+    <span class="keyword">if</span> (<span class="variable">existing</span>) {
+        <span class="variable">existing</span>.quantity++;  <span class="comment">// Increase quantity</span>
+    } <span class="keyword">else</span> {
+        <span class="comment">// Add new item</span>
+        <span class="variable">cart</span>.<span class="function">push</span>({
+            id: <span class="variable">productId</span>,
+            name: <span class="variable">name</span>,
+            price: <span class="variable">price</span>,
+            quantity: <span class="number">1</span>
+        });
+    }
+    
+    <span class="function">updateCartDisplay</span>();  <span class="comment">// Refresh cart on screen</span>
+}
+
+<span class="comment">// When checkout button clicked</span>
+<span class="keyword">function</span> <span class="function">checkout</span>() {
+    <span class="comment">// Send cart to PHP via AJAX</span>
+    <span class="function">fetch</span>(<span class="string">'process_sale.php'</span>, {
+        method: <span class="string">'POST'</span>,
+        headers: {<span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>},
+        body: JSON.<span class="function">stringify</span>({ cart: <span class="variable">cart</span> })
+    })
+    .<span class="function">then</span>(<span class="variable">response</span> => <span class="variable">response</span>.<span class="function">json</span>())
+    .<span class="function">then</span>(<span class="variable">data</span> => {
+        <span class="keyword">if</span> (<span class="variable">data</span>.success) {
+            <span class="function">alert</span>(<span class="string">'Sale completed!'</span>);
+            <span class="variable">cart</span> = [];  <span class="comment">// Clear cart</span>
+        }
+    });
+}
+            </div>
+            
+            <div class="code-example">
+<span class="comment">// PHP (Backend - process_sale.php)</span>
+<span class="keyword">&lt;?php</span>
+<span class="comment">// Receive cart data from JavaScript</span>
+<span class="variable">$data</span> = <span class="function">json_decode</span>(<span class="function">file_get_contents</span>(<span class="string">'php://input'</span>), <span class="keyword">true</span>);
+<span class="variable">$cart</span> = <span class="variable">$data</span>[<span class="string">'cart'</span>];
+
+<span class="comment">// Calculate total</span>
+<span class="variable">$total</span> = <span class="number">0</span>;
+<span class="keyword">foreach</span> (<span class="variable">$cart</span> <span class="keyword">as</span> <span class="variable">$item</span>) {
+    <span class="variable">$total</span> += <span class="variable">$item</span>[<span class="string">'price'</span>] * <span class="variable">$item</span>[<span class="string">'quantity'</span>];
+}
+
+<span class="comment">// Insert sale into database</span>
+<span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"INSERT INTO sales (total, created_at) VALUES (?, NOW())"</span>);
+<span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"d"</span>, <span class="variable">$total</span>);
+<span class="variable">$stmt</span>-><span class="function">execute</span>();
+<span class="variable">$saleId</span> = <span class="variable">$conn</span>->insert_id;
+
+<span class="comment">// Insert each item and update stock</span>
+<span class="keyword">foreach</span> (<span class="variable">$cart</span> <span class="keyword">as</span> <span class="variable">$item</span>) {
+    <span class="comment">// Add to sale_items</span>
+    <span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES (?, ?, ?, ?)"</span>);
+    <span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"iiid"</span>, <span class="variable">$saleId</span>, <span class="variable">$item</span>[<span class="string">'id'</span>], <span class="variable">$item</span>[<span class="string">'quantity'</span>], <span class="variable">$item</span>[<span class="string">'price'</span>]);
+    <span class="variable">$stmt</span>-><span class="function">execute</span>();
+    
+    <span class="comment">// Reduce stock</span>
+    <span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"UPDATE products SET stock = stock - ? WHERE id = ?"</span>);
+    <span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"ii"</span>, <span class="variable">$item</span>[<span class="string">'quantity'</span>], <span class="variable">$item</span>[<span class="string">'id'</span>]);
+    <span class="variable">$stmt</span>-><span class="function">execute</span>();
+}
+
+<span class="comment">// Send response back to JavaScript</span>
+<span class="keyword">echo</span> <span class="function">json_encode</span>([<span class="string">'success'</span> => <span class="keyword">true</span>, <span class="string">'sale_id'</span> => <span class="variable">$saleId</span>]);
+<span class="keyword">?&gt;</span>
+            </div>
+        </section>
+        
+        <!-- AJAX Explained -->
+        <section class="section">
+            <h2>📡 Understanding AJAX (JavaScript ↔ PHP Communication)</h2>
+            
+            <p>AJAX lets your page communicate with the server without refreshing. It's used throughout your system.</p>
+            
+            <div class="concept-box">
+                <div class="title">🔄 Without AJAX (Traditional)</div>
+                <p style="margin-top: 0.5rem;">User clicks button → Entire page reloads → Shows new data</p>
+                <p>❌ Slow, interrupts user experience</p>
+            </div>
+            
+            <div class="concept-box" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-color: var(--success);">
+                <div class="title" style="color: #065f46;">🚀 With AJAX (Modern)</div>
+                <p style="margin-top: 0.5rem;">User clicks button → Background request → Only update needed part</p>
+                <p>✅ Fast, smooth experience</p>
+            </div>
+            
+            <div class="code-example">
+<span class="comment">// Example: Search products without page refresh</span>
+
+<span class="comment">// HTML</span>
+<span class="keyword">&lt;input</span> type="text" id="searchBox" onkeyup="<span class="function">searchProducts</span>()"<span class="keyword">&gt;</span>
+<span class="keyword">&lt;div</span> id="results"<span class="keyword">&gt;&lt;/div&gt;</span>
+
+<span class="comment">// JavaScript</span>
+<span class="keyword">async function</span> <span class="function">searchProducts</span>() {
+    <span class="keyword">const</span> <span class="variable">query</span> = <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'searchBox'</span>).value;
+    
+    <span class="comment">// Send request to PHP</span>
+    <span class="keyword">const</span> <span class="variable">response</span> = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'search_api.php?q='</span> + <span class="variable">query</span>);
+    <span class="keyword">const</span> <span class="variable">products</span> = <span class="keyword">await</span> <span class="variable">response</span>.<span class="function">json</span>();
+    
+    <span class="comment">// Update page with results</span>
+    <span class="keyword">let</span> <span class="variable">html</span> = <span class="string">''</span>;
+    <span class="keyword">for</span> (<span class="keyword">const</span> <span class="variable">product</span> <span class="keyword">of</span> <span class="variable">products</span>) {
+        <span class="variable">html</span> += <span class="string">`&lt;div&gt;${product.name} - ₱${product.price}&lt;/div&gt;`</span>;
+    }
+    <span class="variable">document</span>.<span class="function">getElementById</span>(<span class="string">'results'</span>).innerHTML = <span class="variable">html</span>;
+}
+            </div>
+            
+            <div class="code-example">
+<span class="comment">// PHP (search_api.php)</span>
+<span class="keyword">&lt;?php</span>
+<span class="variable">$query</span> = <span class="variable">$_GET</span>[<span class="string">'q'</span>] ?? <span class="string">''</span>;
+
+<span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"SELECT * FROM products WHERE name LIKE ?"</span>);
+<span class="variable">$searchTerm</span> = <span class="string">"%"</span> . <span class="variable">$query</span> . <span class="string">"%"</span>;
+<span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"s"</span>, <span class="variable">$searchTerm</span>);
+<span class="variable">$stmt</span>-><span class="function">execute</span>();
+
+<span class="variable">$result</span> = <span class="variable">$stmt</span>-><span class="function">get_result</span>();
+<span class="variable">$products</span> = [];
+
+<span class="keyword">while</span> (<span class="variable">$row</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>()) {
+    <span class="variable">$products</span>[] = <span class="variable">$row</span>;
+}
+
+<span class="comment">// Return as JSON for JavaScript</span>
+<span class="function">header</span>(<span class="string">'Content-Type: application/json'</span>);
+<span class="keyword">echo</span> <span class="function">json_encode</span>(<span class="variable">$products</span>);
+<span class="keyword">?&gt;</span>
+            </div>
+        </section>
+        
+        <!-- Common Patterns -->
+        <section class="section">
+            <h2>📋 Common Patterns in Your Code</h2>
+            
+            <h3>Pattern 1: require_once (Include Other Files)</h3>
+            <div class="code-example">
+<span class="comment">// Include a file only once (prevents duplicate includes)</span>
+<span class="keyword">require_once</span> <span class="string">'db_connection.php'</span>;  <span class="comment">// Database</span>
+<span class="keyword">require_once</span> <span class="string">'Auth.php'</span>;           <span class="comment">// Authentication</span>
+<span class="keyword">require_once</span> <span class="string">'config.php'</span>;         <span class="comment">// Settings</span>
+
+<span class="comment">// Now you can use $conn, Auth class, and config constants!</span>
+            </div>
+            
+            <h3>Pattern 2: Checking User Role</h3>
+            <div class="code-example">
+<span class="comment">// Different features for different roles</span>
+<span class="keyword">if</span> (<span class="variable">$_SESSION</span>[<span class="string">'role'</span>] === <span class="string">'admin'</span>) {
+    <span class="comment">// Show admin-only features</span>
+    <span class="keyword">echo</span> <span class="string">'&lt;a href="users.php"&gt;Manage Users&lt;/a&gt;'</span>;
+}
+
+<span class="keyword">if</span> (<span class="variable">$_SESSION</span>[<span class="string">'role'</span>] === <span class="string">'admin'</span> || <span class="variable">$_SESSION</span>[<span class="string">'role'</span>] === <span class="string">'manager'</span>) {
+    <span class="comment">// Show admin or manager features</span>
+    <span class="keyword">echo</span> <span class="string">'&lt;a href="reports.php"&gt;View Reports&lt;/a&gt;'</span>;
+}
+            </div>
+            
+            <h3>Pattern 3: Form Processing</h3>
+            <div class="code-example">
+<span class="comment">// Check if form was submitted</span>
+<span class="keyword">if</span> (<span class="variable">$_SERVER</span>[<span class="string">'REQUEST_METHOD'</span>] === <span class="string">'POST'</span>) {
+    <span class="comment">// Form was submitted - process data</span>
+    <span class="variable">$name</span> = <span class="function">trim</span>(<span class="variable">$_POST</span>[<span class="string">'name'</span>] ?? <span class="string">''</span>);
+    <span class="variable">$price</span> = <span class="function">floatval</span>(<span class="variable">$_POST</span>[<span class="string">'price'</span>] ?? <span class="number">0</span>);
+    
+    <span class="comment">// Validate</span>
+    <span class="keyword">if</span> (<span class="function">empty</span>(<span class="variable">$name</span>)) {
+        <span class="variable">$error</span> = <span class="string">"Name is required"</span>;
+    } <span class="keyword">else</span> {
+        <span class="comment">// Save to database</span>
+        <span class="comment">// ...</span>
+        <span class="variable">$success</span> = <span class="string">"Product added successfully!"</span>;
+    }
+}
+            </div>
+            
+            <h3>Pattern 4: Error Handling with Try-Catch</h3>
+            <div class="code-example">
+<span class="keyword">try</span> {
+    <span class="comment">// Code that might fail</span>
+    <span class="variable">$result</span> = <span class="variable">$conn</span>-><span class="function">query</span>(<span class="variable">$sql</span>);
+    
+    <span class="keyword">if</span> (!<span class="variable">$result</span>) {
+        <span class="keyword">throw new</span> <span class="function">Exception</span>(<span class="string">"Query failed"</span>);
+    }
+    
+    <span class="comment">// Success!</span>
+    <span class="keyword">echo</span> <span class="string">"Data loaded successfully"</span>;
+    
+} <span class="keyword">catch</span> (<span class="function">Exception</span> <span class="variable">$e</span>) {
+    <span class="comment">// Something went wrong</span>
+    <span class="keyword">echo</span> <span class="string">"Error: "</span> . <span class="variable">$e</span>-><span class="function">getMessage</span>();
+    
+    <span class="comment">// Log the error for debugging</span>
+    <span class="function">error_log</span>(<span class="variable">$e</span>-><span class="function">getMessage</span>());
+}
+            </div>
+        </section>
+        
+        <!-- Congratulations -->
+        <section class="section" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 3px solid var(--success);">
+            <h2 style="color: var(--success); border-bottom-color: #86efac;">🎉 Congratulations!</h2>
+            
+            <p>You've completed the PHP Beginner's Code Guide! You now understand:</p>
+            
+            <ul style="margin: 1rem 0 1.5rem 1.5rem;">
+                <li>✅ PHP syntax and symbols</li>
+                <li>✅ Variables and data types</li>
+                <li>✅ Functions and control flow</li>
+                <li>✅ Database operations (CRUD)</li>
+                <li>✅ How your pharmacy system works</li>
+            </ul>
+            
+            <div class="tip-box">
+                <div class="title">🚀 What's Next?</div>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li>Practice reading your system's code files</li>
+                    <li>Make small changes and see what happens</li>
+                    <li>When stuck, read error messages carefully - they tell you what's wrong!</li>
+                    <li>Use <code>var_dump($variable)</code> to inspect variables while debugging</li>
+                </ul>
+            </div>
+            
+            <p style="text-align: center; font-size: 1.1rem; margin-top: 1.5rem;">
+                <strong>The best way to learn is by doing. You've got this! 💪</strong>
+            </p>
+        </section>
+        
+        <!-- Navigation -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 2rem;">
+            <a href="CODE_REVIEWER_PART4.html" style="padding: 1rem 2rem; background: white; color: var(--gray); text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                ← Part 4: Database
+            </a>
+            <a href="CODE_REVIEWER_PART1.html" style="padding: 1rem 2rem; background: var(--success); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 8px 20px rgba(16,185,129,0.3);">
+                🔄 Start Over from Part 1
+            </a>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem;">
+            <a href="DEPLOYMENT_READINESS_PART1.html" style="padding: 1rem 2rem; background: var(--info); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 8px 20px rgba(59,130,246,0.3);">
+                📋 Deployment Readiness Guide
+            </a>
+        </div>
+        
+        <footer>
+            <p>PHP Beginner's Code Guide - Part 5 of 5</p>
+            <p style="font-size: 0.85rem;">Made with ❤️ for Calloway Pharmacy IMS</p>
+        </footer>
+    </div>
+</body>
+</html>

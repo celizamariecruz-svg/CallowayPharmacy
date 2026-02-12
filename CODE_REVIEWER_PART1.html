@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP Beginner's Code Guide - Part 1 | Basics & Symbols</title>
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+            color: var(--dark);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+            text-align: center;
+        }
+        
+        .report-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .report-header .emoji { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        .report-header .subtitle { opacity: 0.9; font-size: 1.1rem; }
+        
+        .part-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .part-nav a {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            color: var(--gray);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .part-nav a:hover { background: var(--primary); color: white; }
+        .part-nav a.active { background: var(--primary); color: white; }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #ede9fe;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section h3 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin: 1.5rem 0 1rem;
+        }
+        
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        
+        .code-example .comment { color: #64748b; font-style: italic; }
+        .code-example .keyword { color: #f472b6; font-weight: 600; }
+        .code-example .string { color: #34d399; }
+        .code-example .variable { color: #60a5fa; }
+        .code-example .function { color: #fbbf24; }
+        .code-example .number { color: #fb923c; }
+        .code-example .symbol { color: #f87171; font-weight: bold; }
+        
+        .explain-box {
+            background: linear-gradient(135deg, #fef3c7, #fef9c3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--warning);
+            margin: 1rem 0;
+        }
+        
+        .explain-box .title {
+            font-weight: 700;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .symbol-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .symbol-card .symbol {
+            font-size: 2.5rem;
+            font-family: 'Consolas', monospace;
+            color: var(--primary);
+            background: white;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .symbol-card h4 {
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .symbol-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        
+        .tip-box {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--success);
+            margin: 1rem 0;
+        }
+        
+        .tip-box .title {
+            font-weight: 700;
+            color: #065f46;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--danger);
+            margin: 1rem 0;
+        }
+        
+        .warning-box .title {
+            font-weight: 700;
+            color: #991b1b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .comparison-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        
+        .comparison-table code {
+            background: #1e293b;
+            color: #60a5fa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .analogy {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--info);
+            margin: 1rem 0;
+        }
+        
+        .analogy .title {
+            font-weight: 700;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .report-header h1 { font-size: 1.75rem; }
+            .symbol-card .symbol { font-size: 2rem; width: 50px; height: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <span class="emoji">📚</span>
+            <h1>PHP Beginner's Code Guide</h1>
+            <p class="subtitle">Part 1: Basics & Symbols - Understanding the Language of Code</p>
+        </header>
+        
+        <nav class="part-nav">
+            <a href="#" class="active">Part 1: Basics</a>
+            <a href="CODE_REVIEWER_PART2.html">Part 2: Variables</a>
+            <a href="CODE_REVIEWER_PART3.html">Part 3: Functions</a>
+            <a href="CODE_REVIEWER_PART4.html">Part 4: Database</a>
+            <a href="CODE_REVIEWER_PART5.html">Part 5: Your System</a>
+        </nav>
+        
+        <!-- What is PHP -->
+        <section class="section">
+            <h2>🐘 What is PHP?</h2>
+            
+            <p>PHP stands for <strong>"PHP: Hypertext Preprocessor"</strong> (yes, it's a recursive name!). It's a programming language specifically designed to build websites.</p>
+            
+            <div class="analogy">
+                <div class="title">💡 Real World Analogy</div>
+                <p>Think of a restaurant:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><strong>HTML</strong> = The menu and decorations (what customers see)</li>
+                    <li><strong>CSS</strong> = The paint, furniture, ambiance (how it looks)</li>
+                    <li><strong>PHP</strong> = The kitchen (where the real work happens - preparing food, checking inventory)</li>
+                    <li><strong>Database</strong> = The storage room (where ingredients/data are kept)</li>
+                </ul>
+            </div>
+            
+            <p>Your customers (website visitors) only see the menu and restaurant decor. They never see the kitchen, but without it, there's no food!</p>
+        </section>
+        
+        <!-- PHP Tags -->
+        <section class="section">
+            <h2>📝 How PHP Code Starts</h2>
+            
+            <p>All PHP code must be wrapped in special tags. This tells the server "Hey, process this as PHP code!"</p>
+            
+            <div class="code-example">
+<span class="keyword">&lt;?php</span>
+    <span class="comment">// Your PHP code goes here</span>
+    <span class="keyword">echo</span> <span class="string">"Hello, World!"</span>;
+<span class="keyword">?&gt;</span>
+            </div>
+            
+            <div class="explain-box">
+                <div class="title">📖 Line by Line Explanation</div>
+                <ul style="margin-left: 1.5rem;">
+                    <li><code>&lt;?php</code> - Opens PHP mode. Everything after this is PHP code.</li>
+                    <li><code>//</code> - Comment marker. Computer ignores this, it's just notes for humans.</li>
+                    <li><code>echo</code> - Command to "print" or "output" something.</li>
+                    <li><code>"Hello, World!"</code> - The text to display (in quotes).</li>
+                    <li><code>;</code> - Semicolon ends the statement (like a period ends a sentence).</li>
+                    <li><code>?&gt;</code> - Closes PHP mode (optional at end of file).</li>
+                </ul>
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Common Beginner Mistake</div>
+                <p>Forgetting the semicolon <code>;</code> at the end of lines! This is the #1 error for beginners. Every PHP statement MUST end with a semicolon.</p>
+            </div>
+        </section>
+        
+        <!-- Essential Symbols -->
+        <section class="section">
+            <h2>🔣 Essential PHP Symbols</h2>
+            
+            <p>Let's learn what each symbol means in PHP. You'll see these everywhere!</p>
+            
+            <div class="symbol-grid">
+                <div class="symbol-card">
+                    <div class="symbol">$</div>
+                    <h4>Dollar Sign - Variable Marker</h4>
+                    <p>All variable names start with $. It tells PHP "this is a container for data."</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$name</span> = <span class="string">"John"</span>;
+<span class="variable">$age</span> = <span class="number">25</span>;
+<span class="variable">$price</span> = <span class="number">99.99</span>;
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">=</div>
+                    <h4>Equals Sign - Assignment</h4>
+                    <p>Assigns a value to a variable. It means "put this value into this container."</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="comment">// "Store 'Maria' in $name"</span>
+<span class="variable">$name</span> = <span class="string">"Maria"</span>;
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">;</div>
+                    <h4>Semicolon - Statement Ender</h4>
+                    <p>Marks the end of a statement. Like a period at the end of a sentence.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$a</span> = <span class="number">1</span><span class="symbol">;</span>  <span class="comment">// End of line 1</span>
+<span class="variable">$b</span> = <span class="number">2</span><span class="symbol">;</span>  <span class="comment">// End of line 2</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">" "</div>
+                    <h4>Double Quotes - Text String</h4>
+                    <p>Wraps text/words. Variables inside will show their values.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$name</span> = <span class="string">"Juan"</span>;
+<span class="keyword">echo</span> <span class="string">"Hello, <span class="variable">$name</span>"</span>;
+<span class="comment">// Output: Hello, Juan</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">' '</div>
+                    <h4>Single Quotes - Literal Text</h4>
+                    <p>Also wraps text, but variables are NOT processed (shown as-is).</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$name</span> = <span class="string">"Juan"</span>;
+<span class="keyword">echo</span> <span class="string">'Hello, $name'</span>;
+<span class="comment">// Output: Hello, $name</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">( )</div>
+                    <h4>Parentheses - Function Call / Grouping</h4>
+                    <p>Used when calling functions or grouping conditions.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="function">strlen</span>(<span class="string">"hello"</span>);  <span class="comment">// Call function</span>
+<span class="keyword">if</span> (<span class="variable">$age</span> > <span class="number">18</span>) { }  <span class="comment">// Condition</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">{ }</div>
+                    <h4>Curly Braces - Code Block</h4>
+                    <p>Groups multiple statements together. Used with if, while, function, etc.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="keyword">if</span> (<span class="variable">$loggedIn</span>) <span class="symbol">{</span>
+    <span class="keyword">echo</span> <span class="string">"Welcome!"</span>;
+    <span class="function">showDashboard</span>();
+<span class="symbol">}</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">[ ]</div>
+                    <h4>Square Brackets - Array Access</h4>
+                    <p>Access items in arrays/lists by their index or key.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$fruits</span><span class="symbol">[</span><span class="number">0</span><span class="symbol">]</span>;  <span class="comment">// First item</span>
+<span class="variable">$user</span><span class="symbol">[</span><span class="string">'name'</span><span class="symbol">]</span>;  <span class="comment">// Get by key</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- More Symbols -->
+        <section class="section">
+            <h2>🔣 More Important Symbols</h2>
+            
+            <div class="symbol-grid">
+                <div class="symbol-card">
+                    <div class="symbol">//</div>
+                    <h4>Double Slash - Single Line Comment</h4>
+                    <p>Computer ignores everything after // on that line. Notes for humans.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="comment">// This is a comment</span>
+<span class="variable">$price</span> = <span class="number">100</span>;  <span class="comment">// Price in pesos</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">/* */</div>
+                    <h4>Block Comment</h4>
+                    <p>For multi-line comments. Everything between /* and */ is ignored.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="comment">/* 
+   This is a 
+   multi-line comment
+*/</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">.</div>
+                    <h4>Dot - String Concatenation</h4>
+                    <p>Joins/combines strings together. Like gluing words.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$first</span> = <span class="string">"Hello"</span>;
+<span class="variable">$second</span> = <span class="string">"World"</span>;
+<span class="keyword">echo</span> <span class="variable">$first</span> <span class="symbol">.</span> <span class="string">" "</span> <span class="symbol">.</span> <span class="variable">$second</span>;
+<span class="comment">// Output: Hello World</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">.=</div>
+                    <h4>Dot Equals - Append to String</h4>
+                    <p>Adds to the end of an existing string.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$message</span> = <span class="string">"Hello"</span>;
+<span class="variable">$message</span> <span class="symbol">.=</span> <span class="string">" World"</span>;
+<span class="comment">// $message is now "Hello World"</span>
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">-></div>
+                    <h4>Arrow - Object Access</h4>
+                    <p>Access methods or properties of an object.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$conn</span><span class="symbol">-></span><span class="function">query</span>(<span class="variable">$sql</span>);
+<span class="variable">$result</span><span class="symbol">-></span><span class="function">fetch_assoc</span>();
+<span class="variable">$stmt</span><span class="symbol">-></span>affected_rows;
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">=></div>
+                    <h4>Double Arrow - Array Key-Value</h4>
+                    <p>Connects a key to its value in arrays.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$user</span> = [
+    <span class="string">'name'</span> <span class="symbol">=></span> <span class="string">'Maria'</span>,
+    <span class="string">'age'</span> <span class="symbol">=></span> <span class="number">25</span>
+];
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">::</div>
+                    <h4>Double Colon - Static Access</h4>
+                    <p>Access static methods/properties of a class without creating an object.</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+DateTime<span class="symbol">::</span><span class="function">createFromFormat</span>();
+PDO<span class="symbol">::</span>FETCH_ASSOC;
+                    </div>
+                </div>
+                
+                <div class="symbol-card">
+                    <div class="symbol">??</div>
+                    <h4>Null Coalescing - Default Value</h4>
+                    <p>Use left value if it exists, otherwise use right value (default).</p>
+                    <div class="code-example" style="padding: 0.75rem;">
+<span class="variable">$name</span> = <span class="variable">$_GET</span>[<span class="string">'name'</span>] <span class="symbol">??</span> <span class="string">'Guest'</span>;
+<span class="comment">// If name not provided, use 'Guest'</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Comparison Operators -->
+        <section class="section">
+            <h2>⚖️ Comparison Symbols (True/False Tests)</h2>
+            
+            <p>These symbols are used to compare values and return true or false.</p>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>What it Does</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>==</code></td>
+                        <td>Equals</td>
+                        <td>Checks if values are equal (ignores type)</td>
+                        <td><code>5 == "5"</code> → true</td>
+                    </tr>
+                    <tr>
+                        <td><code>===</code></td>
+                        <td>Identical</td>
+                        <td>Checks if values AND types are equal</td>
+                        <td><code>5 === "5"</code> → false</td>
+                    </tr>
+                    <tr>
+                        <td><code>!=</code></td>
+                        <td>Not Equal</td>
+                        <td>Checks if values are different</td>
+                        <td><code>5 != 3</code> → true</td>
+                    </tr>
+                    <tr>
+                        <td><code>!==</code></td>
+                        <td>Not Identical</td>
+                        <td>Checks if values OR types are different</td>
+                        <td><code>5 !== "5"</code> → true</td>
+                    </tr>
+                    <tr>
+                        <td><code>></code></td>
+                        <td>Greater Than</td>
+                        <td>Left is bigger than right</td>
+                        <td><code>10 > 5</code> → true</td>
+                    </tr>
+                    <tr>
+                        <td><code><</code></td>
+                        <td>Less Than</td>
+                        <td>Left is smaller than right</td>
+                        <td><code>3 < 8</code> → true</td>
+                    </tr>
+                    <tr>
+                        <td><code>>=</code></td>
+                        <td>Greater or Equal</td>
+                        <td>Left is bigger or same as right</td>
+                        <td><code>5 >= 5</code> → true</td>
+                    </tr>
+                    <tr>
+                        <td><code><=</code></td>
+                        <td>Less or Equal</td>
+                        <td>Left is smaller or same as right</td>
+                        <td><code>4 <= 5</code> → true</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ = vs == vs === Confusion</div>
+                <ul style="margin-left: 1.5rem;">
+                    <li><code>=</code> (one equals) = Assignment - "Store this value"</li>
+                    <li><code>==</code> (two equals) = Comparison - "Are these equal?"</li>
+                    <li><code>===</code> (three equals) = Strict Comparison - "Are these exactly equal?"</li>
+                </ul>
+                <p style="margin-top: 0.5rem;"><strong>Tip:</strong> Always use <code>===</code> when possible to avoid unexpected bugs!</p>
+            </div>
+        </section>
+        
+        <!-- Logical Operators -->
+        <section class="section">
+            <h2>🧠 Logical Operators (Combining Conditions)</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>What it Does</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>&&</code> or <code>AND</code></td>
+                        <td>And</td>
+                        <td>Both conditions must be true</td>
+                        <td><code>$a > 5 && $a < 10</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>||</code> or <code>OR</code></td>
+                        <td>Or</td>
+                        <td>At least one must be true</td>
+                        <td><code>$role == 'admin' || $role == 'manager'</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>!</code></td>
+                        <td>Not</td>
+                        <td>Flips true to false, false to true</td>
+                        <td><code>!$isLoggedIn</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="code-example">
+<span class="comment">// Example: Check if user can access admin panel</span>
+<span class="variable">$isLoggedIn</span> = <span class="keyword">true</span>;
+<span class="variable">$role</span> = <span class="string">'admin'</span>;
+
+<span class="keyword">if</span> (<span class="variable">$isLoggedIn</span> <span class="symbol">&&</span> <span class="variable">$role</span> === <span class="string">'admin'</span>) {
+    <span class="keyword">echo</span> <span class="string">"Welcome to Admin Panel!"</span>;
+}
+
+<span class="comment">// Both must be true:</span>
+<span class="comment">// 1. User is logged in ✓</span>
+<span class="comment">// 2. User role is admin ✓</span>
+<span class="comment">// Result: Shows the welcome message</span>
+            </div>
+        </section>
+        
+        <!-- Math Operators -->
+        <section class="section">
+            <h2>🔢 Math Operators</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Example</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>+</code></td>
+                        <td>Addition</td>
+                        <td><code>5 + 3</code></td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td><code>-</code></td>
+                        <td>Subtraction</td>
+                        <td><code>10 - 4</code></td>
+                        <td>6</td>
+                    </tr>
+                    <tr>
+                        <td><code>*</code></td>
+                        <td>Multiplication</td>
+                        <td><code>6 * 7</code></td>
+                        <td>42</td>
+                    </tr>
+                    <tr>
+                        <td><code>/</code></td>
+                        <td>Division</td>
+                        <td><code>20 / 4</code></td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td><code>%</code></td>
+                        <td>Modulus (Remainder)</td>
+                        <td><code>10 % 3</code></td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td><code>++</code></td>
+                        <td>Increment (add 1)</td>
+                        <td><code>$i++</code></td>
+                        <td>$i becomes $i + 1</td>
+                    </tr>
+                    <tr>
+                        <td><code>--</code></td>
+                        <td>Decrement (subtract 1)</td>
+                        <td><code>$i--</code></td>
+                        <td>$i becomes $i - 1</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="code-example">
+<span class="comment">// Pharmacy example: Calculate total price</span>
+<span class="variable">$pricePerPill</span> = <span class="number">15.50</span>;
+<span class="variable">$quantity</span> = <span class="number">30</span>;
+<span class="variable">$discount</span> = <span class="number">10</span>;  <span class="comment">// 10%</span>
+
+<span class="variable">$subtotal</span> = <span class="variable">$pricePerPill</span> * <span class="variable">$quantity</span>;  <span class="comment">// 465</span>
+<span class="variable">$discountAmount</span> = <span class="variable">$subtotal</span> * (<span class="variable">$discount</span> / <span class="number">100</span>);  <span class="comment">// 46.50</span>
+<span class="variable">$total</span> = <span class="variable">$subtotal</span> - <span class="variable">$discountAmount</span>;  <span class="comment">// 418.50</span>
+
+<span class="keyword">echo</span> <span class="string">"Total: ₱"</span> . <span class="variable">$total</span>;  <span class="comment">// Total: ₱418.50</span>
+            </div>
+        </section>
+        
+        <!-- Quick Reference -->
+        <section class="section">
+            <h2>📋 Quick Reference Card</h2>
+            
+            <div class="tip-box">
+                <div class="title">💾 Save This Reference!</div>
+                <p>Print this or bookmark it. You'll refer to it often when starting out!</p>
+            </div>
+            
+            <div style="background: #1e293b; color: #e2e8f0; padding: 2rem; border-radius: 12px; font-family: 'Consolas', monospace;">
+<pre style="margin: 0; line-height: 1.8;">
+<span style="color: #f472b6; font-weight: bold;">SYMBOLS CHEAT SHEET</span>
+
+<span style="color: #fbbf24;">Variables:</span>
+$variable         <span style="color: #64748b;">// All variables start with $</span>
+
+<span style="color: #fbbf24;">Strings:</span>
+"double quotes"   <span style="color: #64748b;">// Variables work inside</span>
+'single quotes'   <span style="color: #64748b;">// Variables shown as text</span>
+"Hello" . "World" <span style="color: #64748b;">// Join strings with .</span>
+
+<span style="color: #fbbf24;">Assignment:</span>
+=                 <span style="color: #64748b;">// Put value into variable</span>
+.=                <span style="color: #64748b;">// Add to end of string</span>
++=                <span style="color: #64748b;">// Add to number</span>
+
+<span style="color: #fbbf24;">Comparison:</span>
+==                <span style="color: #64748b;">// Equal (loose)</span>
+===               <span style="color: #64748b;">// Exactly equal (strict)</span>
+!=                <span style="color: #64748b;">// Not equal</span>
+> < >= <=         <span style="color: #64748b;">// Greater/less than</span>
+
+<span style="color: #fbbf24;">Logic:</span>
+&&                <span style="color: #64748b;">// AND - both true</span>
+||                <span style="color: #64748b;">// OR - at least one true</span>
+!                 <span style="color: #64748b;">// NOT - flip true/false</span>
+
+<span style="color: #fbbf24;">Arrays:</span>
+[]                <span style="color: #64748b;">// Create array or access item</span>
+=>                <span style="color: #64748b;">// Key => Value pair</span>
+
+<span style="color: #fbbf24;">Objects:</span>
+->                <span style="color: #64748b;">// Access object method/property</span>
+::                <span style="color: #64748b;">// Access static method</span>
+
+<span style="color: #fbbf24;">Other:</span>
+;                 <span style="color: #64748b;">// End of statement (required!)</span>
+//                <span style="color: #64748b;">// Comment (ignored by PHP)</span>
+??                <span style="color: #64748b;">// Default value if null</span>
+</pre>
+            </div>
+        </section>
+        
+        <!-- Navigation -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 2rem;">
+            <a href="DEPLOYMENT_READINESS_PART1.html" style="padding: 1rem 2rem; background: white; color: var(--gray); text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                ← Deployment Guides
+            </a>
+            <a href="CODE_REVIEWER_PART2.html" style="padding: 1rem 2rem; background: var(--primary); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 8px 20px rgba(139,92,246,0.3);">
+                Part 2: Variables & Data Types →
+            </a>
+        </div>
+        
+        <footer>
+            <p>PHP Beginner's Code Guide - Part 1 of 5</p>
+            <p style="font-size: 0.85rem;">Made with ❤️ for Calloway Pharmacy IMS</p>
+        </footer>
+    </div>
+</body>
+</html>

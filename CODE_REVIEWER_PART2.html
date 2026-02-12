@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP Beginner's Code Guide - Part 2 | Variables & Data Types</title>
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --gray: #64748b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+            color: var(--dark);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, #0891b2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.3);
+            text-align: center;
+        }
+        
+        .report-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .report-header .emoji { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        
+        .part-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .part-nav a {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            color: var(--gray);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .part-nav a:hover { background: var(--secondary); color: white; }
+        .part-nav a.active { background: var(--secondary); color: white; }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #cffafe;
+        }
+        
+        .section h3 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin: 1.5rem 0 1rem;
+        }
+        
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        
+        .code-example .comment { color: #64748b; font-style: italic; }
+        .code-example .keyword { color: #f472b6; font-weight: 600; }
+        .code-example .string { color: #34d399; }
+        .code-example .variable { color: #60a5fa; }
+        .code-example .function { color: #fbbf24; }
+        .code-example .number { color: #fb923c; }
+        
+        .type-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .type-card h4 {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .analogy {
+            background: linear-gradient(135deg, #fef3c7, #fef9c3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--warning);
+            margin: 1rem 0;
+        }
+        
+        .analogy .title {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tip-box {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--success);
+            margin: 1rem 0;
+        }
+        
+        .tip-box .title {
+            font-weight: 700;
+            color: #065f46;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--danger);
+            margin: 1rem 0;
+        }
+        
+        .warning-box .title {
+            font-weight: 700;
+            color: #991b1b;
+        }
+        
+        .visual-box {
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .visual-box .container-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .comparison-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        
+        .comparison-table code {
+            background: #1e293b;
+            color: #60a5fa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .report-header h1 { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <span class="emoji">📦</span>
+            <h1>Variables & Data Types</h1>
+            <p class="subtitle">Part 2: Understanding How PHP Stores Information</p>
+        </header>
+        
+        <nav class="part-nav">
+            <a href="CODE_REVIEWER_PART1.html">Part 1: Basics</a>
+            <a href="#" class="active">Part 2: Variables</a>
+            <a href="CODE_REVIEWER_PART3.html">Part 3: Functions</a>
+            <a href="CODE_REVIEWER_PART4.html">Part 4: Database</a>
+            <a href="CODE_REVIEWER_PART5.html">Part 5: Your System</a>
+        </nav>
+        
+        <!-- What is a Variable -->
+        <section class="section">
+            <h2>📦 What is a Variable?</h2>
+            
+            <p>A variable is like a <strong>labeled container</strong> that holds information. You can put data in, take data out, or change what's inside.</p>
+            
+            <div class="visual-box">
+                <div class="container-icon">📦</div>
+                <p style="font-size: 1.2rem;"><strong>$medicine_name</strong></p>
+                <p style="color: var(--gray);">Container Label</p>
+                <div style="margin-top: 1rem; padding: 1rem; background: #ecfdf5; border-radius: 8px; display: inline-block;">
+                    <p style="font-size: 1.5rem; color: var(--success);">"Biogesic"</p>
+                    <p style="color: var(--gray); font-size: 0.9rem;">What's stored inside</p>
+                </div>
+            </div>
+            
+            <div class="analogy">
+                <div class="title">💡 Real World Analogy</div>
+                <p>Think of variables like labeled jars in a pharmacy shelf:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><strong>Jar Label</strong> = Variable Name ($medicine_name)</li>
+                    <li><strong>Contents</strong> = The Value ("Biogesic")</li>
+                    <li>You can replace the contents, but the label stays the same</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Creating Variables -->
+        <section class="section">
+            <h2>✏️ Creating Variables</h2>
+            
+            <p>To create a variable, you need three things:</p>
+            
+            <div class="code-example">
+<span class="variable">$product_name</span> = <span class="string">"Paracetamol"</span>;
+<span class="comment">//    ↑          ↑        ↑</span>
+<span class="comment">//  Dollar    Equals   The Value</span>
+<span class="comment">//  Sign +    Sign     (what to store)</span>
+<span class="comment">//  Name</span>
+            </div>
+            
+            <h3>Variable Naming Rules</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Rule</th>
+                        <th>✓ Valid</th>
+                        <th>✗ Invalid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Must start with letter or underscore</td>
+                        <td><code>$name</code>, <code>$_id</code></td>
+                        <td><code>$123name</code></td>
+                    </tr>
+                    <tr>
+                        <td>Can contain letters, numbers, underscores</td>
+                        <td><code>$user2</code>, <code>$total_price</code></td>
+                        <td><code>$my-name</code></td>
+                    </tr>
+                    <tr>
+                        <td>No spaces allowed</td>
+                        <td><code>$first_name</code></td>
+                        <td><code>$first name</code></td>
+                    </tr>
+                    <tr>
+                        <td>Case sensitive</td>
+                        <td><code>$Name</code> ≠ <code>$name</code></td>
+                        <td>They're different!</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="tip-box">
+                <div class="title">💡 Naming Best Practice</div>
+                <p>Use descriptive names! <code>$p</code> is confusing. <code>$product_price</code> is clear. Future you will thank present you!</p>
+            </div>
+        </section>
+        
+        <!-- Data Types -->
+        <section class="section">
+            <h2>🏷️ Data Types (What Kind of Data)</h2>
+            
+            <p>Variables can hold different <strong>types</strong> of data. PHP automatically figures out the type (it's "loosely typed").</p>
+            
+            <!-- String -->
+            <div class="type-card">
+                <h4>📝 String - Text/Words</h4>
+                <p>Any text wrapped in quotes. Can be letters, numbers, symbols - anything!</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="variable">$name</span> = <span class="string">"Juan Dela Cruz"</span>;       <span class="comment">// Double quotes</span>
+<span class="variable">$address</span> = <span class="string">'Manila, Philippines'</span>; <span class="comment">// Single quotes</span>
+<span class="variable">$phone</span> = <span class="string">"0917-123-4567"</span>;        <span class="comment">// Numbers as text</span>
+<span class="variable">$mixed</span> = <span class="string">"Order #12345"</span>;         <span class="comment">// Mixed text</span>
+                </div>
+                <p style="margin-top: 0.5rem;"><strong>Used for:</strong> Names, addresses, descriptions, any text</p>
+            </div>
+            
+            <!-- Integer -->
+            <div class="type-card">
+                <h4>🔢 Integer - Whole Numbers</h4>
+                <p>Numbers without decimal points. Can be positive or negative.</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="variable">$quantity</span> = <span class="number">50</span>;       <span class="comment">// Positive number</span>
+<span class="variable">$stock</span> = <span class="number">-10</span>;         <span class="comment">// Negative number</span>
+<span class="variable">$product_id</span> = <span class="number">12345</span>; <span class="comment">// ID number</span>
+<span class="variable">$year</span> = <span class="number">2025</span>;         <span class="comment">// Year</span>
+                </div>
+                <p style="margin-top: 0.5rem;"><strong>Used for:</strong> IDs, quantities, counts, ages</p>
+            </div>
+            
+            <!-- Float -->
+            <div class="type-card">
+                <h4>💰 Float/Double - Decimal Numbers</h4>
+                <p>Numbers with decimal points. Used for money, measurements, percentages.</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="variable">$price</span> = <span class="number">99.99</span>;          <span class="comment">// Price in pesos</span>
+<span class="variable">$discount</span> = <span class="number">0.15</span>;       <span class="comment">// 15% as decimal</span>
+<span class="variable">$temperature</span> = <span class="number">36.5</span>;   <span class="comment">// Body temp</span>
+<span class="variable">$average</span> = <span class="number">85.75</span>;       <span class="comment">// Average score</span>
+                </div>
+                <p style="margin-top: 0.5rem;"><strong>Used for:</strong> Prices, percentages, measurements, calculations</p>
+            </div>
+            
+            <!-- Boolean -->
+            <div class="type-card">
+                <h4>✅ Boolean - True or False</h4>
+                <p>Only two possible values: <code>true</code> or <code>false</code>. Used for yes/no questions.</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="variable">$isLoggedIn</span> = <span class="keyword">true</span>;       <span class="comment">// User is logged in</span>
+<span class="variable">$isExpired</span> = <span class="keyword">false</span>;      <span class="comment">// Product not expired</span>
+<span class="variable">$hasDiscount</span> = <span class="keyword">true</span>;     <span class="comment">// Discount applies</span>
+<span class="variable">$inStock</span> = <span class="keyword">false</span>;        <span class="comment">// Out of stock</span>
+                </div>
+                <p style="margin-top: 0.5rem;"><strong>Used for:</strong> Status flags, toggles, conditions</p>
+            </div>
+            
+            <!-- Array -->
+            <div class="type-card">
+                <h4>📋 Array - List of Items</h4>
+                <p>A collection of multiple values in one variable. Like a shopping list!</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="comment">// Simple list (indexed array)</span>
+<span class="variable">$medicines</span> = [<span class="string">"Biogesic"</span>, <span class="string">"Neozep"</span>, <span class="string">"Bioflu"</span>];
+
+<span class="comment">// List with labels (associative array)</span>
+<span class="variable">$product</span> = [
+    <span class="string">'name'</span> => <span class="string">"Biogesic"</span>,
+    <span class="string">'price'</span> => <span class="number">5.50</span>,
+    <span class="string">'stock'</span> => <span class="number">100</span>
+];
+                </div>
+                <p style="margin-top: 0.5rem;"><strong>Used for:</strong> Lists, collections, database records</p>
+            </div>
+            
+            <!-- Null -->
+            <div class="type-card">
+                <h4>⬜ NULL - No Value</h4>
+                <p>Means "nothing" or "empty". Not zero, not empty string - actually nothing.</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="variable">$middleName</span> = <span class="keyword">null</span>;      <span class="comment">// No middle name</span>
+<span class="variable">$discount</span> = <span class="keyword">null</span>;        <span class="comment">// No discount applied</span>
+<span class="variable">$result</span> = <span class="keyword">null</span>;          <span class="comment">// Not computed yet</span>
+                </div>
+                <p style="margin-top: 0.5rem;"><strong>Used for:</strong> Optional fields, unset values, "not applicable"</p>
+            </div>
+        </section>
+        
+        <!-- Arrays Deep Dive -->
+        <section class="section">
+            <h2>📋 Arrays Explained (Super Important!)</h2>
+            
+            <p>Arrays are used EVERYWHERE in your pharmacy system. Let's understand them well!</p>
+            
+            <h3>Indexed Array (Simple List)</h3>
+            <p>Items are numbered starting from 0.</p>
+            
+            <div class="code-example">
+<span class="comment">// Creating a list of medicines</span>
+<span class="variable">$medicines</span> = [<span class="string">"Biogesic"</span>, <span class="string">"Neozep"</span>, <span class="string">"Bioflu"</span>, <span class="string">"Solmux"</span>];
+<span class="comment">//              ↑           ↑          ↑          ↑</span>
+<span class="comment">//           Index 0     Index 1    Index 2    Index 3</span>
+
+<span class="comment">// Access items by index number</span>
+<span class="keyword">echo</span> <span class="variable">$medicines</span>[<span class="number">0</span>];  <span class="comment">// Output: Biogesic</span>
+<span class="keyword">echo</span> <span class="variable">$medicines</span>[<span class="number">2</span>];  <span class="comment">// Output: Bioflu</span>
+
+<span class="comment">// Get how many items</span>
+<span class="keyword">echo</span> <span class="function">count</span>(<span class="variable">$medicines</span>);  <span class="comment">// Output: 4</span>
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Remember: Counting starts at 0!</div>
+                <p>First item is [0], second is [1], third is [2], etc. This confuses beginners a lot!</p>
+            </div>
+            
+            <h3>Associative Array (Labeled List)</h3>
+            <p>Items have text labels (keys) instead of numbers.</p>
+            
+            <div class="code-example">
+<span class="comment">// Creating a product with labeled data</span>
+<span class="variable">$product</span> = [
+    <span class="string">'name'</span>        => <span class="string">"Paracetamol 500mg"</span>,
+    <span class="string">'brand'</span>       => <span class="string">"Biogesic"</span>,
+    <span class="string">'price'</span>       => <span class="number">5.50</span>,
+    <span class="string">'stock'</span>       => <span class="number">150</span>,
+    <span class="string">'expiry_date'</span> => <span class="string">"2026-12-31"</span>
+];
+
+<span class="comment">// Access items by key name</span>
+<span class="keyword">echo</span> <span class="variable">$product</span>[<span class="string">'name'</span>];   <span class="comment">// Output: Paracetamol 500mg</span>
+<span class="keyword">echo</span> <span class="variable">$product</span>[<span class="string">'price'</span>];  <span class="comment">// Output: 5.50</span>
+
+<span class="comment">// Update a value</span>
+<span class="variable">$product</span>[<span class="string">'stock'</span>] = <span class="number">145</span>;  <span class="comment">// Now stock is 145</span>
+            </div>
+            
+            <h3>Array of Arrays (2D Array)</h3>
+            <p>When you get data from database, you usually get an array of arrays - a list of products.</p>
+            
+            <div class="code-example">
+<span class="comment">// List of products (like from database)</span>
+<span class="variable">$products</span> = [
+    [<span class="string">'id'</span> => <span class="number">1</span>, <span class="string">'name'</span> => <span class="string">"Biogesic"</span>,  <span class="string">'price'</span> => <span class="number">5.50</span>],
+    [<span class="string">'id'</span> => <span class="number">2</span>, <span class="string">'name'</span> => <span class="string">"Neozep"</span>,    <span class="string">'price'</span> => <span class="number">8.00</span>],
+    [<span class="string">'id'</span> => <span class="number">3</span>, <span class="string">'name'</span> => <span class="string">"Bioflu"</span>,    <span class="string">'price'</span> => <span class="number">12.00</span>]
+];
+
+<span class="comment">// Access: First the row [0], then the column ['name']</span>
+<span class="keyword">echo</span> <span class="variable">$products</span>[<span class="number">0</span>][<span class="string">'name'</span>];  <span class="comment">// Output: Biogesic</span>
+<span class="keyword">echo</span> <span class="variable">$products</span>[<span class="number">1</span>][<span class="string">'price'</span>]; <span class="comment">// Output: 8.00</span>
+
+<span class="comment">// Loop through all products</span>
+<span class="keyword">foreach</span> (<span class="variable">$products</span> <span class="keyword">as</span> <span class="variable">$product</span>) {
+    <span class="keyword">echo</span> <span class="variable">$product</span>[<span class="string">'name'</span>] . <span class="string">" - ₱"</span> . <span class="variable">$product</span>[<span class="string">'price'</span>] . <span class="string">"&lt;br&gt;"</span>;
+}
+<span class="comment">// Output:
+// Biogesic - ₱5.50
+// Neozep - ₱8.00
+// Bioflu - ₱12.00</span>
+            </div>
+        </section>
+        
+        <!-- Special Variables -->
+        <section class="section">
+            <h2>🌟 Special PHP Variables (Superglobals)</h2>
+            
+            <p>PHP has built-in variables that are available everywhere. These are called "superglobals".</p>
+            
+            <div class="type-card">
+                <h4>📥 $_GET - URL Parameters</h4>
+                <p>Data passed through the URL (visible in address bar)</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="comment">// URL: product.php?id=123&category=medicine</span>
+
+<span class="variable">$id</span> = <span class="variable">$_GET</span>[<span class="string">'id'</span>];           <span class="comment">// Gets: 123</span>
+<span class="variable">$category</span> = <span class="variable">$_GET</span>[<span class="string">'category'</span>]; <span class="comment">// Gets: medicine</span>
+                </div>
+            </div>
+            
+            <div class="type-card">
+                <h4>📤 $_POST - Form Data</h4>
+                <p>Data sent from forms (hidden from URL, more secure)</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="comment">// Form with method="POST"</span>
+<span class="comment">// &lt;input name="username" value="Juan"&gt;</span>
+
+<span class="variable">$username</span> = <span class="variable">$_POST</span>[<span class="string">'username'</span>];  <span class="comment">// Gets: Juan</span>
+<span class="variable">$password</span> = <span class="variable">$_POST</span>[<span class="string">'password'</span>];  <span class="comment">// Gets form password</span>
+                </div>
+            </div>
+            
+            <div class="type-card">
+                <h4>🍪 $_SESSION - User Session Data</h4>
+                <p>Data that persists across pages while user is logged in</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="comment">// Store user info after login</span>
+<span class="variable">$_SESSION</span>[<span class="string">'user_id'</span>] = <span class="number">42</span>;
+<span class="variable">$_SESSION</span>[<span class="string">'username'</span>] = <span class="string">"Maria"</span>;
+<span class="variable">$_SESSION</span>[<span class="string">'role'</span>] = <span class="string">"admin"</span>;
+
+<span class="comment">// Access on any page</span>
+<span class="keyword">if</span> (<span class="variable">$_SESSION</span>[<span class="string">'role'</span>] === <span class="string">'admin'</span>) {
+    <span class="comment">// Show admin features</span>
+}
+                </div>
+            </div>
+            
+            <div class="type-card">
+                <h4>📁 $_FILES - Uploaded Files</h4>
+                <p>Information about files uploaded through forms</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="comment">// Form with: &lt;input type="file" name="photo"&gt;</span>
+
+<span class="variable">$fileName</span> = <span class="variable">$_FILES</span>[<span class="string">'photo'</span>][<span class="string">'name'</span>];      <span class="comment">// Original name</span>
+<span class="variable">$fileSize</span> = <span class="variable">$_FILES</span>[<span class="string">'photo'</span>][<span class="string">'size'</span>];      <span class="comment">// Size in bytes</span>
+<span class="variable">$tempPath</span> = <span class="variable">$_FILES</span>[<span class="string">'photo'</span>][<span class="string">'tmp_name'</span>];  <span class="comment">// Temp location</span>
+                </div>
+            </div>
+            
+            <div class="type-card">
+                <h4>🖥️ $_SERVER - Server Information</h4>
+                <p>Information about the server and current request</p>
+                <div class="code-example" style="padding: 1rem;">
+<span class="variable">$_SERVER</span>[<span class="string">'REQUEST_METHOD'</span>];  <span class="comment">// GET or POST</span>
+<span class="variable">$_SERVER</span>[<span class="string">'PHP_SELF'</span>];         <span class="comment">// Current file name</span>
+<span class="variable">$_SERVER</span>[<span class="string">'HTTP_HOST'</span>];        <span class="comment">// Domain name</span>
+<span class="variable">$_SERVER</span>[<span class="string">'REMOTE_ADDR'</span>];      <span class="comment">// User's IP address</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Type Checking -->
+        <section class="section">
+            <h2>🔍 Checking Variable Types</h2>
+            
+            <p>PHP provides functions to check what type a variable is:</p>
+            
+            <div class="code-example">
+<span class="variable">$name</span> = <span class="string">"Maria"</span>;
+<span class="variable">$age</span> = <span class="number">25</span>;
+<span class="variable">$price</span> = <span class="number">99.99</span>;
+<span class="variable">$isActive</span> = <span class="keyword">true</span>;
+<span class="variable">$nothing</span> = <span class="keyword">null</span>;
+<span class="variable">$items</span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+
+<span class="comment">// Check functions return true/false</span>
+<span class="function">is_string</span>(<span class="variable">$name</span>);     <span class="comment">// true - it's a string</span>
+<span class="function">is_int</span>(<span class="variable">$age</span>);         <span class="comment">// true - it's an integer</span>
+<span class="function">is_float</span>(<span class="variable">$price</span>);     <span class="comment">// true - it's a float</span>
+<span class="function">is_bool</span>(<span class="variable">$isActive</span>);   <span class="comment">// true - it's a boolean</span>
+<span class="function">is_null</span>(<span class="variable">$nothing</span>);    <span class="comment">// true - it's null</span>
+<span class="function">is_array</span>(<span class="variable">$items</span>);     <span class="comment">// true - it's an array</span>
+
+<span class="comment">// Check if variable exists and has value</span>
+<span class="function">isset</span>(<span class="variable">$name</span>);         <span class="comment">// true - exists and not null</span>
+<span class="function">empty</span>(<span class="variable">$name</span>);         <span class="comment">// false - has a value</span>
+
+<span class="comment">// Get the type as string</span>
+<span class="function">gettype</span>(<span class="variable">$name</span>);       <span class="comment">// "string"</span>
+<span class="function">gettype</span>(<span class="variable">$age</span>);        <span class="comment">// "integer"</span>
+            </div>
+            
+            <div class="tip-box">
+                <div class="title">💡 Pro Tip: Always Check Before Using</div>
+                <p>Before using <code>$_GET</code> or <code>$_POST</code> data, always check if it exists:</p>
+                <div class="code-example" style="padding: 1rem; margin-top: 0.5rem;">
+<span class="comment">// Safe way to get URL parameter</span>
+<span class="variable">$id</span> = <span class="variable">$_GET</span>[<span class="string">'id'</span>] ?? <span class="keyword">null</span>;  <span class="comment">// Use null if not set</span>
+
+<span class="comment">// Or check with isset</span>
+<span class="keyword">if</span> (<span class="function">isset</span>(<span class="variable">$_GET</span>[<span class="string">'id'</span>])) {
+    <span class="variable">$id</span> = <span class="variable">$_GET</span>[<span class="string">'id'</span>];
+}
+                </div>
+            </div>
+        </section>
+        
+        <!-- Type Conversion -->
+        <section class="section">
+            <h2>🔄 Converting Between Types</h2>
+            
+            <p>Sometimes you need to change a value from one type to another:</p>
+            
+            <div class="code-example">
+<span class="variable">$string_number</span> = <span class="string">"123"</span>;     <span class="comment">// This is a string</span>
+<span class="variable">$real_number</span> = (<span class="keyword">int</span>)<span class="variable">$string_number</span>;  <span class="comment">// Now it's integer 123</span>
+
+<span class="comment">// Cast to different types:</span>
+(<span class="keyword">int</span>)    <span class="comment">// Convert to integer</span>
+(<span class="keyword">float</span>)  <span class="comment">// Convert to decimal number</span>
+(<span class="keyword">string</span>) <span class="comment">// Convert to text</span>
+(<span class="keyword">bool</span>)   <span class="comment">// Convert to true/false</span>
+(<span class="keyword">array</span>)  <span class="comment">// Convert to array</span>
+
+<span class="comment">// Examples:</span>
+<span class="variable">$price</span> = (<span class="keyword">float</span>)<span class="string">"99.99"</span>;   <span class="comment">// String to float: 99.99</span>
+<span class="variable">$text</span> = (<span class="keyword">string</span>)<span class="number">100</span>;       <span class="comment">// Integer to string: "100"</span>
+<span class="variable">$flag</span> = (<span class="keyword">bool</span>)<span class="number">1</span>;           <span class="comment">// Integer to boolean: true</span>
+<span class="variable">$flag2</span> = (<span class="keyword">bool</span>)<span class="number">0</span>;          <span class="comment">// Integer to boolean: false</span>
+
+<span class="comment">// Using functions:</span>
+<span class="function">intval</span>(<span class="string">"42"</span>);        <span class="comment">// Convert to integer</span>
+<span class="function">floatval</span>(<span class="string">"3.14"</span>);    <span class="comment">// Convert to float</span>
+<span class="function">strval</span>(<span class="number">100</span>);         <span class="comment">// Convert to string</span>
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Why This Matters</div>
+                <p>Data from forms (<code>$_GET</code>, <code>$_POST</code>) is ALWAYS a string, even if it looks like a number! If you're doing math, convert it first.</p>
+                <div class="code-example" style="padding: 1rem; margin-top: 0.5rem;">
+<span class="comment">// ❌ Problem: String math can cause issues</span>
+<span class="variable">$quantity</span> = <span class="variable">$_POST</span>[<span class="string">'quantity'</span>];  <span class="comment">// "5" (string)</span>
+
+<span class="comment">// ✅ Solution: Convert first</span>
+<span class="variable">$quantity</span> = (<span class="keyword">int</span>)<span class="variable">$_POST</span>[<span class="string">'quantity'</span>];  <span class="comment">// 5 (integer)</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Navigation -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 2rem;">
+            <a href="CODE_REVIEWER_PART1.html" style="padding: 1rem 2rem; background: white; color: var(--gray); text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                ← Part 1: Basics
+            </a>
+            <a href="CODE_REVIEWER_PART3.html" style="padding: 1rem 2rem; background: var(--secondary); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 8px 20px rgba(6,182,212,0.3);">
+                Part 3: Functions & Control Flow →
+            </a>
+        </div>
+        
+        <footer>
+            <p>PHP Beginner's Code Guide - Part 2 of 5</p>
+            <p style="font-size: 0.85rem;">Made with ❤️ for Calloway Pharmacy IMS</p>
+        </footer>
+    </div>
+</body>
+</html>

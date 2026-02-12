@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP Beginner's Code Guide - Part 4 | Database Operations</title>
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --secondary: #d97706;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --gray: #64748b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: var(--dark);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.3);
+            text-align: center;
+        }
+        
+        .report-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .report-header .emoji { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        
+        .part-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .part-nav a {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            color: var(--gray);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .part-nav a:hover { background: var(--primary); color: white; }
+        .part-nav a.active { background: var(--primary); color: white; }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .section h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #fef3c7;
+        }
+        
+        .section h3 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin: 1.5rem 0 1rem;
+        }
+        
+        .code-example {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+        
+        .code-example .comment { color: #64748b; font-style: italic; }
+        .code-example .keyword { color: #f472b6; font-weight: 600; }
+        .code-example .string { color: #34d399; }
+        .code-example .variable { color: #60a5fa; }
+        .code-example .function { color: #fbbf24; }
+        .code-example .number { color: #fb923c; }
+        .code-example .sql { color: #c084fc; }
+        
+        .analogy {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--info);
+            margin: 1rem 0;
+        }
+        
+        .analogy .title {
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tip-box {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--success);
+            margin: 1rem 0;
+        }
+        
+        .tip-box .title {
+            font-weight: 700;
+            color: #065f46;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--danger);
+            margin: 1rem 0;
+        }
+        
+        .warning-box .title {
+            font-weight: 700;
+            color: #991b1b;
+        }
+        
+        .crud-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 5px solid;
+        }
+        
+        .crud-card.create { border-color: var(--success); }
+        .crud-card.read { border-color: var(--info); }
+        .crud-card.update { border-color: var(--warning); }
+        .crud-card.delete { border-color: var(--danger); }
+        
+        .crud-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .crud-card.create h4 { color: var(--success); }
+        .crud-card.read h4 { color: var(--info); }
+        .crud-card.update h4 { color: var(--warning); }
+        .crud-card.delete h4 { color: var(--danger); }
+        
+        .table-visual {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .table-visual th, .table-visual td {
+            border: 2px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        .table-visual th {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .table-visual tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .report-header h1 { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <span class="emoji">🗄️</span>
+            <h1>Database Operations</h1>
+            <p class="subtitle">Part 4: Connecting PHP to MySQL</p>
+        </header>
+        
+        <nav class="part-nav">
+            <a href="CODE_REVIEWER_PART1.html">Part 1: Basics</a>
+            <a href="CODE_REVIEWER_PART2.html">Part 2: Variables</a>
+            <a href="CODE_REVIEWER_PART3.html">Part 3: Functions</a>
+            <a href="#" class="active">Part 4: Database</a>
+            <a href="CODE_REVIEWER_PART5.html">Part 5: Your System</a>
+        </nav>
+        
+        <!-- What is a Database -->
+        <section class="section">
+            <h2>📊 What is a Database?</h2>
+            
+            <p>A database is where your application stores all its data permanently. Think of it as a super organized digital filing cabinet.</p>
+            
+            <div class="analogy">
+                <div class="title">💡 Real World Analogy</div>
+                <p>Your pharmacy database is like your physical storage system:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><strong>Database</strong> = The entire filing cabinet</li>
+                    <li><strong>Tables</strong> = Different drawers (Products, Sales, Customers)</li>
+                    <li><strong>Columns</strong> = Labels on folders (Name, Price, Stock)</li>
+                    <li><strong>Rows</strong> = Individual records (each product)</li>
+                </ul>
+            </div>
+            
+            <h3>Example: Products Table</h3>
+            <table class="table-visual">
+                <thead>
+                    <tr>
+                        <th>id</th>
+                        <th>name</th>
+                        <th>brand</th>
+                        <th>price</th>
+                        <th>stock</th>
+                        <th>expiry_date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Paracetamol 500mg</td>
+                        <td>Biogesic</td>
+                        <td>5.50</td>
+                        <td>150</td>
+                        <td>2026-06-30</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Cold Tablet</td>
+                        <td>Neozep</td>
+                        <td>8.00</td>
+                        <td>75</td>
+                        <td>2025-12-31</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Flu Relief</td>
+                        <td>Bioflu</td>
+                        <td>12.00</td>
+                        <td>200</td>
+                        <td>2026-03-15</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <!-- Connecting to Database -->
+        <section class="section">
+            <h2>🔌 Connecting to the Database</h2>
+            
+            <p>Before you can use the database, you need to connect to it. This is done in your <code>db_connection.php</code> file.</p>
+            
+            <div class="code-example">
+<span class="keyword">&lt;?php</span>
+<span class="comment">// Database connection settings</span>
+<span class="variable">$host</span> = <span class="string">"localhost"</span>;      <span class="comment">// Where the database is (usually localhost)</span>
+<span class="variable">$username</span> = <span class="string">"root"</span>;        <span class="comment">// Database username</span>
+<span class="variable">$password</span> = <span class="string">""</span>;            <span class="comment">// Database password (empty for XAMPP default)</span>
+<span class="variable">$database</span> = <span class="string">"pharmacy_db"</span>; <span class="comment">// Name of your database</span>
+
+<span class="comment">// Create connection</span>
+<span class="variable">$conn</span> = <span class="keyword">new</span> <span class="function">mysqli</span>(<span class="variable">$host</span>, <span class="variable">$username</span>, <span class="variable">$password</span>, <span class="variable">$database</span>);
+
+<span class="comment">// Check if connection worked</span>
+<span class="keyword">if</span> (<span class="variable">$conn</span>->connect_error) {
+    <span class="comment">// Something went wrong!</span>
+    <span class="keyword">die</span>(<span class="string">"Connection failed: "</span> . <span class="variable">$conn</span>->connect_error);
+}
+
+<span class="comment">// Connection successful - $conn is now your connection object</span>
+<span class="keyword">echo</span> <span class="string">"Connected successfully!"</span>;
+<span class="keyword">?&gt;</span>
+            </div>
+            
+            <div class="tip-box">
+                <div class="title">💡 What Each Part Means</div>
+                <ul style="margin-left: 1.5rem;">
+                    <li><code>new mysqli()</code> - Creates a new MySQL connection object</li>
+                    <li><code>$conn</code> - The connection object (you'll use this for all queries)</li>
+                    <li><code>connect_error</code> - Contains error message if connection failed</li>
+                    <li><code>die()</code> - Stops the script and shows a message</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- CRUD Operations -->
+        <section class="section">
+            <h2>📝 CRUD Operations</h2>
+            
+            <p>CRUD stands for the 4 basic database operations:</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+                <div style="background: #ecfdf5; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">➕</div>
+                    <strong style="color: var(--success);">CREATE</strong>
+                    <p style="font-size: 0.9rem; color: var(--gray);">Add new data</p>
+                </div>
+                <div style="background: #eff6ff; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📖</div>
+                    <strong style="color: var(--info);">READ</strong>
+                    <p style="font-size: 0.9rem; color: var(--gray);">Get/view data</p>
+                </div>
+                <div style="background: #fef3c7; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✏️</div>
+                    <strong style="color: var(--warning);">UPDATE</strong>
+                    <p style="font-size: 0.9rem; color: var(--gray);">Modify existing</p>
+                </div>
+                <div style="background: #fef2f2; padding: 1.5rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🗑️</div>
+                    <strong style="color: var(--danger);">DELETE</strong>
+                    <p style="font-size: 0.9rem; color: var(--gray);">Remove data</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- CREATE -->
+        <section class="section">
+            <h2>➕ CREATE - Adding New Data (INSERT)</h2>
+            
+            <p>Use INSERT to add new records to a table.</p>
+            
+            <div class="code-example">
+<span class="comment">// Method 1: Simple (NOT RECOMMENDED - security risk!)</span>
+<span class="variable">$sql</span> = <span class="string">"<span class="sql">INSERT INTO</span> products (name, brand, price, stock) 
+        <span class="sql">VALUES</span> ('Paracetamol', 'Biogesic', 5.50, 100)"</span>;
+
+<span class="variable">$conn</span>-><span class="function">query</span>(<span class="variable">$sql</span>);
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Security Warning: SQL Injection!</div>
+                <p>Never put user input directly into SQL! Hackers can inject malicious code. Always use <strong>prepared statements</strong>.</p>
+            </div>
+            
+            <div class="code-example">
+<span class="comment">// ✅ CORRECT WAY: Prepared Statement</span>
+<span class="variable">$name</span> = <span class="variable">$_POST</span>[<span class="string">'name'</span>];     <span class="comment">// User input: "Biogesic"</span>
+<span class="variable">$brand</span> = <span class="variable">$_POST</span>[<span class="string">'brand'</span>];   <span class="comment">// User input: "Unilab"</span>
+<span class="variable">$price</span> = <span class="variable">$_POST</span>[<span class="string">'price'</span>];   <span class="comment">// User input: "5.50"</span>
+<span class="variable">$stock</span> = <span class="variable">$_POST</span>[<span class="string">'stock'</span>];   <span class="comment">// User input: "100"</span>
+
+<span class="comment">// Step 1: Prepare the SQL with placeholders (?)</span>
+<span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"<span class="sql">INSERT INTO</span> products (name, brand, price, stock) <span class="sql">VALUES</span> (?, ?, ?, ?)"</span>);
+
+<span class="comment">// Step 2: Bind the actual values to placeholders</span>
+<span class="comment">// "ssdi" = string, string, double, integer (types of each value)</span>
+<span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"ssdi"</span>, <span class="variable">$name</span>, <span class="variable">$brand</span>, <span class="variable">$price</span>, <span class="variable">$stock</span>);
+
+<span class="comment">// Step 3: Execute the query</span>
+<span class="keyword">if</span> (<span class="variable">$stmt</span>-><span class="function">execute</span>()) {
+    <span class="keyword">echo</span> <span class="string">"Product added! ID: "</span> . <span class="variable">$conn</span>->insert_id;
+} <span class="keyword">else</span> {
+    <span class="keyword">echo</span> <span class="string">"Error: "</span> . <span class="variable">$stmt</span>->error;
+}
+
+<span class="comment">// Step 4: Close the statement</span>
+<span class="variable">$stmt</span>-><span class="function">close</span>();
+            </div>
+            
+            <div class="tip-box">
+                <div class="title">💡 bind_param Type Codes</div>
+                <ul style="margin-left: 1.5rem;">
+                    <li><code>s</code> = string (text)</li>
+                    <li><code>i</code> = integer (whole number)</li>
+                    <li><code>d</code> = double (decimal number)</li>
+                    <li><code>b</code> = blob (binary data, like files)</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- READ -->
+        <section class="section">
+            <h2>📖 READ - Getting Data (SELECT)</h2>
+            
+            <p>Use SELECT to retrieve data from the database.</p>
+            
+            <h3>Get All Records</h3>
+            <div class="code-example">
+<span class="comment">// Get all products</span>
+<span class="variable">$sql</span> = <span class="string">"<span class="sql">SELECT</span> * <span class="sql">FROM</span> products"</span>;
+<span class="variable">$result</span> = <span class="variable">$conn</span>-><span class="function">query</span>(<span class="variable">$sql</span>);
+
+<span class="comment">// Check if we got results</span>
+<span class="keyword">if</span> (<span class="variable">$result</span>->num_rows > <span class="number">0</span>) {
+    <span class="comment">// Loop through each row</span>
+    <span class="keyword">while</span> (<span class="variable">$row</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>()) {
+        <span class="keyword">echo</span> <span class="variable">$row</span>[<span class="string">'name'</span>] . <span class="string">" - ₱"</span> . <span class="variable">$row</span>[<span class="string">'price'</span>] . <span class="string">"&lt;br&gt;"</span>;
+    }
+} <span class="keyword">else</span> {
+    <span class="keyword">echo</span> <span class="string">"No products found"</span>;
+}
+
+<span class="comment">// Output:
+// Paracetamol - ₱5.50
+// Neozep - ₱8.00
+// Bioflu - ₱12.00</span>
+            </div>
+            
+            <div class="tip-box">
+                <div class="title">💡 Understanding the Code</div>
+                <ul style="margin-left: 1.5rem;">
+                    <li><code>SELECT *</code> = Get all columns (* means "everything")</li>
+                    <li><code>$result</code> = Contains all matching rows</li>
+                    <li><code>num_rows</code> = Count of rows found</li>
+                    <li><code>fetch_assoc()</code> = Get one row as an array with column names</li>
+                </ul>
+            </div>
+            
+            <h3>Get Specific Records (with WHERE)</h3>
+            <div class="code-example">
+<span class="comment">// Get products with low stock (less than 50)</span>
+<span class="variable">$sql</span> = <span class="string">"<span class="sql">SELECT</span> * <span class="sql">FROM</span> products <span class="sql">WHERE</span> stock < 50"</span>;
+
+<span class="comment">// Get products by brand</span>
+<span class="variable">$sql</span> = <span class="string">"<span class="sql">SELECT</span> * <span class="sql">FROM</span> products <span class="sql">WHERE</span> brand = 'Biogesic'"</span>;
+
+<span class="comment">// Get products expiring soon</span>
+<span class="variable">$sql</span> = <span class="string">"<span class="sql">SELECT</span> * <span class="sql">FROM</span> products <span class="sql">WHERE</span> expiry_date < '2025-06-01'"</span>;
+
+<span class="comment">// Multiple conditions</span>
+<span class="variable">$sql</span> = <span class="string">"<span class="sql">SELECT</span> * <span class="sql">FROM</span> products <span class="sql">WHERE</span> stock < 50 <span class="sql">AND</span> price > 10"</span>;
+            </div>
+            
+            <h3>Get Single Record (with Prepared Statement)</h3>
+            <div class="code-example">
+<span class="comment">// Get product by ID (from URL: product.php?id=5)</span>
+<span class="variable">$id</span> = <span class="variable">$_GET</span>[<span class="string">'id'</span>];
+
+<span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"<span class="sql">SELECT</span> * <span class="sql">FROM</span> products <span class="sql">WHERE</span> id = ?"</span>);
+<span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"i"</span>, <span class="variable">$id</span>);  <span class="comment">// "i" = integer</span>
+<span class="variable">$stmt</span>-><span class="function">execute</span>();
+
+<span class="variable">$result</span> = <span class="variable">$stmt</span>-><span class="function">get_result</span>();
+<span class="variable">$product</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>();  <span class="comment">// Get single row</span>
+
+<span class="keyword">if</span> (<span class="variable">$product</span>) {
+    <span class="keyword">echo</span> <span class="string">"Product: "</span> . <span class="variable">$product</span>[<span class="string">'name'</span>];
+    <span class="keyword">echo</span> <span class="string">"Price: ₱"</span> . <span class="variable">$product</span>[<span class="string">'price'</span>];
+} <span class="keyword">else</span> {
+    <span class="keyword">echo</span> <span class="string">"Product not found"</span>;
+}
+            </div>
+        </section>
+        
+        <!-- UPDATE -->
+        <section class="section">
+            <h2>✏️ UPDATE - Modifying Data</h2>
+            
+            <p>Use UPDATE to change existing records.</p>
+            
+            <div class="code-example">
+<span class="comment">// Update product price and stock</span>
+<span class="variable">$id</span> = <span class="variable">$_POST</span>[<span class="string">'id'</span>];
+<span class="variable">$newPrice</span> = <span class="variable">$_POST</span>[<span class="string">'price'</span>];
+<span class="variable">$newStock</span> = <span class="variable">$_POST</span>[<span class="string">'stock'</span>];
+
+<span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"<span class="sql">UPDATE</span> products <span class="sql">SET</span> price = ?, stock = ? <span class="sql">WHERE</span> id = ?"</span>);
+<span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"dii"</span>, <span class="variable">$newPrice</span>, <span class="variable">$newStock</span>, <span class="variable">$id</span>);
+
+<span class="keyword">if</span> (<span class="variable">$stmt</span>-><span class="function">execute</span>()) {
+    <span class="keyword">if</span> (<span class="variable">$stmt</span>->affected_rows > <span class="number">0</span>) {
+        <span class="keyword">echo</span> <span class="string">"Product updated successfully!"</span>;
+    } <span class="keyword">else</span> {
+        <span class="keyword">echo</span> <span class="string">"No changes made (maybe same values?)"</span>;
+    }
+} <span class="keyword">else</span> {
+    <span class="keyword">echo</span> <span class="string">"Error: "</span> . <span class="variable">$stmt</span>->error;
+}
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Always Use WHERE!</div>
+                <p>Without WHERE, you'll update ALL rows! Always specify which row(s) to update.</p>
+                <div class="code-example" style="padding: 1rem; margin-top: 0.5rem;">
+<span class="comment">// ❌ DANGEROUS - Updates ALL products!</span>
+<span class="string">"UPDATE products SET price = 0"</span>
+
+<span class="comment">// ✅ SAFE - Only updates product #5</span>
+<span class="string">"UPDATE products SET price = 0 WHERE id = 5"</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- DELETE -->
+        <section class="section">
+            <h2>🗑️ DELETE - Removing Data</h2>
+            
+            <p>Use DELETE to remove records from the database.</p>
+            
+            <div class="code-example">
+<span class="comment">// Delete a product by ID</span>
+<span class="variable">$id</span> = <span class="variable">$_POST</span>[<span class="string">'id'</span>];
+
+<span class="variable">$stmt</span> = <span class="variable">$conn</span>-><span class="function">prepare</span>(<span class="string">"<span class="sql">DELETE FROM</span> products <span class="sql">WHERE</span> id = ?"</span>);
+<span class="variable">$stmt</span>-><span class="function">bind_param</span>(<span class="string">"i"</span>, <span class="variable">$id</span>);
+
+<span class="keyword">if</span> (<span class="variable">$stmt</span>-><span class="function">execute</span>()) {
+    <span class="keyword">if</span> (<span class="variable">$stmt</span>->affected_rows > <span class="number">0</span>) {
+        <span class="keyword">echo</span> <span class="string">"Product deleted!"</span>;
+    } <span class="keyword">else</span> {
+        <span class="keyword">echo</span> <span class="string">"Product not found"</span>;
+    }
+}
+            </div>
+            
+            <div class="warning-box">
+                <div class="title">⚠️ Double Warning!</div>
+                <p>DELETE is permanent! Once data is deleted, it's gone forever. Same as UPDATE - always use WHERE!</p>
+            </div>
+        </section>
+        
+        <!-- SQL Queries Reference -->
+        <section class="section">
+            <h2>📚 SQL Keywords Reference</h2>
+            
+            <p>Here are the most common SQL keywords you'll see in your code:</p>
+            
+            <div class="code-example">
+<span class="comment">-- SELECT: Choose which columns</span>
+<span class="sql">SELECT</span> *                    <span class="comment">-- All columns</span>
+<span class="sql">SELECT</span> name, price          <span class="comment">-- Specific columns</span>
+<span class="sql">SELECT COUNT(*)</span>             <span class="comment">-- Count rows</span>
+<span class="sql">SELECT SUM(price)</span>           <span class="comment">-- Add up values</span>
+
+<span class="comment">-- FROM: Which table</span>
+<span class="sql">FROM</span> products
+<span class="sql">FROM</span> sales
+
+<span class="comment">-- WHERE: Filter rows</span>
+<span class="sql">WHERE</span> id = 5                <span class="comment">-- Exact match</span>
+<span class="sql">WHERE</span> price > 100           <span class="comment">-- Greater than</span>
+<span class="sql">WHERE</span> name <span class="sql">LIKE</span> '%bio%'    <span class="comment">-- Contains 'bio'</span>
+<span class="sql">WHERE</span> stock <span class="sql">BETWEEN</span> 10 <span class="sql">AND</span> 50
+
+<span class="comment">-- ORDER BY: Sort results</span>
+<span class="sql">ORDER BY</span> name <span class="sql">ASC</span>          <span class="comment">-- A to Z</span>
+<span class="sql">ORDER BY</span> price <span class="sql">DESC</span>        <span class="comment">-- Highest first</span>
+
+<span class="comment">-- LIMIT: Restrict results</span>
+<span class="sql">LIMIT</span> 10                    <span class="comment">-- Only first 10</span>
+<span class="sql">LIMIT</span> 10 <span class="sql">OFFSET</span> 20          <span class="comment">-- Skip 20, get next 10</span>
+
+<span class="comment">-- JOIN: Combine tables</span>
+<span class="sql">JOIN</span> categories <span class="sql">ON</span> products.category_id = categories.id
+
+<span class="comment">-- GROUP BY: Group similar rows</span>
+<span class="sql">GROUP BY</span> category           <span class="comment">-- Totals per category</span>
+            </div>
+        </section>
+        
+        <!-- Full Example -->
+        <section class="section">
+            <h2>🎯 Full Working Example</h2>
+            
+            <p>Here's a complete example that loads products into an HTML table:</p>
+            
+            <div class="code-example">
+<span class="keyword">&lt;?php</span>
+<span class="comment">// Include database connection</span>
+<span class="keyword">require_once</span> <span class="string">'db_connection.php'</span>;
+
+<span class="comment">// Get all products, sorted by name</span>
+<span class="variable">$sql</span> = <span class="string">"<span class="sql">SELECT</span> * <span class="sql">FROM</span> products <span class="sql">ORDER BY</span> name <span class="sql">ASC</span>"</span>;
+<span class="variable">$result</span> = <span class="variable">$conn</span>-><span class="function">query</span>(<span class="variable">$sql</span>);
+<span class="keyword">?&gt;</span>
+
+<span class="keyword">&lt;!DOCTYPE html&gt;</span>
+<span class="keyword">&lt;html&gt;</span>
+<span class="keyword">&lt;body&gt;</span>
+    <span class="keyword">&lt;h1&gt;</span>Products List<span class="keyword">&lt;/h1&gt;</span>
+    
+    <span class="keyword">&lt;table border="1"&gt;</span>
+        <span class="keyword">&lt;tr&gt;</span>
+            <span class="keyword">&lt;th&gt;</span>Name<span class="keyword">&lt;/th&gt;</span>
+            <span class="keyword">&lt;th&gt;</span>Brand<span class="keyword">&lt;/th&gt;</span>
+            <span class="keyword">&lt;th&gt;</span>Price<span class="keyword">&lt;/th&gt;</span>
+            <span class="keyword">&lt;th&gt;</span>Stock<span class="keyword">&lt;/th&gt;</span>
+        <span class="keyword">&lt;/tr&gt;</span>
+        
+        <span class="keyword">&lt;?php</span> <span class="keyword">while</span> (<span class="variable">$row</span> = <span class="variable">$result</span>-><span class="function">fetch_assoc</span>()): <span class="keyword">?&gt;</span>
+        <span class="keyword">&lt;tr&gt;</span>
+            <span class="keyword">&lt;td&gt;&lt;?=</span> <span class="function">htmlspecialchars</span>(<span class="variable">$row</span>[<span class="string">'name'</span>]) <span class="keyword">?&gt;&lt;/td&gt;</span>
+            <span class="keyword">&lt;td&gt;&lt;?=</span> <span class="function">htmlspecialchars</span>(<span class="variable">$row</span>[<span class="string">'brand'</span>]) <span class="keyword">?&gt;&lt;/td&gt;</span>
+            <span class="keyword">&lt;td&gt;</span>₱<span class="keyword">&lt;?=</span> <span class="function">number_format</span>(<span class="variable">$row</span>[<span class="string">'price'</span>], <span class="number">2</span>) <span class="keyword">?&gt;&lt;/td&gt;</span>
+            <span class="keyword">&lt;td&gt;&lt;?=</span> <span class="variable">$row</span>[<span class="string">'stock'</span>] <span class="keyword">?&gt;&lt;/td&gt;</span>
+        <span class="keyword">&lt;/tr&gt;</span>
+        <span class="keyword">&lt;?php</span> <span class="keyword">endwhile</span>; <span class="keyword">?&gt;</span>
+    <span class="keyword">&lt;/table&gt;</span>
+    
+    <span class="keyword">&lt;p&gt;</span>Total Products: <span class="keyword">&lt;?=</span> <span class="variable">$result</span>->num_rows <span class="keyword">?&gt;&lt;/p&gt;</span>
+<span class="keyword">&lt;/body&gt;</span>
+<span class="keyword">&lt;/html&gt;</span>
+
+<span class="keyword">&lt;?php</span>
+<span class="comment">// Close connection</span>
+<span class="variable">$conn</span>-><span class="function">close</span>();
+<span class="keyword">?&gt;</span>
+            </div>
+            
+            <div class="tip-box">
+                <div class="title">💡 New Things in This Example</div>
+                <ul style="margin-left: 1.5rem;">
+                    <li><code>&lt;?= ... ?&gt;</code> = Short for <code>&lt;?php echo ... ?&gt;</code></li>
+                    <li><code>htmlspecialchars()</code> = Security function that prevents XSS attacks</li>
+                    <li><code>number_format()</code> = Formats number with commas and decimals</li>
+                    <li><code>while(): / endwhile;</code> = Alternative loop syntax for HTML templates</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Navigation -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 2rem;">
+            <a href="CODE_REVIEWER_PART3.html" style="padding: 1rem 2rem; background: white; color: var(--gray); text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                ← Part 3: Functions
+            </a>
+            <a href="CODE_REVIEWER_PART5.html" style="padding: 1rem 2rem; background: var(--primary); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; box-shadow: 0 8px 20px rgba(245,158,11,0.3);">
+                Part 5: Understanding Your System →
+            </a>
+        </div>
+        
+        <footer>
+            <p>PHP Beginner's Code Guide - Part 4 of 5</p>
+            <p style="font-size: 0.85rem;">Made with ❤️ for Calloway Pharmacy IMS</p>
+        </footer>
+    </div>
+</body>
+</html>
