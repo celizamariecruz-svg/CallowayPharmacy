@@ -3,8 +3,11 @@
  * Pharmacy Online Ordering - Connected to Database
  * Fetches real medicine data from the products table
  */
-session_start();
+// Load config FIRST so session security settings apply before session_start()
 require_once 'db_connection.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Ensure tables exist — only run once per session to avoid repeated DDL on every page load
 if (empty($_SESSION['_online_tables_checked'])) {
@@ -4677,6 +4680,8 @@ if ($prodResult) {
                     console.error('Non-JSON response:', rawText);
                 }
 
+                console.log('[OnlineOrder placeOrder] status:', res.status, 'raw:', rawText.substring(0, 500));
+
                 // Handle authentication error - user not logged in
                 if (res.status === 401) {
                     showToast(data?.message || 'Please log in to place an order', 'info');
@@ -4784,7 +4789,10 @@ if ($prodResult) {
             toast.className = 'toast' + (type === 'info' ? ' info' : '');
             toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${message}`;
             container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+            // Errors/info stay visible longer
+            const delay = (type === 'success') ? 2500 : 5000;
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, delay);
+            if (type !== 'success') console.error('[OnlineOrder Toast]', message);
         }
 
         // ─── Utility ───

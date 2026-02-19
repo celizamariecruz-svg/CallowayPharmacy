@@ -2415,10 +2415,13 @@ $page_title = 'Point of Sale';
                     data = null;
                 }
 
+                console.log('[POS completeSale] status:', res.status, 'raw:', raw.substring(0, 500));
+
                 if (!res.ok) {
                     const msg = (data && data.message)
                         ? data.message
                         : `Sale request failed (${res.status}).`;
+                    console.error('[POS completeSale] HTTP error:', res.status, data);
                     showToast(msg, 'error');
                     btn.disabled = false;
                     btn.textContent = 'Complete Sale';
@@ -2426,6 +2429,7 @@ $page_title = 'Point of Sale';
                 }
 
                 if (!data || typeof data !== 'object') {
+                    console.error('[POS completeSale] Invalid JSON response:', raw.substring(0, 300));
                     showToast('Server returned an invalid response while saving sale.', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Complete Sale';
@@ -2433,6 +2437,7 @@ $page_title = 'Point of Sale';
                 }
 
                 if (!data.success) {
+                    console.error('[POS completeSale] Sale failed:', data.message);
                     showToast(data.message || 'Sale failed', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Complete Sale';
@@ -3136,7 +3141,11 @@ $page_title = 'Point of Sale';
             t.textContent = msg;
             t.className = 'toast ' + type + ' show';
             clearTimeout(t._timer);
-            t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+            // Errors stay visible longer so the user can read them
+            const delay = (type === 'error') ? 5000 : 1800;
+            t._timer = setTimeout(() => t.classList.remove('show'), delay);
+            // Also log to console for debugging
+            if (type === 'error') console.error('[POS Toast]', msg);
         }
 
         // ─── Online Order Notification System ───

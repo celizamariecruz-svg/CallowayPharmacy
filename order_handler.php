@@ -10,8 +10,12 @@ ob_start();
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-session_start();
+// Load config FIRST so session security settings are applied before session_start()
 require_once 'db_connection.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Throw exceptions for mysqli errors so we can return real messages
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

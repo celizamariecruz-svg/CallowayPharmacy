@@ -3,11 +3,31 @@
  * POS API — handles sale creation and stock deduction
  */
 
-session_start();
+// Load config FIRST so session security settings are applied before session_start()
 require_once 'db_connection.php';
 require_once 'Auth.php';
 
+// Session is started by Auth constructor (after config.php sets secure cookie params)
 header('Content-Type: application/json');
+
+/**
+ * Check if a column exists in a table (MySQL 5.7+ compatible).
+ */
+function posColumnExists($conn, $table, $column) {
+    static $cache = [];
+    $key = "$table.$column";
+    if (isset($cache[$key])) return $cache[$key];
+    $stmt = $conn->prepare(
+        "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS "
+        . "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?"
+    );
+    $stmt->bind_param('ss', $table, $column);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    $cache[$key] = intval($row['cnt']) > 0;
+    return $cache[$key];
+}
 
 $auth = new Auth($conn);
 
@@ -40,6 +60,19 @@ switch ($action) {
         if (empty($items)) {
             echo json_encode(['success' => false, 'message' => 'Cart is empty']);
             exit;
+        }
+
+        // Ensure discount columns exist BEFORE the transaction (DDL causes implicit commit)
+        try {
+            if (!posColumnExists($conn, 'sales', 'discount_percent')) {
+                $conn->query("ALTER TABLE sales ADD COLUMN discount_percent DECIMAL(5,2) DEFAULT 0");
+            }
+            if (!posColumnExists($conn, 'sales', 'discount_amount')) {
+                $conn->query("ALTER TABLE sales ADD COLUMN discount_amount DECIMAL(10,2) DEFAULT 0");
+            }
+        } catch (Exception $schemaEx) {
+            // Columns may already exist or lack permission — non-fatal
+            error_log('POS schema migration note: ' . $schemaEx->getMessage());
         }
 
         try {
@@ -106,10 +139,6 @@ switch ($action) {
             }
             $total = round($beforeDiscount - $discountAmount, 2);
             $changeAmount = max(0, $amountTendered - $total);
-
-            // 1. Ensure discount columns exist on sales table
-            $conn->query("ALTER TABLE sales ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0");
-            $conn->query("ALTER TABLE sales ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(10,2) DEFAULT 0");
 
             // 2. Insert sale header with subtotal, tax, discount
             $stmt = $conn->prepare("
