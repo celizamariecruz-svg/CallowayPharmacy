@@ -24,6 +24,9 @@ let prescriptions = [
   { id: 2, patientName: 'Jane Smith', medicationId: 3, quantity: 20, status: 'Processing', date: '2026-02-18' }
 ];
 
+let medicationIdCounter = 3;
+let prescriptionIdCounter = 2;
+
 // API Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', message: 'Calloway Pharmacy API is running' });
@@ -44,7 +47,7 @@ app.get('/api/medications/:id', (req, res) => {
 
 app.post('/api/medications', (req, res) => {
   const newMedication = {
-    id: medications.length + 1,
+    id: ++medicationIdCounter,
     name: req.body.name,
     quantity: req.body.quantity,
     price: req.body.price,
@@ -57,10 +60,10 @@ app.post('/api/medications', (req, res) => {
 app.put('/api/medications/:id', (req, res) => {
   const medication = medications.find(m => m.id === parseInt(req.params.id));
   if (medication) {
-    medication.name = req.body.name || medication.name;
-    medication.quantity = req.body.quantity || medication.quantity;
-    medication.price = req.body.price || medication.price;
-    medication.description = req.body.description || medication.description;
+    medication.name = req.body.name !== undefined ? req.body.name : medication.name;
+    medication.quantity = req.body.quantity !== undefined ? req.body.quantity : medication.quantity;
+    medication.price = req.body.price !== undefined ? req.body.price : medication.price;
+    medication.description = req.body.description !== undefined ? req.body.description : medication.description;
     res.json(medication);
   } else {
     res.status(404).json({ error: 'Medication not found' });
@@ -83,7 +86,7 @@ app.get('/api/prescriptions', (req, res) => {
 
 app.post('/api/prescriptions', (req, res) => {
   const newPrescription = {
-    id: prescriptions.length + 1,
+    id: ++prescriptionIdCounter,
     patientName: req.body.patientName,
     medicationId: req.body.medicationId,
     quantity: req.body.quantity,
@@ -97,8 +100,8 @@ app.post('/api/prescriptions', (req, res) => {
 app.put('/api/prescriptions/:id', (req, res) => {
   const prescription = prescriptions.find(p => p.id === parseInt(req.params.id));
   if (prescription) {
-    prescription.status = req.body.status || prescription.status;
-    prescription.quantity = req.body.quantity || prescription.quantity;
+    prescription.status = req.body.status !== undefined ? req.body.status : prescription.status;
+    prescription.quantity = req.body.quantity !== undefined ? req.body.quantity : prescription.quantity;
     res.json(prescription);
   } else {
     res.status(404).json({ error: 'Prescription not found' });

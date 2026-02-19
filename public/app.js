@@ -9,7 +9,12 @@ function showTab(tabName) {
     buttons.forEach(btn => btn.classList.remove('active'));
     
     document.getElementById(`${tabName}-tab`).classList.add('active');
-    event.target.classList.add('active');
+    
+    buttons.forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(tabName)) {
+            btn.classList.add('active');
+        }
+    });
     
     if (tabName === 'medications') {
         loadMedications();
