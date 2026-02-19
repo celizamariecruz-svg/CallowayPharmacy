@@ -25,7 +25,7 @@ jobs:
 
       - name: Check if composer.json exists
         id: check_files
-        uses: andstor/file-existence-action@v1
+        uses: andstor/file-existence-action@v3
         with:
           files: 'composer.json'
 
@@ -33,12 +33,30 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true'
         run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deploy_package
+          rsync -a ./ ./deploy_package \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='_deploy_bundle/' \
+            --exclude='_archive_dev/' \
+            --exclude='deploy_ready_*.zip' \
+            --exclude='medicine_images/' \
+            --exclude='html_guides/' \
+            --exclude='__pycache__/' \
+            --exclude='backups/' \
+            --exclude='cache/' \
+            --exclude='logs/' \
+            --exclude='*.md' \
+            --exclude='scan_report.html'
+
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: php-app
-          path: .
+          path: deploy_package
 
   deploy:
     runs-on: ubuntu-latest
