@@ -7,13 +7,33 @@
 require_once 'config.php';
 
 // Use persistent connection for better performance (connection pooling)
+// Note: SSL connections are created without the 'p:' prefix to avoid SSL handshake issues.
 $host = IS_PRODUCTION ? 'p:' . DB_HOST : DB_HOST; // 'p:' prefix enables persistent connection
+
+// Enable SSL automatically for Azure MySQL hosts, or via env override
+$sslEnv = getenv('DB_SSL');
+$useSsl = $sslEnv !== false
+    ? filter_var($sslEnv, FILTER_VALIDATE_BOOLEAN)
+    : (strpos(DB_HOST, '.mysql.database.azure.com') !== false);
 
 // Create connection with error reporting
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
-    $conn = new mysqli($host, DB_USER, DB_PASS, DB_NAME);
+    if ($useSsl) {
+        $conn = mysqli_init();
+        if (!$conn) {
+            throw new mysqli_sql_exception('Failed to initialize MySQL connection');
+        }
+
+        // Disable cert verification to support Azure's default SSL without local CA files.
+        $conn->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, false);
+        $conn->ssl_set(null, null, null, null, null);
+
+        $conn->real_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, 3306, null, MYSQLI_CLIENT_SSL);
+    } else {
+        $conn = new mysqli($host, DB_USER, DB_PASS, DB_NAME);
+    }
     
     // Set charset to utf8mb4 for full unicode support
     $conn->set_charset("utf8mb4");
