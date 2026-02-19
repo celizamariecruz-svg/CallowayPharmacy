@@ -42,12 +42,21 @@ if ($search_term) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Logs - Calloway Pharmacy</title>
     <?php echo CSRF::getTokenMeta(); ?>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js?v=2"></script>
     <style>
         .logs-container {
             max-width: 1400px;
@@ -532,11 +541,9 @@ if ($search_term) {
             }
         });
         
-        // Auto-refresh every 30 seconds
+        // Auto-refresh every 30 seconds (silently)
         let autoRefresh = setInterval(() => {
-            if (confirm('Refresh logs?')) {
-                location.reload();
-            }
+            location.reload();
         }, 30000);
         
         // Stop auto-refresh on page unload

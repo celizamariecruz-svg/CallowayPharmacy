@@ -27,7 +27,9 @@ $page_title = 'Inventory Management';
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js?v=2"></script>
     <style>
         .inventory-container {
             max-width: 1400px;
@@ -415,6 +417,9 @@ $page_title = 'Inventory Management';
                 <button class="btn btn-secondary" onclick="exportInventory()">
                     <i class="fas fa-file-export"></i> Export Report
                 </button>
+                <button class="btn btn-secondary" onclick="openActivityLogs()" style="background:#7c3aed;color:#fff;border-color:#7c3aed;">
+                    <i class="fas fa-clock-rotate-left"></i> Activity Log
+                </button>
             </div>
         </div>
 
@@ -559,8 +564,8 @@ $page_title = 'Inventory Management';
                         </select>
                     </div>
                     <div>
-                        <label>Strength</label>
-                        <input type="text" id="productStrength" placeholder="e.g. 500mg">
+                        <label>Strength *</label>
+                        <input type="text" id="productStrength" placeholder="e.g. 500mg" required>
                     </div>
                     <div>
                         <label>Age Group</label>
@@ -598,8 +603,8 @@ $page_title = 'Inventory Management';
                         <input type="number" id="productPrice" step="0.01" required>
                     </div>
                     <div>
-                        <label>Cost Price</label>
-                        <input type="number" id="productCost" step="0.01">
+                        <label>Cost Price *</label>
+                        <input type="number" id="productCost" step="0.01" required>
                     </div>
                 </div>
 
@@ -664,6 +669,19 @@ $page_title = 'Inventory Management';
                         style="flex: 1;">Cancel</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Activity Log Modal -->
+    <div id="activityLogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;">
+        <div style="background:var(--card-bg,#fff);border-radius:18px;max-width:720px;width:95%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,0.22);overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.3rem;border-bottom:1px solid rgba(0,0,0,0.08);">
+                <h3 style="margin:0;font-size:1.1rem;"><i class="fas fa-clock-rotate-left" style="color:#7c3aed;margin-right:0.4rem;"></i>Inventory Activity Log</h3>
+                <button onclick="closeActivityLogs()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-light);">&times;</button>
+            </div>
+            <div id="activityLogBody" style="padding:0.5rem 1rem 1rem;overflow-y:auto;flex:1;">
+                <div style="text-align:center;padding:2rem;color:var(--text-light);">Loading...</div>
+            </div>
         </div>
     </div>
 
@@ -989,7 +1007,8 @@ $page_title = 'Inventory Management';
         async function deleteProduct(id) {
             const p = allProducts.find(x => x.product_id == id);
             const name = p?.name ? `\n\n${p.name}` : '';
-            if (!confirm(`Delete this medicine/product?${name}\n\nThis will hide it from inventory (soft delete).`)) {
+            const ok = await customConfirm('Delete Product', `Delete this medicine/product?\n\n${p?.name || ''}\n\nThis will hide it from inventory (soft delete).`, 'danger', { confirmText: 'Yes, Delete', cancelText: 'Cancel' });
+            if (!ok) {
                 return;
             }
 
@@ -1130,6 +1149,14 @@ $page_title = 'Inventory Management';
             const id = document.getElementById('productId').value;
             const action = id ? 'update_product' : 'add_product';
 
+            // Require image for new products
+            const imageInput = document.getElementById('productImage');
+            if (!id && imageInput.files.length === 0) {
+                showToast('Please upload a product image', 'error');
+                document.getElementById('imagePreviewWrap').style.borderColor = '#d9534f';
+                return;
+            }
+
             const payload = {
                 product_id: id,
                 name: document.getElementById('productName').value,
@@ -1174,12 +1201,32 @@ $page_title = 'Inventory Management';
                             formData.append('product_id', productId);
                             try {
                                 const imgRes = await fetch('upload_product_image.php', { method: 'POST', body: formData });
-                                const imgData = await imgRes.json();
-                                if (!imgData.success) console.warn('Image upload failed:', imgData.message);
-                            } catch (imgErr) { console.warn('Image upload error:', imgErr); }
+                                const imgText = await imgRes.text();
+                                let imgData;
+                                try {
+                                    imgData = JSON.parse(imgText);
+                                } catch (jsonErr) {
+                                    imgData = {
+                                        success: false,
+                                        message: imgText ? imgText.slice(0, 200) : 'Invalid server response from image upload'
+                                    };
+                                }
+                                if (!imgData.success) {
+                                    showToast('Product saved but image upload failed: ' + (imgData.message || 'Unknown error'), 'error');
+                                    closeModal();
+                                    loadProducts();
+                                    return;
+                                }
+                            } catch (imgErr) {
+                                console.warn('Image upload error:', imgErr);
+                                showToast('Product saved but image upload failed', 'error');
+                                closeModal();
+                                loadProducts();
+                                return;
+                            }
                         }
                     }
-                    showToast('Product saved successfully', 'success');
+                    showToast(imageInput.files.length > 0 ? 'Product saved with image!' : 'Product saved successfully', 'success');
                     closeModal();
                     loadProducts();
                 } else {
@@ -1203,6 +1250,104 @@ $page_title = 'Inventory Management';
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        // Export inventory as CSV report
+        function exportInventory() {
+            if (!allProducts || allProducts.length === 0) {
+                showToast('No products to export', 'error');
+                return;
+            }
+
+            const headers = ['Product ID', 'Name', 'Category', 'Cost Price', 'Selling Price', 'Strength', 'Stock Qty', 'Reorder Level', 'Expiry Date', 'Supplier', 'Status'];
+            const csvRows = [headers.join(',')];
+
+            allProducts.forEach(p => {
+                const stock = parseInt(p.stock_quantity) || 0;
+                const reorder = parseInt(p.reorder_level) || 0;
+                let status = 'In Stock';
+                if (stock <= 0) status = 'Out of Stock';
+                else if (stock <= reorder) status = 'Low Stock';
+
+                const row = [
+                    p.product_id || '',
+                    '"' + (p.name || '').replace(/"/g, '""') + '"',
+                    '"' + (p.category_name || 'Uncategorized').replace(/"/g, '""') + '"',
+                    p.cost_price || '0.00',
+                    p.selling_price || '0.00',
+                    '"' + (p.strength || 'N/A').replace(/"/g, '""') + '"',
+                    stock,
+                    reorder,
+                    p.expiry_date || 'N/A',
+                    '"' + (p.supplier_name || 'N/A').replace(/"/g, '""') + '"',
+                    status
+                ];
+                csvRows.push(row.join(','));
+            });
+
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10);
+            link.href = URL.createObjectURL(blob);
+            link.download = `inventory_report_${dateStr}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast('Inventory report exported!', 'success');
+        }
+
+        // ─── Activity Log Functions ───
+        function openActivityLogs() {
+            const modal = document.getElementById('activityLogModal');
+            modal.style.display = 'flex';
+            document.getElementById('activityLogBody').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-light);"><i class="fas fa-spinner fa-spin"></i> Loading activity logs...</div>';
+            fetch('inventory_api.php?action=get_activity_logs&limit=100')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.data && data.data.length > 0) {
+                        renderActivityLogs(data.data);
+                    } else {
+                        document.getElementById('activityLogBody').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-light);"><i class="fas fa-inbox" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:0.5rem;"></i>No activity logs found.</div>';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('activityLogBody').innerHTML = '<div style="text-align:center;padding:2rem;color:#ef4444;">Failed to load activity logs.</div>';
+                });
+        }
+
+        function closeActivityLogs() {
+            document.getElementById('activityLogModal').style.display = 'none';
+        }
+
+        function renderActivityLogs(logs) {
+            const actionIcons = {
+                'product_created': { icon: 'fa-plus-circle', color: '#22c55e' },
+                'product_updated': { icon: 'fa-pen', color: '#3b82f6' },
+                'product_deleted': { icon: 'fa-trash', color: '#ef4444' },
+                'stock_movement':  { icon: 'fa-boxes-stacked', color: '#f59e0b' },
+                'category_updated': { icon: 'fa-tags', color: '#8b5cf6' },
+                'category_deleted': { icon: 'fa-tag', color: '#ef4444' }
+            };
+
+            let html = '<div style="display:flex;flex-direction:column;gap:0.3rem;">';
+            logs.forEach(log => {
+                const ai = actionIcons[log.action] || { icon: 'fa-circle-info', color: '#6b7280' };
+                const time = log.created_at ? new Date(log.created_at).toLocaleString() : '';
+                html += `<div style="display:flex;align-items:flex-start;gap:0.7rem;padding:0.6rem 0.5rem;border-bottom:1px solid rgba(0,0,0,0.05);">
+                    <div style="width:32px;height:32px;border-radius:8px;background:${ai.color}15;color:${ai.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.85rem;">
+                        <i class="fas ${ai.icon}"></i>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:0.82rem;font-weight:600;">${log.details || log.action}</div>
+                        <div style="font-size:0.72rem;color:var(--text-light);margin-top:0.1rem;">
+                            <span style="font-weight:600;">${log.username}</span> &middot; ${time}
+                        </div>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            document.getElementById('activityLogBody').innerHTML = html;
         }
     </script>
 </body>

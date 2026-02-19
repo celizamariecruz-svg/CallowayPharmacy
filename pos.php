@@ -17,13 +17,23 @@ $page_title = 'Point of Sale';
 <html lang="en" data-theme="light">
 
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="custom-modal.js?v=2"></script>
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -36,6 +46,7 @@ $page_title = 'Point of Sale';
             display: grid;
             grid-template-columns: 1fr 400px;
             height: calc(100vh - 60px);
+            margin-top: 60px;
             padding-top: 0;
         }
 
@@ -530,6 +541,9 @@ $page_title = 'Point of Sale';
             background: var(--card-bg);
             border-top: 1px solid var(--divider-color);
             flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+            z-index: 1;
         }
 
         .summary-row {
@@ -541,6 +555,89 @@ $page_title = 'Point of Sale';
         }
 
         .summary-row span:last-child { font-variant-numeric: tabular-nums; }
+
+        .discount-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        .discount-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.45rem 0.85rem;
+            border-radius: 8px;
+            border: 1.5px solid var(--divider-color);
+            background: var(--bg-color);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 0.82rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .discount-toggle-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: rgba(10, 116, 218, 0.06);
+        }
+
+        .discount-toggle-btn.active {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+        }
+
+        .discount-toggle-btn .toggle-track {
+            width: 34px;
+            height: 18px;
+            border-radius: 9px;
+            background: rgba(0,0,0,0.15);
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .discount-toggle-btn.active .toggle-track {
+            background: #22c55e;
+        }
+
+        .discount-toggle-btn .toggle-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: white;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .discount-toggle-btn.active .toggle-thumb {
+            transform: translateX(16px);
+        }
+
+        .discount-toggle-btn .discount-icon {
+            font-size: 0.85rem;
+        }
+
+        .discount-amount {
+            font-weight: 600;
+            color: #dc2626;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .discount-amount.has-discount {
+            color: #16a34a;
+            font-weight: 700;
+        }
 
         .summary-total {
             display: flex;
@@ -1007,6 +1104,47 @@ $page_title = 'Point of Sale';
             }
         }
 
+        /* ─── Thermal Printer Connect Button ─── */
+        .printer-connect-btn {
+            position: fixed;
+            top: 12px;
+            right: 130px;
+            z-index: 9999;
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+        .printer-connect-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .printer-connect-btn.connected {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+        .printer-status-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dc2626;
+        }
+        .printer-connect-btn.connected .printer-status-dot {
+            background: #16a34a;
+            box-shadow: 0 0 6px rgba(22,163,74,0.5);
+        }
+
         /* ─── Online Order Notifications ─── */
         .online-notif-bell {
             position: fixed;
@@ -1383,6 +1521,12 @@ $page_title = 'Point of Sale';
 <body data-cashier-name="<?php echo htmlspecialchars($currentUser['full_name'] ?? $currentUser['username'] ?? 'Cashier'); ?>">
     <?php include 'header-component.php'; ?>
 
+    <!-- Thermal Printer Connect Button -->
+    <div class="printer-connect-btn" id="printerConnectBtn" onclick="togglePrinterConnection()" title="Connect Thermal Printer">
+        <i class="fas fa-print"></i>
+        <span class="printer-status-dot" id="printerStatusDot"></span>
+    </div>
+
     <!-- Online Order Notification Bell -->
     <div class="online-notif-bell" id="onlineNotifBell" onclick="toggleNotifPanel()" title="Online Orders">
         <i class="fas fa-bell"></i>
@@ -1415,6 +1559,9 @@ $page_title = 'Point of Sale';
                     <i class="fas fa-globe"></i> Online Orders
                     <span class="tab-badge hidden" id="onlineOrdersBadge">0</span>
                 </button>
+                <a href="loyalty_qr.php" class="pos-main-tab" style="text-decoration:none;" target="_blank">
+                    <i class="fas fa-gift"></i> Loyalty & QR
+                </a>
             </div>
 
             <!-- Products Panel -->
@@ -1520,6 +1667,14 @@ $page_title = 'Point of Sale';
                     <span>VAT (12%)</span>
                     <span id="taxDisplay">₱0.00</span>
                 </div>
+                <div class="discount-row">
+                    <button type="button" class="discount-toggle-btn" id="discountToggle" onclick="toggleDiscount()">
+                        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                        <span class="discount-icon"><i class="fas fa-id-card"></i></span>
+                        <span>20% SC/PWD</span>
+                    </button>
+                    <span class="discount-amount" id="discountDisplay">-₱0.00</span>
+                </div>
                 <div class="summary-total">
                     <span>Total</span>
                     <span id="totalDisplay">₱0.00</span>
@@ -1579,12 +1734,15 @@ $page_title = 'Point of Sale';
                 <!-- Receipt content is injected by JS -->
             </div>
             <div class="receipt-actions">
-                <button class="btn-print" onclick="printReceipt()">
+                <button class="btn-print" onclick="printReceipt()" id="btnPrintReceipt">
                     <i class="fas fa-print"></i> Print
                 </button>
                 <button class="btn-new" onclick="newSale()">
                     <i class="fas fa-plus"></i> New Sale
                 </button>
+            </div>
+            <div id="printerHint" style="text-align:center;font-size:0.75rem;color:var(--text-light);margin-top:0.5rem;display:none;">
+                <i class="fas fa-info-circle"></i> Click the <i class="fas fa-print"></i> icon in the top bar to connect your thermal printer
             </div>
         </div>
     </div>
@@ -1605,6 +1763,7 @@ $page_title = 'Point of Sale';
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
             setupEventListeners();
+            updatePrinterUI();
         });
 
         // --- Data ---
@@ -1613,14 +1772,19 @@ $page_title = 'Point of Sale';
                 const res = await fetch('inventory_api.php?action=get_products&limit=1000');
                 const data = await res.json();
                 if (data.success) {
-                    products = data.data;
+                    products = data.data || [];
+                    console.log(`POS: Loaded ${products.length} products`);
                     renderCategories();
                     renderProducts();
+                } else {
+                    console.error('POS: API returned error:', data.message || 'Unknown error');
+                    document.getElementById('productsGrid').innerHTML =
+                        '<div class="no-products"><i class="fas fa-exclamation-triangle"></i> ' + (data.message || 'Failed to load products') + '</div>';
                 }
             } catch (err) {
                 console.error("Failed to load products", err);
                 document.getElementById('productsGrid').innerHTML =
-                    '<div class="no-products"><i class="fas fa-exclamation-triangle"></i>Failed to load products</div>';
+                    '<div class="no-products"><i class="fas fa-exclamation-triangle"></i> Failed to load products. Check console for details.</div>';
             }
         }
 
@@ -1723,7 +1887,7 @@ $page_title = 'Point of Sale';
             if (filtered.length === 0) {
                 grid.innerHTML = `<div class="no-products">
                     <i class="fas fa-search"></i>
-                    No products found${term ? ' for "' + term + '"' : ''}
+                    No products found${term ? ' for "' + escapeHtmlPos(term) + '"' : ''}
                 </div>`;
                 return;
             }
@@ -1749,14 +1913,14 @@ $page_title = 'Point of Sale';
                     ${imgHtml}
                     ${isRx ? '<span style="position:absolute;top:4px;right:4px;background:#e65100;color:#fff;font-size:0.6rem;padding:2px 5px;border-radius:4px;font-weight:700;z-index:2;">Rx</span>' : ''}
                     <span class="p-category">${p.category_name || ''}</span>
-                    <span class="p-name">${p.name}</span>
+                    <span class="p-name">${escapeHtmlPos(p.name)}</span>
                     ${variant ? '<span style="font-size:0.7rem;color:var(--text-light);margin-top:-2px;">' + variant + '</span>' : ''}
                     <div class="p-bottom">
                         <span class="p-price">₱${parseFloat(p.selling_price).toFixed(2)}</span>
                         <span class="p-stock ${stockClass}">${stockLabel}</span>
                     </div>
                     ${canSellPiece && !isOut ? `<button class="piece-sell-btn" onclick="event.stopPropagation(); addToCart(${p.product_id}, true)" title="Sell per piece">
-                        <i class="fas fa-tablets"></i> ₱${parseFloat(p.price_per_piece).toFixed(2)}/pc
+                        <i class="fas fa-tablets"></i> ₱${(parseFloat(p.price_per_piece) || 0).toFixed(2)}/pc
                     </button>` : ''}
                 </div>`;
             }).join('');
@@ -1765,17 +1929,29 @@ $page_title = 'Point of Sale';
         }
 
         // --- Cart ---
-        function addToCart(productId, perPiece = false) {
+        async function addToCart(productId, perPiece = false) {
             const product = products.find(p => p.product_id == productId);
-            if (!product || parseInt(product.stock_quantity) <= 0) return;
+            if (!product) {
+                console.error('POS: Product not found in loaded products array. ID:', productId, 'Products loaded:', products.length);
+                showToast('Product not found. Try refreshing.', 'error');
+                return;
+            }
+            if (parseInt(product.stock_quantity) <= 0) {
+                showToast('Product is out of stock', 'error');
+                return;
+            }
 
             // Prescription warning
             if (parseInt(product.requires_prescription) === 1) {
                 const alreadyInCart = cart.find(item => item.id == productId);
                 if (!alreadyInCart) {
-                    if (!confirm('⚠️ PRESCRIPTION REQUIRED\n\n"' + product.name + '" requires a valid prescription.\n\nPlease verify the customer has a valid prescription before proceeding.\n\nContinue?')) {
-                        return;
-                    }
+                    const ok = await customConfirm(
+                        'Prescription Required',
+                        '"' + product.name + '" requires a valid prescription.\n\nPlease verify the customer has a valid prescription before proceeding.',
+                        'prescription',
+                        { confirmText: 'Yes, Verified', cancelText: 'Cancel' }
+                    );
+                    if (!ok) return;
                 }
             }
 
@@ -1838,7 +2014,7 @@ $page_title = 'Point of Sale';
             container.innerHTML = cart.map((item, index) => `
                 <div class="cart-item">
                     <div class="item-info">
-                        <h4>${item.name}${item.perPiece ? ' <span style="color:var(--primary-color);font-size:0.7rem;">PIECE</span>' : ''}</h4>
+                        <h4>${escapeHtmlPos(item.name)}${item.perPiece ? ' <span style="color:var(--primary-color);font-size:0.7rem;">PIECE</span>' : ''}</h4>
                         <div class="item-unit-price">₱${item.price.toFixed(2)} ea.</div>
                     </div>
                     <div class="item-qty">
@@ -1889,14 +2065,59 @@ $page_title = 'Point of Sale';
             showToast('Sale held (feature coming)', 'success');
         }
 
+        let discountEnabled = false;
+        const DISCOUNT_RATE = 0.20;
+        const DISCOUNT_MIN_SUBTOTAL = 200;
+
+        function toggleDiscount() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            // If trying to enable, enforce ₱200 minimum
+            if (!discountEnabled && subtotal < DISCOUNT_MIN_SUBTOTAL) {
+                showToast('Subtotal must be at least ₱' + DISCOUNT_MIN_SUBTOTAL.toFixed(2) + ' to apply the 20% SC/PWD discount', 'error');
+                return;
+            }
+            discountEnabled = !discountEnabled;
+            const btn = document.getElementById('discountToggle');
+            if (btn) btn.classList.toggle('active', discountEnabled);
+            updateTotals(subtotal);
+            if (discountEnabled) {
+                showToast('20% Senior/PWD discount applied', 'success');
+            } else {
+                showToast('Discount removed', 'success');
+            }
+        }
+
+        // Legacy compat
+        function applyDiscount() { toggleDiscount(); }
+
         function updateTotals(subtotal) {
+            // Auto-disable discount if subtotal drops below minimum
+            if (discountEnabled && subtotal < DISCOUNT_MIN_SUBTOTAL) {
+                discountEnabled = false;
+                const btn = document.getElementById('discountToggle');
+                if (btn) btn.classList.remove('active');
+                showToast('Discount removed — subtotal below ₱' + DISCOUNT_MIN_SUBTOTAL.toFixed(2), 'error');
+            }
             const tax = subtotal * 0.12;
-            const total = subtotal + tax;
+            const beforeDiscount = subtotal + tax;
+            const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
+            const total = beforeDiscount - discountAmount;
 
             document.getElementById('subtotalDisplay').textContent = '₱' + subtotal.toFixed(2);
             document.getElementById('taxDisplay').textContent = '₱' + tax.toFixed(2);
+            const discDisplay = document.getElementById('discountDisplay');
+            discDisplay.textContent = '-₱' + discountAmount.toFixed(2);
+            discDisplay.classList.toggle('has-discount', discountAmount > 0);
             document.getElementById('totalDisplay').textContent = '₱' + total.toFixed(2);
             document.getElementById('modalTotalDisplay').textContent = '₱' + total.toFixed(2);
+        }
+
+        function getTotal() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const tax = subtotal * 0.12;
+            const beforeDiscount = subtotal + tax;
+            const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
+            return beforeDiscount - discountAmount;
         }
 
         // --- Payment ---
@@ -1905,9 +2126,7 @@ $page_title = 'Point of Sale';
             document.getElementById('paymentModal').classList.add('active');
             document.getElementById('amountTendered').value = '';
 
-            // Generate quick cash buttons based on total
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const total = subtotal * 1.12;
+            const total = getTotal();
             generateQuickCash(total);
 
             updateChange();
@@ -1957,8 +2176,7 @@ $page_title = 'Point of Sale';
         }
 
         function updateChange() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const total = subtotal * 1.12;
+            const total = getTotal();
             const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
             const change = tendered - total;
 
@@ -1977,16 +2195,35 @@ $page_title = 'Point of Sale';
         async function completeSale() {
             const btn = document.getElementById('completeSaleBtn');
             if (btn.disabled) return;
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            // Block payment if discount is on but subtotal is below minimum
+            if (discountEnabled && subtotal < DISCOUNT_MIN_SUBTOTAL) {
+                showToast('Cannot process: Subtotal must be at least ₱' + DISCOUNT_MIN_SUBTOTAL.toFixed(2) + ' for the 20% discount', 'error');
+                discountEnabled = false;
+                const discBtn = document.getElementById('discountToggle');
+                if (discBtn) discBtn.classList.remove('active');
+                updateTotals(subtotal);
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = 'Processing...';
 
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const total = subtotal * 1.12;
+            const tax = subtotal * 0.12;
+            const beforeDiscount = subtotal + tax;
+            const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
+            const total = beforeDiscount - discountAmount;
 
             const now = new Date();
             const saleData = {
                 items: cart,
                 total: total,
+                subtotal: subtotal,
+                tax: tax,
+                discount_percent: discountEnabled ? 20 : 0,
+                discount_amount: discountAmount,
                 payment_method: paymentMethod,
                 amount_tendered: parseFloat(document.getElementById('amountTendered').value) || total,
                 receipt_no: 'TX-' + now.getTime().toString().slice(-8),
@@ -2011,6 +2248,12 @@ $page_title = 'Point of Sale';
 
                 saleData.sale_id = data.sale_id;
                 saleData.sale_reference = data.sale_reference;
+                
+                // Capture server-generated reward QR code if available
+                if (data.reward_qr_code) {
+                    saleData.reward_qr_code = data.reward_qr_code;
+                    saleData.reward_qr_expires = data.reward_qr_expires;
+                }
             } catch (err) {
                 console.error('Sale error:', err);
                 showToast('Network error — sale not saved', 'error');
@@ -2021,19 +2264,424 @@ $page_title = 'Point of Sale';
 
             closePaymentModal();
             lastSaleData = saleData;
+
+            // If points were auto-awarded for pickup, do NOT show a redeemable QR code
+            // (prevents double-dipping and confusion)
+            let pointsAutoAwarded = false;
+
+            // If this was a pickup order, mark it as picked up
+            if (currentPickupOrderId) {
+                try {
+                    const pickupRes = await fetch('online_order_api.php?action=mark_picked_up', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `order_id=${currentPickupOrderId}&sale_id=${saleData.sale_id}`
+                    });
+                    const pickupData = await pickupRes.json();
+                    
+                    if (pickupData.success) {
+                        showToast('✅ Order marked as picked up!', 'success');
+                        // Show loyalty points message if awarded
+                        if (pickupData.loyalty && pickupData.loyalty.awarded) {
+                            pointsAutoAwarded = true;
+                            setTimeout(() => {
+                                showToast('🎉 Customer earned ' + pickupData.loyalty.points + ' loyalty points!', 'success');
+                            }, 1500);
+                        }
+                        // Refresh online orders panel
+                        loadOnlineOrders();
+                        pollPendingOrderCount();
+                    }
+                } catch (pickupErr) {
+                    console.error('Error marking as picked up:', pickupErr);
+                }
+                
+                // Clear the pickup order reference
+                currentPickupOrderId = null;
+            }
+
+            // Generate one-time reward QR code for this sale (fallback if server didn't already generate one)
+            // Note: POS sales are for walk-in customers, so we don't assign to a specific user
+            // The customer can scan the QR code printed on their receipt to earn points
+            if (pointsAutoAwarded) {
+                // If points were already awarded automatically, remove any generated QR code
+                delete saleData.reward_qr_code;
+                delete saleData.reward_qr_expires;
+            } else if (!saleData.reward_qr_code) {
+                try {
+                    const qrRes = await fetch('reward_qr_api.php?action=generate_reward_qr', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            source_type: 'pos',
+                            order_id: saleData.sale_id || 0,
+                            sale_reference: saleData.sale_reference || saleData.receipt_no,
+                            customer_name: 'Walk-in Customer',
+                            total_amount: saleData.total || 0
+                        })
+                    });
+                    const qrData = await qrRes.json();
+                    if (qrData.success) {
+                        saleData.reward_qr_code = qrData.qr_code;
+                        saleData.reward_qr_expires = qrData.expires_at;
+                    }
+                } catch (qrErr) {
+                    console.warn('Could not generate reward QR:', qrErr);
+                }
+            }
+
             renderReceipt(saleData);
             document.getElementById('receiptModal').classList.add('active');
             btn.disabled = false;
             btn.textContent = 'Complete Sale';
+
+            // Immediately refresh product stock after sale
+            loadProducts();
         }
 
         function newSale() {
             cart = [];
+            discountEnabled = false;
+            const discToggle = document.getElementById('discountToggle');
+            if (discToggle) discToggle.classList.remove('active');
             updateCartUI();
             document.getElementById('receiptModal').classList.remove('active');
             document.getElementById('searchInput').focus();
             // Refresh product list to reflect updated stock
             loadProducts();
+        }
+
+        // ═══════════════════════════════════════════════
+        // ═══ THERMAL PRINTER — Web Bluetooth ESC/POS ═══
+        // ═══════════════════════════════════════════════
+        let btDevice = null;
+        let btCharacteristic = null;
+        const textEncoder = new TextEncoder();
+
+        // Common BLE printer service/characteristic UUIDs
+        const BLE_PRINTER_SERVICES = [
+            '000018f0-0000-1000-8000-00805f9b34fb',
+            '0000ff00-0000-1000-8000-00805f9b34fb',
+            'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+            '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+        ];
+        const BLE_WRITE_CHARACTERISTICS = [
+            '00002af1-0000-1000-8000-00805f9b34fb',
+            '0000ff02-0000-1000-8000-00805f9b34fb',
+            'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f',
+            '49535343-8841-43f4-a8d4-ecbe34729bb3',
+            '49535343-1e4d-4bd9-ba61-23c647249616',
+        ];
+
+        const ESC = 0x1B, GS = 0x1D, LF = 0x0A;
+        const ESCPOS = {
+            INIT:         [ESC, 0x40],
+            ALIGN_LEFT:   [ESC, 0x61, 0],
+            ALIGN_CENTER: [ESC, 0x61, 1],
+            ALIGN_RIGHT:  [ESC, 0x61, 2],
+            BOLD_ON:      [ESC, 0x45, 1],
+            BOLD_OFF:     [ESC, 0x45, 0],
+            DOUBLE_ON:    [GS, 0x21, 0x11],
+            DOUBLE_OFF:   [GS, 0x21, 0x00],
+            FEED:         [ESC, 0x64, 5],
+            CUT:          [GS, 0x56, 0x00],
+            PARTIAL_CUT:  [GS, 0x56, 0x01],
+            CASH_DRAWER:  [ESC, 0x70, 0, 0x19, 0xFA]
+        };
+
+        let hardwarePrintUnavailable = false;
+        let backendPrintUnavailable = false;
+
+        function isPrinterConnected() { return btDevice !== null && btCharacteristic !== null; }
+
+        function updatePrinterUI() {
+            const btn = document.getElementById('printerConnectBtn');
+            const hint = document.getElementById('printerHint');
+            if (isPrinterConnected()) {
+                btn.classList.add('connected');
+                btn.title = 'Printer: ' + (btDevice.name || 'Connected') + ' (click to disconnect)';
+                if (hint) hint.style.display = 'none';
+            } else {
+                btn.classList.remove('connected');
+                btn.title = 'Connect Thermal Printer';
+                if (hint) hint.style.display = 'block';
+            }
+        }
+
+        async function togglePrinterConnection() {
+            if (isPrinterConnected()) {
+                await disconnectPrinter();
+            } else {
+                await connectPrinter();
+            }
+        }
+
+        async function connectPrinter() {
+            if (!('bluetooth' in navigator)) {
+                hardwarePrintUnavailable = true;
+                showToast('Bluetooth not supported. Use Chrome or Edge.', 'error');
+                return;
+            }
+            try {
+                showToast('Searching for printer...', 'success');
+                btDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'JP' }],
+                    optionalServices: BLE_PRINTER_SERVICES,
+                    acceptAllDevices: false
+                }).catch(() =>
+                    // If name filter doesn't work, try accepting all devices
+                    navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true,
+                        optionalServices: BLE_PRINTER_SERVICES
+                    })
+                );
+
+                if (!btDevice) {
+                    showToast('No printer selected.', 'error');
+                    return;
+                }
+
+                btDevice.addEventListener('gattserverdisconnected', () => {
+                    console.log('Printer disconnected');
+                    btCharacteristic = null;
+                    updatePrinterUI();
+                    showToast('Printer disconnected', 'error');
+                });
+
+                const server = await btDevice.gatt.connect();
+
+                // Try each known service UUID until we find one
+                let writeChar = null;
+                for (const svcUuid of BLE_PRINTER_SERVICES) {
+                    try {
+                        const service = await server.getPrimaryService(svcUuid);
+                        const chars = await service.getCharacteristics();
+                        // Find writable characteristic
+                        for (const c of chars) {
+                            if (c.properties.write || c.properties.writeWithoutResponse) {
+                                writeChar = c;
+                                console.log('Found writable characteristic:', c.uuid, 'in service:', svcUuid);
+                                break;
+                            }
+                        }
+                        if (writeChar) break;
+                    } catch (_) { /* service not found, try next */ }
+                }
+
+                if (!writeChar) {
+                    showToast('Could not find print characteristic. Is this a BLE printer?', 'error');
+                    btDevice.gatt.disconnect();
+                    btDevice = null;
+                    updatePrinterUI();
+                    return;
+                }
+
+                btCharacteristic = writeChar;
+                updatePrinterUI();
+                showToast('Printer connected: ' + (btDevice.name || 'Thermal Printer'), 'success');
+
+            } catch (err) {
+                const msg = (err && err.message) ? String(err.message) : '';
+                const name = (err && err.name) ? String(err.name) : '';
+                if (
+                    name === 'SecurityError' ||
+                    name === 'NotAllowedError' ||
+                    /permissions policy|feature policy|serial|bluetooth/i.test(msg)
+                ) {
+                    hardwarePrintUnavailable = true;
+                }
+                if (err.name !== 'NotFoundError') {
+                    console.error('Bluetooth connect error:', err);
+                    showToast('Failed to connect: ' + err.message, 'error');
+                }
+                btDevice = null;
+                btCharacteristic = null;
+                updatePrinterUI();
+            }
+        }
+
+        async function disconnectPrinter() {
+            try {
+                if (btDevice && btDevice.gatt.connected) {
+                    btDevice.gatt.disconnect();
+                }
+            } catch (err) {
+                console.error('Disconnect error:', err);
+            }
+            btDevice = null;
+            btCharacteristic = null;
+            updatePrinterUI();
+            showToast('Printer disconnected', 'success');
+        }
+
+        // BLE has limited MTU — send data in small chunks
+        async function bleWrite(data) {
+            if (!btCharacteristic) return false;
+            const CHUNK = 100; // safe BLE chunk size
+            try {
+                for (let i = 0; i < data.length; i += CHUNK) {
+                    const chunk = data.slice(i, i + CHUNK);
+                    if (btCharacteristic.properties.writeWithoutResponse) {
+                        await btCharacteristic.writeValueWithoutResponse(chunk);
+                    } else {
+                        await btCharacteristic.writeValueWithResponse(chunk);
+                    }
+                    // Small delay between chunks for printer to process
+                    if (i + CHUNK < data.length) {
+                        await new Promise(r => setTimeout(r, 20));
+                    }
+                }
+                return true;
+            } catch (err) {
+                console.error('BLE write error:', err);
+                return false;
+            }
+        }
+
+        async function sendBytes(bytes) {
+            return bleWrite(new Uint8Array(bytes));
+        }
+
+        async function sendText(text) {
+            return bleWrite(textEncoder.encode(text));
+        }
+
+        function padLine(left, right, w) {
+            const space = w - left.length - right.length;
+            return left + ' '.repeat(Math.max(1, space)) + right;
+        }
+
+        function fmtMoney(val) {
+            return 'P' + parseFloat(val).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function wrapText(text, width) {
+            text = text.trim();
+            if (!text) return [''];
+            const lines = [];
+            while (text.length > 0) {
+                if (text.length <= width) { lines.push(text); break; }
+                let cut = text.lastIndexOf(' ', width);
+                if (cut === -1) cut = width;
+                lines.push(text.substring(0, cut).trimEnd());
+                text = text.substring(cut).trimStart();
+            }
+            return lines;
+        }
+
+        async function printReceiptToThermal(saleData) {
+            const W = 32; // 58mm paper width
+            const line = '-'.repeat(W);
+            const dline = '='.repeat(W);
+
+            const cashierName = document.body.dataset.cashierName || 'Cashier';
+            const receiptNo = saleData.receipt_no || 'TX-' + Date.now().toString().slice(-8);
+            const createdAt = saleData.created_at ? new Date(saleData.created_at) : new Date();
+            const items = saleData.items || [];
+            const subtotal = items.reduce((s, i) => s + (i.price * i.qty), 0);
+            const tax = subtotal * 0.12;
+            const beforeDiscount = subtotal + tax;
+            const discountPct = saleData.discount_percent || 0;
+            const discountAmt = saleData.discount_amount || 0;
+            const total = beforeDiscount - discountAmt;
+            const tendered = saleData.amount_tendered || total;
+            const change = Math.max(0, tendered - total);
+            const payMethod = saleData.payment_method || 'cash';
+
+            // Header
+            await sendBytes(ESCPOS.INIT);
+            await sendBytes(ESCPOS.ALIGN_CENTER);
+            await sendBytes(ESCPOS.DOUBLE_ON);
+            await sendText('Calloway\nPharmacy\n');
+            await sendBytes(ESCPOS.DOUBLE_OFF);
+            await sendText('Official Receipt\n\n');
+
+            // Receipt info
+            await sendBytes(ESCPOS.ALIGN_LEFT);
+            await sendText('Receipt: ' + receiptNo + '\n');
+            await sendText('Date: ' + createdAt.toLocaleString() + '\n');
+            await sendText('Cashier: ' + cashierName + '\n');
+            await sendText(dline + '\n');
+
+            // Items
+            for (const item of items) {
+                const name = item.name || '';
+                const qty = parseInt(item.qty) || 0;
+                const price = parseFloat(item.price) || 0;
+                const lineTotal = price * qty;
+
+                const nameLines = wrapText(name, W);
+                for (const nl of nameLines) {
+                    await sendText(nl + '\n');
+                }
+                const left = qty + ' x ' + fmtMoney(price);
+                const right = fmtMoney(lineTotal);
+                await sendText(padLine(left, right, W) + '\n');
+            }
+
+            await sendText(line + '\n');
+
+            // Totals
+            await sendText(padLine('Subtotal', fmtMoney(subtotal), W) + '\n');
+            await sendText(padLine('VAT 12%', fmtMoney(tax), W) + '\n');
+            if (discountPct > 0) {
+                await sendText(padLine('Discount (' + discountPct + '%)', '-' + fmtMoney(discountAmt), W) + '\n');
+            }
+            await sendBytes(ESCPOS.BOLD_ON);
+            await sendText(padLine('TOTAL', fmtMoney(total), W) + '\n');
+            await sendBytes(ESCPOS.BOLD_OFF);
+            await sendText(padLine('Paid (' + payMethod + ')', fmtMoney(tendered), W) + '\n');
+            await sendText(padLine('Change', fmtMoney(change), W) + '\n');
+
+            // Footer
+            await sendText('\n');
+            await sendBytes(ESCPOS.ALIGN_CENTER);
+            await sendText('Thank you! Get well soon.\n');
+            await sendText(dline + '\n');
+
+            // Reward QR Code
+            const qrCode = saleData.reward_qr_code;
+            if (qrCode) {
+                await sendText('\n');
+                await sendBytes(ESCPOS.BOLD_ON);
+                await sendText('*** Reward QR Code ***\n');
+                await sendBytes(ESCPOS.BOLD_OFF);
+                await sendText('Scan to earn loyalty points\n');
+                await sendText('(25 pts per P500 spent)\n\n');
+
+                // Build the scannable URL (same as the on-screen QR)
+                const basePath = window.location.pathname.replace(/[^\/]*$/, '');
+                const qrUrl = window.location.origin + basePath + 'receipt_qr_landing.php?code=' + encodeURIComponent(qrCode);
+                const qrData = textEncoder.encode(qrUrl);
+                const qrLen = qrData.length + 3; // data + pL/pH overhead
+                const pL = qrLen & 0xFF;
+                const pH = (qrLen >> 8) & 0xFF;
+
+                // ESC/POS QR Code commands (GS ( k)
+                // 1. Select QR model 2
+                await sendBytes([GS, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00]);
+                // 2. Set module size (4 = good size for 58mm paper)
+                await sendBytes([GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x06]);
+                // 3. Set error correction level M
+                await sendBytes([GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x31]);
+                // 4. Store QR data
+                await sendBytes([GS, 0x28, 0x6B, pL, pH, 0x31, 0x50, 0x30]);
+                await bleWrite(qrData);
+                // Small delay for printer to process QR data
+                await new Promise(r => setTimeout(r, 100));
+                // 5. Print QR code
+                await sendBytes([GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30]);
+
+                await sendText('\n');
+                await sendText(qrCode + '\n');
+                await sendText('Valid 30 days | One-time use\n');
+                await sendText(dline + '\n');
+            }
+
+            await sendBytes(ESCPOS.FEED);
+            await sendBytes(ESCPOS.PARTIAL_CUT);
+
+            return true;
         }
 
         async function printReceipt() {
@@ -2042,13 +2690,118 @@ $page_title = 'Point of Sale';
                 return;
             }
 
-            const ok = await sendReceiptToPrinter(lastSaleData);
-            if (!ok) {
-                showToast('Printer error. Check server log.', 'error');
+            // Try connected thermal printer first
+            if (!hardwarePrintUnavailable && isPrinterConnected()) {
+                try {
+                    await printReceiptToThermal(lastSaleData);
+                    showToast('Receipt sent to printer', 'success');
+                    return;
+                } catch (err) {
+                    console.error('Thermal print error:', err);
+                    hardwarePrintUnavailable = true;
+                    showToast('Thermal print failed — using browser print fallback.', 'error');
+                }
+            }
+
+            // If local hardware printing is unavailable, try backend as secondary option
+            if (!backendPrintUnavailable) {
+                const result = await sendReceiptToPrinter(lastSaleData);
+                if (result.success) {
+                    showToast('Receipt sent to printer', 'success');
+                    return;
+                }
+                console.warn('Backend print failed:', result.message);
+                if (/spooler|rpc server|not authenticated|print request failed/i.test(result.message || '')) {
+                    backendPrintUnavailable = true;
+                }
+            }
+
+            // Ultimate fallback: browser print
+            printReceiptBrowserFallback(lastSaleData);
+        }
+
+        function buildPlainTextReceipt(saleData) {
+            const W = 32;
+            const line = '-'.repeat(W);
+            const dline = '='.repeat(W);
+
+            const cashierName = document.body.dataset.cashierName || 'Cashier';
+            const receiptNo = saleData.receipt_no || 'TX-' + Date.now().toString().slice(-8);
+            const createdAt = saleData.created_at ? new Date(saleData.created_at) : new Date();
+            const items = saleData.items || [];
+
+            const subtotal = items.reduce((s, i) => s + (i.price * i.qty), 0);
+            const tax = subtotal * 0.12;
+            const beforeDiscount = subtotal + tax;
+            const discountPct = saleData.discount_percent || 0;
+            const discountAmt = saleData.discount_amount || 0;
+            const total = beforeDiscount - discountAmt;
+            const tendered = saleData.amount_tendered || total;
+            const change = Math.max(0, tendered - total);
+            const payMethod = saleData.payment_method || 'cash';
+
+            const out = [];
+            out.push('CALLOWAY PHARMACY');
+            out.push('OFFICIAL RECEIPT');
+            out.push('');
+            out.push('Receipt: ' + receiptNo);
+            out.push('Date: ' + createdAt.toLocaleString());
+            out.push('Cashier: ' + cashierName);
+            out.push(dline);
+
+            for (const item of items) {
+                const name = item.name || '';
+                const qty = parseInt(item.qty) || 0;
+                const price = parseFloat(item.price) || 0;
+                const lineTotal = qty * price;
+
+                const nameLines = wrapText(name, W);
+                for (const nl of nameLines) out.push(nl);
+                out.push(padLine(qty + ' x ' + fmtMoney(price), fmtMoney(lineTotal), W));
+            }
+
+            out.push(line);
+            out.push(padLine('Subtotal', fmtMoney(subtotal), W));
+            out.push(padLine('VAT 12%', fmtMoney(tax), W));
+            if (discountPct > 0) {
+                out.push(padLine('Discount (' + discountPct + '%)', '-' + fmtMoney(discountAmt), W));
+            }
+            out.push(padLine('TOTAL', fmtMoney(total), W));
+            out.push(padLine('Paid (' + payMethod + ')', fmtMoney(tendered), W));
+            out.push(padLine('Change', fmtMoney(change), W));
+            out.push('');
+            out.push('Thank you! Get well soon.');
+            out.push(dline);
+
+            return out.join('\n');
+        }
+
+        function printReceiptBrowserFallback(saleData) {
+            const text = buildPlainTextReceipt(saleData || lastSaleData || {});
+            const win = window.open('', '_blank', 'width=420,height=700');
+            if (!win) {
+                showToast('Popup blocked. Allow popups then print again.', 'error');
                 return;
             }
 
-            showToast('Receipt sent to printer', 'success');
+            win.document.write(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Receipt</title>
+  <style>
+    body { font-family: 'Courier New', monospace; margin: 8px; }
+    pre { white-space: pre-wrap; font-size: 12px; line-height: 1.3; }
+    @media print { @page { margin: 4mm; } }
+  </style>
+</head>
+<body>
+  <pre>${escapeHtmlPos(text)}</pre>
+</body>
+</html>`);
+            win.document.close();
+            win.focus();
+            setTimeout(() => { win.print(); }, 120);
         }
 
         async function sendReceiptToPrinter(payload) {
@@ -2058,11 +2811,31 @@ $page_title = 'Point of Sale';
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const data = await res.json();
-                return data && data.success === true;
+                const raw = await res.text();
+                let data = null;
+                try {
+                    data = JSON.parse(raw);
+                } catch (_) {
+                    data = null;
+                }
+
+                if (data && data.success === true) {
+                    return { success: true, message: 'Printed' };
+                }
+
+                if (data && data.details) {
+                    console.warn('Print details:', data.details);
+                }
+
+                return {
+                    success: false,
+                    message: (data && data.message)
+                        ? data.message
+                        : `Print request failed (${res.status}).`
+                };
             } catch (err) {
                 console.error('Print error:', err);
-                return false;
+                return { success: false, message: 'Print request failed.' };
             }
         }
 
@@ -2074,7 +2847,10 @@ $page_title = 'Point of Sale';
 
             const subtotal = saleData.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
             const tax = subtotal * 0.12;
-            const total = subtotal + tax;
+            const beforeDiscount = subtotal + tax;
+            const discountPct = saleData.discount_percent || 0;
+            const discountAmt = saleData.discount_amount || 0;
+            const total = beforeDiscount - discountAmt;
             const tendered = saleData.amount_tendered || total;
             const change = Math.max(0, tendered - total);
 
@@ -2083,7 +2859,7 @@ $page_title = 'Point of Sale';
                 return `
                     <tr>
                         <td>
-                            <div style="font-weight: 600;">${item.name}</div>
+                            <div style="font-weight: 600;">${escapeHtmlPos(item.name)}</div>
                             <div style="color: var(--text-light); font-size: 0.72rem;">${item.qty} x ₱${item.price.toFixed(2)}</div>
                         </td>
                         <td>₱${lineTotal.toFixed(2)}</td>
@@ -2118,6 +2894,7 @@ $page_title = 'Point of Sale';
                 <div class="receipt-totals">
                     <div class="row"><span>Subtotal</span><span>₱${subtotal.toFixed(2)}</span></div>
                     <div class="row"><span>VAT (12%)</span><span>₱${tax.toFixed(2)}</span></div>
+                    ${discountPct > 0 ? `<div class="row" style="color:#dc2626;"><span>Discount (${discountPct}%)</span><span>-₱${discountAmt.toFixed(2)}</span></div>` : ''}
                     <div class="row total"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
                     <div class="row"><span>Paid (${saleData.payment_method})</span><span>₱${tendered.toFixed(2)}</span></div>
                     <div class="row"><span>Change</span><span>₱${change.toFixed(2)}</span></div>
@@ -2126,7 +2903,38 @@ $page_title = 'Point of Sale';
                 <div class="receipt-footer">
                     Thank you! Get well soon.
                 </div>
+
+                ${saleData.reward_qr_code ? `
+                <div style="margin-top:1rem; padding-top:0.75rem; border-top:1px dashed var(--divider-color); text-align:center;">
+                    <div style="font-weight:700; font-size:0.85rem; margin-bottom:0.4rem; color:var(--primary-color);">🎁 Reward QR Code</div>
+                    <div style="font-size:0.75rem; color:var(--text-light); margin-bottom:0.5rem;">Scan this code to earn loyalty points (25 points per ₱500 spent)!</div>
+                    <div id="receiptQrCodeContainer" style="display:flex;justify-content:center;margin:0.5rem auto;"></div>
+                    <div style="font-size:0.7rem; color:var(--text-light); word-break:break-all; margin-top:0.3rem;">${saleData.reward_qr_code}</div>
+                    <div style="font-size:0.65rem; color:var(--text-light); margin-top:0.2rem;">Valid for 30 days &bull; One-time use only</div>
+                </div>
+                ` : ''}
             `;
+
+            // Render actual QR code
+            if (saleData.reward_qr_code) {
+                setTimeout(() => {
+                    const qrContainer = document.getElementById('receiptQrCodeContainer');
+                    if (qrContainer && typeof QRCode !== 'undefined') {
+                        qrContainer.innerHTML = '';
+                        // Build a scannable URL so phones open the landing page directly
+                        const basePath = window.location.pathname.replace(/[^\/]*$/, '');
+                        const qrUrl = window.location.origin + basePath + 'receipt_qr_landing.php?code=' + encodeURIComponent(saleData.reward_qr_code);
+                        new QRCode(qrContainer, {
+                            text: qrUrl,
+                            width: 150,
+                            height: 150,
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    }
+                }, 100);
+            }
         }
 
         // --- Toast ---
@@ -2393,7 +3201,8 @@ $page_title = 'Point of Sale';
                     html += `<button class="oo-action-btn ready-btn" onclick="changeOrderStatus(${order.order_id}, 'Ready')"><i class="fas fa-check-double"></i> Mark Ready</button>`;
                     break;
                 case 'Ready':
-                    html += `<button class="oo-action-btn complete-btn" onclick="changeOrderStatus(${order.order_id}, 'Completed')"><i class="fas fa-flag-checkered"></i> Complete (Picked Up)</button>`;
+                    html += `<button class="oo-action-btn complete-btn" onclick="processPickupPayment(${order.order_id})"><i class="fas fa-cash-register"></i> Process Pickup Payment</button>`;
+                    html += `<button class="oo-action-btn" onclick="changeOrderStatus(${order.order_id}, 'Completed')" style="background:#6b7280;"><i class="fas fa-flag-checkered"></i> Mark Complete (No Payment)</button>`;
                     break;
             }
             html += `<button class="oo-action-btn view-btn" onclick="toggleOrderExpand(${order.order_id})"><i class="fas fa-eye"></i> Details</button>`;
@@ -2431,12 +3240,81 @@ $page_title = 'Point of Sale';
             }
         }
 
+        // ─── Process Pickup Payment - Load order into POS cart ───
+        let currentPickupOrderId = null;
+        
+        async function processPickupPayment(orderId) {
+            try {
+                // Fetch order details
+                const res = await fetch('online_order_api.php?action=get_order_details&order_id=' + orderId);
+                const data = await res.json();
+                
+                if (!data.success || !data.order || !data.order.items) {
+                    showToast('Failed to load order details', 'error');
+                    return;
+                }
+                
+                const order = data.order;
+                
+                // Confirm with user
+                const ok = await customConfirm(
+                    'Process Pickup Payment',
+                    `Load ${order.customer_name}'s order (${order.order_ref}) into POS cart for payment?`,
+                    'info',
+                    { confirmText: 'Yes, Load to Cart', cancelText: 'Cancel' }
+                );
+                
+                if (!ok) return;
+                
+                // Clear current cart
+                cart = [];
+                
+                // Load order items into cart using order data directly
+                for (const item of order.items) {
+                    cart.push({
+                        id: item.product_id,
+                        cartKey: item.product_id + '_box',
+                        name: item.product_name,
+                        price: parseFloat(item.price),
+                        qty: parseInt(item.quantity),
+                        maxStock: parseInt(item.quantity) + 100,
+                        perPiece: false,
+                        piecesPerBox: 1
+                    });
+                }
+                
+                // Store the pickup order ID so we can link it when payment is completed
+                currentPickupOrderId = orderId;
+                
+                // Update cart UI
+                updateCartUI();
+                
+                // Switch to POS products tab
+                const productsTab = document.querySelector('.pos-main-tab');
+                if (productsTab) switchPosTab('products', productsTab);
+                
+                // Show success message
+                showToast(`Order loaded! Total: ₱${order.total_amount} - Customer: ${order.customer_name}`, 'success');
+                
+                // Show payment panel automatically
+                setTimeout(() => {
+                    document.getElementById('payBtn').click();
+                }, 300);
+                
+            } catch (err) {
+                console.error('Error loading pickup order:', err);
+                showToast('Error loading order into cart', 'error');
+            }
+        }
+
         async function changeOrderStatus(orderId, newStatus) {
             if (newStatus === 'Cancelled') {
-                if (!confirm('Are you sure you want to cancel this order? Stock will be restored.')) return;
+                const ok = await customConfirm('Cancel Order', 'Are you sure you want to cancel this order? Stock will be restored.', 'danger', { confirmText: 'Yes, Cancel Order', cancelText: 'Go Back' });
+                if (!ok) return;
             }
             if (newStatus === 'Completed') {
-                if (!confirm('Mark this order as completed? This will create a sale record in the system.')) return;
+                const ok = await customConfirm('Complete Order', 'Mark this order as completed? This will create a sale record in the system.', 'success', { confirmText: 'Yes, Complete', cancelText: 'Not Yet' });
+                if (!ok) return;
             }
 
             try {
@@ -2497,6 +3375,11 @@ $page_title = 'Point of Sale';
                 loadOnlineOrders();
             }
         }, 15000);
+
+        // Auto-refresh product stock every 30 seconds to catch other terminals' sales
+        setInterval(() => {
+            loadProducts();
+        }, 30000);
     </script>
 </body>
 

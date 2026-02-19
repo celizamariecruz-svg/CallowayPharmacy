@@ -156,10 +156,13 @@ function initRippleButtons() {
 
 // Confirm Dialog with style
 function confirmAction(message, title = 'Confirm Action') {
-    return new Promise((resolve) => {
-        const result = confirm(`${title}\n\n${message}`);
-        resolve(result);
-    });
+    if (typeof window.customConfirm === 'function') {
+        return window.customConfirm(title, message, 'warning', {
+            confirmText: 'Confirm',
+            cancelText: 'Cancel'
+        });
+    }
+    return Promise.resolve(true);
 }
 
 // Enhanced Fetch with loading and error handling

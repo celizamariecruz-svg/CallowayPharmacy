@@ -100,26 +100,43 @@ document.addEventListener('DOMContentLoaded', function() {
                     `Your session will expire in ${minutes} minutes. Please save your work.`,
                     'Session Timeout Warning'
                 );
+            } else if (typeof window.customAlert === 'function') {
+                window.customAlert('Session Timeout Warning', `Your session will expire in ${minutes} minutes due to inactivity.`, 'warning');
             } else {
-                alert(`Your session will expire in ${minutes} minutes due to inactivity.`);
+                console.warn(`Session timeout warning: ${minutes} minutes remaining.`);
             }
         }
         
         // Redirect to login on timeout
         if (timeSinceActivity >= SESSION_TIMEOUT) {
-            window.location.href = 'login.html?timeout=1';
+            window.location.href = 'login.php?timeout=1';
         }
     }, 60000); // Check every minute
     
     // Confirmation dialogs for destructive actions
     document.querySelectorAll('[data-confirm]').forEach(function(element) {
-        element.addEventListener('click', function(e) {
+        element.addEventListener('click', async function(e) {
+            if (this.dataset.confirmApproved === '1') {
+                this.dataset.confirmApproved = '0';
+                return;
+            }
+
             const message = this.getAttribute('data-confirm');
-            if (!confirm(message)) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const ok = (typeof window.customConfirm === 'function')
+                ? await window.customConfirm('Confirm Action', message, 'warning', { confirmText: 'Continue', cancelText: 'Cancel' })
+                : true;
+
+            if (!ok) {
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }
+
+            this.dataset.confirmApproved = '1';
+            this.click();
         });
     });
     
@@ -138,8 +155,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (urlParams.get('timeout') === '1') {
         if (window.PolishUI && window.PolishUI.toast) {
             window.PolishUI.toast.warning('Your session has expired due to inactivity. Please login again.');
+        } else if (typeof window.customAlert === 'function') {
+            window.customAlert('Session Expired', 'Your session has expired. Please login again.', 'warning');
         } else {
-            alert('Your session has expired. Please login again.');
+            console.warn('Session expired due to inactivity.');
         }
     }
 });

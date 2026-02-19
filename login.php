@@ -760,7 +760,7 @@ if (isset($_SESSION['user_id'])) {
           <span>Dark Mode</span>
         </div>
         <div class="divider"></div>
-        <a href="index.html" class="dropdown-item">
+        <a href="index.php" class="dropdown-item">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -797,7 +797,15 @@ if (isset($_SESSION['user_id'])) {
           </div>
           <button type="submit" aria-label="Log In button">Log In</button>
         </form>
+        <p class="register-note" style="margin-bottom:0.3rem;"><a href="#" onclick="openForgotModal(event)" style="color:var(--primary-color);font-weight:600;">Forgot Password?</a></p>
         <p class="register-note">Don't have an account? <a onclick="switchTab('register')">Register here</a></p>
+        
+        <div style="margin-top: 1rem; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 1rem;">
+            <button type="button" onclick="window.location.href='onlineordering.php'" style="background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); margin-top: 0; padding: 0.8rem; font-size: 1rem;">
+                Browse Online Shop as Guest
+            </button>
+        </div>
+        <p class="register-note" style="margin-top: 0.8rem;">Staff member? <a href="admin_login.php">Log in here &rarr;</a></p>
       </div>
 
       <!-- REGISTER TAB -->
@@ -819,6 +827,7 @@ if (isset($_SESSION['user_id'])) {
           <div class="form-group">
             <input id="reg-password" name="password" type="password" placeholder=" " required autocomplete="new-password" />
             <label for="reg-password">Password</label>
+            <small style="display:block; margin-top:0.3rem; font-size:0.75rem; color:var(--text-light); opacity:0.8;">Min 8 chars, 1 uppercase letter, 1 special character</small>
           </div>
           <button type="submit" aria-label="Register button">Register</button>
         </form>
@@ -855,6 +864,41 @@ if (isset($_SESSION['user_id'])) {
   <div id="register-error-modal" class="modal modal-error">
       <p id="register-error-msg">Registration failed.</p>
       <button onclick="document.getElementById('register-error-modal').style.display='none'">Okay</button>
+  </div>
+
+  <!-- Email Verification Modal -->
+  <div id="verify-email-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:18px;max-width:420px;width:92%;padding:2.2rem;box-shadow:0 16px 48px rgba(0,0,0,0.22);text-align:center;position:relative;">
+      <button onclick="closeVerifyModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      <div style="font-size:2.5rem;margin-bottom:0.5rem;">&#9993;</div>
+      <h3 style="color:#1e3a5f;margin-bottom:0.4rem;font-size:1.2rem;">Verify Your Email</h3>
+      <p style="color:#64748b;font-size:0.88rem;margin-bottom:1rem;">Enter the 6-digit code sent to your email to activate your account.</p>
+      <div id="verify-code-hint" style="display:none;background:#fef3c7;color:#92400e;padding:0.6rem 1rem;border-radius:10px;font-size:0.85rem;font-weight:600;margin-bottom:1rem;"></div>
+      <div id="verify-msg" style="margin-bottom:0.5rem;"></div>
+      <form onsubmit="handleVerifyCode(event)" id="verify-form">
+        <input type="text" id="verify-code-input" maxlength="6" pattern="[0-9]{6}" placeholder="000000"
+          style="width:100%;text-align:center;font-size:1.8rem;font-weight:800;letter-spacing:10px;padding:0.8rem;border:2px solid #cbd5e1;border-radius:12px;margin-bottom:1rem;box-sizing:border-box;font-family:monospace;" required>
+        <button type="submit" id="verify-submit-btn"
+          style="width:100%;padding:0.8rem;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-weight:700;font-size:1rem;border:none;border-radius:12px;cursor:pointer;">Verify & Activate</button>
+      </form>
+      <div style="margin-top:1rem;">
+        <button onclick="resendVerifyCode()" id="resend-verify-btn" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:0.85rem;font-weight:600;text-decoration:underline;">Resend Code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div id="forgot-password-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;max-width:420px;width:90%;padding:2.2rem;box-shadow:0 12px 40px rgba(0,0,0,0.18);text-align:center;position:relative;">
+      <button onclick="closeForgotModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;">&times;</button>
+      <h3 style="color:#1e3a5f;margin-bottom:0.5rem;font-size:1.25rem;">Forgot Password?</h3>
+      <p style="color:#64748b;font-size:0.9rem;margin-bottom:1.3rem;">Enter your username or email address and we'll send a reset link to your registered email.</p>
+      <div id="forgot-msg"></div>
+      <form onsubmit="handleForgotSubmit(event)" id="forgot-form">
+        <input type="text" id="forgot-email" placeholder="Enter username or email" required style="width:100%;padding:0.75rem 1rem;border:1.5px solid #cbd5e1;border-radius:10px;font-size:1rem;margin-bottom:1rem;box-sizing:border-box;">
+        <button type="submit" id="forgot-btn" style="width:100%;padding:0.8rem;background:#2563eb;color:#fff;font-weight:700;font-size:1rem;border:none;border-radius:10px;cursor:pointer;">Send Reset Link</button>
+      </form>
+    </div>
   </div>
 
   <footer>
@@ -934,6 +978,28 @@ if (isset($_SESSION['user_id'])) {
       document.getElementById('tab-' + tab + '-btn').classList.add('active');
     }
 
+    // ─── Reward QR from POS receipt ───
+    // If the URL has ?tab=register&reward=RWD-XXXX, auto-switch to register tab
+    // and save the reward code so we can auto-redeem it after login
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      const rewardParam = urlParams.get('reward') || urlParams.get('reward_qr');
+      if (tabParam === 'register') {
+        switchTab('register');
+      }
+      if (rewardParam) {
+        localStorage.setItem('calloway_pending_reward', rewardParam);
+        // Show reward banner at top of form
+        const banner = document.createElement('div');
+        banner.id = 'reward-banner';
+        banner.innerHTML = '<span style="font-size:1.3rem;">🎁</span> <strong>Reward QR Detected!</strong><br><span style="font-size:0.85rem;">Register or log in to claim your loyalty points.</span>';
+        banner.style.cssText = 'background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;color:#92400e;padding:0.8rem 1rem;border-radius:12px;margin-bottom:1rem;text-align:center;font-size:0.95rem;animation:slideUp 0.3s ease-out;';
+        const container = document.querySelector('.container');
+        if (container) container.insertBefore(banner, container.children[1]);
+      }
+    })();
+
     // ─── Modal functionality ───
     let loginRedirectUrl = 'index.php'; // default; overridden by role
 
@@ -980,20 +1046,39 @@ if (isset($_SESSION['user_id'])) {
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken
           },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password, login_type: 'customer' })
         });
 
         const data = await response.json();
 
         if (data.success) {
+          // Check for pending reward QR from POS receipt
+          const pendingReward = localStorage.getItem('calloway_pending_reward');
+          
           // Redirect based on role
           if (data.role_name === 'customer') {
-            loginRedirectUrl = 'onlineordering.php';
+            if (pendingReward) {
+              localStorage.removeItem('calloway_pending_reward');
+              loginRedirectUrl = 'loyalty_qr.php?auto_redeem=' + encodeURIComponent(pendingReward);
+            } else {
+              loginRedirectUrl = 'onlineordering.php';
+            }
           } else {
             loginRedirectUrl = 'index.php';
           }
           document.getElementById('login-success-modal').style.display = 'block';
+        } else if (data.needs_verification) {
+          // Unverified email — show verification modal
+          window._verifyEmail = data.email || '';
+          document.getElementById('verify-code-hint').style.display = 'none';
+          document.getElementById('verify-email-modal').style.display = 'flex';
         } else {
+          // If staff account, suggest admin login
+          if (data.redirect) {
+            showErrorModal(data.message + ' Redirecting...');
+            setTimeout(() => { window.location.href = data.redirect; }, 1500);
+            return;
+          }
           showErrorModal(data.message || 'Invalid username or password');
         }
       } catch (error) {
@@ -1019,8 +1104,18 @@ if (isset($_SESSION['user_id'])) {
         return;
       }
 
-      if (password.length < 6) {
-        showRegisterError('Password must be at least 6 characters.');
+      if (password.length < 8) {
+        showRegisterError('Password must be at least 8 characters.');
+        return;
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        showRegisterError('Password must contain at least one uppercase letter.');
+        return;
+      }
+
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        showRegisterError('Password must contain at least one special character.');
         return;
       }
 
@@ -1037,8 +1132,21 @@ if (isset($_SESSION['user_id'])) {
         const data = await response.json();
 
         if (data.success) {
-          document.getElementById('register-success-modal').style.display = 'block';
-          e.target.reset();
+          if (data.needs_verification) {
+            // Show verification modal
+            window._verifyEmail = data.user_email || email;
+            if (data.email_hint) {
+              document.getElementById('verify-code-hint').textContent = 'Your code: ' + data.email_hint;
+              document.getElementById('verify-code-hint').style.display = 'block';
+            } else {
+              document.getElementById('verify-code-hint').style.display = 'none';
+            }
+            document.getElementById('verify-email-modal').style.display = 'flex';
+            e.target.reset();
+          } else {
+            document.getElementById('register-success-modal').style.display = 'block';
+            e.target.reset();
+          }
         } else {
           showRegisterError(data.message || 'Registration failed.');
         }
@@ -1060,6 +1168,147 @@ if (isset($_SESSION['user_id'])) {
     function showRegisterError(message) {
       document.getElementById('register-error-msg').textContent = message;
       document.getElementById('register-error-modal').style.display = 'block';
+    }
+
+    // ─── FORGOT PASSWORD ───
+    function openForgotModal(e) {
+      if (e) e.preventDefault();
+      document.getElementById('forgot-msg').innerHTML = '';
+      document.getElementById('forgot-email').value = '';
+      document.getElementById('forgot-form').style.display = 'block';
+      const m = document.getElementById('forgot-password-modal');
+      m.style.display = 'flex';
+    }
+    function closeForgotModal() {
+      document.getElementById('forgot-password-modal').style.display = 'none';
+    }
+    // close on backdrop click
+    document.getElementById('forgot-password-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeForgotModal();
+    });
+
+    async function handleForgotSubmit(e) {
+      e.preventDefault();
+      const identifier = document.getElementById('forgot-email').value.trim();
+      const btn = document.getElementById('forgot-btn');
+      const msgDiv = document.getElementById('forgot-msg');
+
+      if (!identifier) { msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.6rem;border-radius:8px;font-size:0.9rem;">Please enter your username or email.</p>'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      msgDiv.innerHTML = '';
+
+      try {
+        const res = await fetch('forgot_password_handler.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier })
+        });
+        const data = await res.json();
+        if (data.success) {
+          msgDiv.innerHTML = '<p style="color:#166534;background:#dcfce7;padding:0.6rem;border-radius:8px;font-size:0.9rem;">' + data.message + '</p>';
+          document.getElementById('forgot-form').style.display = 'none';
+        } else {
+          msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.6rem;border-radius:8px;font-size:0.9rem;">' + data.message + '</p>';
+        }
+      } catch (err) {
+        console.error('Forgot password error:', err);
+        msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.6rem;border-radius:8px;font-size:0.9rem;">Something went wrong. Please try again.</p>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Link';
+      }
+    }
+
+    // ─── Email Verification Functions ───
+    function closeVerifyModal() {
+      document.getElementById('verify-email-modal').style.display = 'none';
+      document.getElementById('verify-msg').innerHTML = '';
+    }
+
+    async function handleVerifyCode(e) {
+      e.preventDefault();
+      const code = document.getElementById('verify-code-input').value.trim();
+      const btn = document.getElementById('verify-submit-btn');
+      const msgDiv = document.getElementById('verify-msg');
+
+      if (!code || code.length !== 6) {
+        msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.5rem;border-radius:8px;font-size:0.85rem;">Please enter a 6-digit code.</p>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+      msgDiv.innerHTML = '';
+
+      try {
+        const res = await fetch('verify_email.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: window._verifyEmail, code: code })
+        });
+        const raw = await res.text();
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (parseErr) {
+          throw new Error('Server returned an invalid response. Please try again.');
+        }
+        if (data.success) {
+          msgDiv.innerHTML = '<p style="color:#166534;background:#dcfce7;padding:0.5rem;border-radius:8px;font-size:0.85rem;">' + data.message + '</p>';
+          setTimeout(() => {
+            closeVerifyModal();
+            // Switch to login tab
+            document.getElementById('loginTab').click();
+          }, 1500);
+        } else {
+          let debugMsg = data.debug ? '<br><small style="color:#666;font-family:monospace;">' + data.debug + '</small>' : '';
+          msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.5rem;border-radius:8px;font-size:0.85rem;">' + data.message + debugMsg + '</p>';
+        }
+      } catch (err) {
+        msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.5rem;border-radius:8px;font-size:0.85rem;">Something went wrong. Please try again.<br><small style="color:#666;font-family:monospace;">' + (err.message || 'Verification failed') + '</small></p>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Verify & Activate';
+      }
+    }
+
+    async function resendVerifyCode() {
+      const btn = document.getElementById('resend-verify-btn');
+      const msgDiv = document.getElementById('verify-msg');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch('verify_email.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: window._verifyEmail, action: 'resend' })
+        });
+        const raw = await res.text();
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (parseErr) {
+          throw new Error('Server returned an invalid response. Please try again.');
+        }
+        if (data.success) {
+          let msg = data.message;
+          if (data.email_hint) {
+            document.getElementById('verify-code-hint').textContent = 'Your code: ' + data.email_hint;
+            document.getElementById('verify-code-hint').style.display = 'block';
+          }
+          msgDiv.innerHTML = '<p style="color:#166534;background:#dcfce7;padding:0.5rem;border-radius:8px;font-size:0.85rem;">' + msg + '</p>';
+        } else {
+          msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.5rem;border-radius:8px;font-size:0.85rem;">' + data.message + '</p>';
+        }
+      } catch (err) {
+        msgDiv.innerHTML = '<p style="color:#991b1b;background:#fee2e2;padding:0.5rem;border-radius:8px;font-size:0.85rem;">Something went wrong.</p>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Resend Code';
+      }
     }
   </script>
 

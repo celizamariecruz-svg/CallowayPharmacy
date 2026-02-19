@@ -1,0 +1,208 @@
+/* ─── Notification Tray Styles ─── */
+.notif-panel {
+    position: fixed;
+    top: 56px;
+    right: 12px;
+    width: 380px;
+    max-height: 520px;
+    background: var(--card-bg, #fff);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    z-index: 10001;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+.notif-panel.visible {
+    display: flex;
+}
+
+[data-theme="dark"] .notif-panel {
+    background: #1e293b;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.notif-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+[data-theme="dark"] .notif-panel-header {
+    border-color: rgba(255,255,255,0.08);
+}
+
+.notif-panel-header .notif-count-label {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    margin-left: 0.5rem;
+}
+
+.notif-panel-close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text-light, #6b7280);
+    padding: 0.2rem;
+}
+
+.notif-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.notif-mark-read-all {
+    border: none;
+    background: transparent;
+    color: var(--primary-color, #2563eb);
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0.2rem 0.35rem;
+    border-radius: 6px;
+}
+
+.notif-mark-read-all:hover {
+    background: rgba(37, 99, 235, 0.1);
+}
+.notif-panel-close:hover {
+    color: var(--text-color, #333);
+}
+
+.notif-panel-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.4rem 0;
+    max-height: 420px;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+    color: inherit;
+}
+.notif-item:hover {
+    background: rgba(0,0,0,0.04);
+}
+[data-theme="dark"] .notif-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.notif-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    color: white;
+}
+
+.notif-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-item-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.notif-item-title {
+    font-weight: 700;
+    font-size: 0.82rem;
+    margin-bottom: 0.1rem;
+}
+
+.notif-item-read-btn {
+    border: 1px solid rgba(37, 99, 235, 0.35);
+    background: transparent;
+    color: var(--primary-color, #2563eb);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.18rem 0.45rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.notif-item-read-btn:hover {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.notif-item-msg {
+    font-size: 0.78rem;
+    color: var(--text-light, #6b7280);
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notif-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-light, #6b7280);
+}
+.notif-empty i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    opacity: 0.4;
+}
+
+/* Badge on bell icon */
+.notif-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.notif-panel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+}
+.notif-panel-overlay.visible {
+    display: block;
+}
+
+@media (max-width: 440px) {
+    .notif-panel {
+        right: 4px;
+        left: 4px;
+        width: auto;
+    }
+}

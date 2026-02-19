@@ -20,13 +20,22 @@ $page_title = 'Purchase Orders';
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js"></script>
     <style>
         .po-container {
             max-width: 1400px;
@@ -586,7 +595,8 @@ $page_title = 'Purchase Orders';
         }
         
         async function receivePO(id) {
-            if (!confirm('Mark this purchase order as received? This will update inventory.')) {
+            const ok = await customConfirm('Receive Purchase Order', 'Mark this purchase order as received? This will update inventory.', 'success', { confirmText: 'Yes, Mark Received', cancelText: 'Cancel' });
+            if (!ok) {
                 return;
             }
             
@@ -620,7 +630,8 @@ $page_title = 'Purchase Orders';
         }
         
         async function cancelPO(id) {
-            if (!confirm('Cancel this purchase order?')) {
+            const ok = await customConfirm('Cancel Purchase Order', 'Cancel this purchase order?', 'danger', { confirmText: 'Yes, Cancel It', cancelText: 'Go Back' });
+            if (!ok) {
                 return;
             }
             

@@ -113,6 +113,13 @@ $page_title = "Medicine Locator";
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+<script>
+// Apply theme immediately to prevent flash
+(function() {
+  const theme = localStorage.getItem('calloway_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Medicine Locator - Calloway Pharmacy</title>

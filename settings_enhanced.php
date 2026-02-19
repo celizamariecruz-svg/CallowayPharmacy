@@ -28,213 +28,464 @@ while ($row = $settings_result->fetch_assoc()) {
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js?v=2"></script>
     <style>
         .settings-container {
-            max-width: 1400px;
-            margin: 100px auto 2rem;
-            padding: 2rem;
+            max-width: 1200px;
+            margin: 80px auto 2rem;
+            padding: 0 1.5rem 2rem;
         }
-        
+        .settings-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #7c3aed 100%);
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 1.75rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .settings-header::before {
+            content: '';
+            position: absolute;
+            top: -60%; right: -10%;
+            width: 280px; height: 280px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .settings-header::after {
+            content: '';
+            position: absolute;
+            bottom: -40%; left: 10%;
+            width: 180px; height: 180px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .settings-header h1 {
+            margin: 0 0 0.3rem;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+        .settings-header h1 i { margin-right: 0.35rem; }
+        .settings-header p {
+            margin: 0;
+            opacity: 0.85;
+            font-size: 0.925rem;
+            position: relative;
+        }
         .settings-tabs {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid var(--border-color);
+            gap: 0.35rem;
+            margin-bottom: 1.75rem;
+            padding: 0.375rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--input-border);
             overflow-x: auto;
+            scrollbar-width: thin;
         }
+        .settings-tabs::-webkit-scrollbar { height: 4px; }
+        .settings-tabs::-webkit-scrollbar-thumb { background: var(--input-border); border-radius: 4px; }
         
         .tab-button {
-            padding: 1rem 1.5rem;
-            background: none;
+            padding: 0.6rem 1.1rem;
+            background: transparent;
             border: none;
-            border-bottom: 3px solid transparent;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.875rem;
             font-weight: 600;
-            color: var(--text-color);
-            opacity: 0.6;
-            transition: all 0.3s;
+            color: var(--text-light);
+            transition: all 0.2s ease;
             white-space: nowrap;
-        }
-        
-        .tab-button:hover {
-            opacity: 0.8;
-        }
-        
-        .tab-button.active {
-            opacity: 1;
-            border-bottom-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-        
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 2rem;
-        }
-        
-        .settings-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        [data-theme="dark"] .settings-card {
-            background: #1e293b;
-        }
-        
-        .settings-card h3 {
-            margin: 0 0 1.5rem;
-            color: var(--primary-color);
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
+        .tab-button:hover {
+            background: var(--hover-bg);
+            color: var(--text-color);
+        }
+        .tab-button.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 10px rgba(var(--primary-rgb), 0.3);
+        }
+        .tab-button i { font-size: 0.95rem; width: 18px; text-align: center; }
+        .tab-content { display: none; }
+        .tab-content.active {
+            display: block;
+            animation: settingsFadeUp 0.35s ease both;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 1.5rem;
+        }
+        .settings-card {
+            background: var(--card-bg);
+            padding: 1.75rem 2rem;
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--input-border);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .settings-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .settings-card h3 {
+            margin: 0 0 1.5rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--input-border);
+            color: var(--text-color);
+        }
+        .settings-card h3 .card-icon {
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        .card-icon.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+        .card-icon.green { background: linear-gradient(135deg, #059669, #10b981); }
+        .card-icon.purple { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+        .card-icon.amber { background: linear-gradient(135deg, #d97706, #f59e0b); }
+        .card-icon.red { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .card-icon.teal { background: linear-gradient(135deg, #0d9488, #14b8a6); }
+        .card-icon.slate { background: linear-gradient(135deg, #475569, #64748b); }
         
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.35rem;
         }
-        
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             font-weight: 600;
+            font-size: 0.9rem;
             color: var(--text-color);
         }
-        
         .form-group small {
             display: block;
-            margin-top: 0.25rem;
-            color: var(--text-color);
-            opacity: 0.7;
-            font-size: 0.875rem;
+            margin-top: 0.3rem;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            line-height: 1.4;
         }
-        
-        .form-group input,
+        .form-group input[type="text"],
+        .form-group input[type="tel"],
+        .form-group input[type="email"],
+        .form-group input[type="url"],
+        .form-group input[type="number"],
+        .form-group input[type="password"],
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-color);
+            padding: 0.65rem 0.85rem;
+            border: 1.5px solid var(--input-border);
             border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s;
+            font-size: 0.925rem;
+            font-family: inherit;
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
         }
-        
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             border-color: var(--primary-color);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(10, 116, 218, 0.1);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
         }
-        
+        .form-group textarea { resize: vertical; }
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
         }
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            gap: 1rem;
+        }
+        .toggle-row .toggle-info .toggle-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        .toggle-row .toggle-info small {
+            display: block;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 44px; height: 24px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-switch .slider {
+            position: absolute; inset: 0;
+            background: var(--input-border);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background 0.25s;
+        }
+        .toggle-switch .slider::before {
+            content: '';
+            position: absolute;
+            width: 18px; height: 18px;
+            left: 3px; top: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.25s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .slider { background: var(--primary-color); }
+        .toggle-switch input:checked + .slider::before { transform: translateX(20px); }
         
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.25rem;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+            line-height: 1.4;
         }
-        
+        .btn:active { transform: scale(0.97); }
         .btn-primary {
-            background: #2563eb;
+            background: var(--primary-color);
             color: white;
         }
-        
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35);
         }
-        
         .btn-secondary {
-            background: #6c757d;
-            color: white;
+            background: var(--hover-bg);
+            color: var(--text-color);
+            border: 1.5px solid var(--input-border);
         }
-        
+        .btn-secondary:hover { background: var(--input-border); }
         .btn-success {
-            background: #28a745;
+            background: var(--secondary-color);
             color: white;
         }
-        
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(16,185,129,0.35);
+        }
         .btn-danger {
-            background: #dc3545;
+            background: var(--danger-color);
             color: white;
         }
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+        }
+        .btn.saving { pointer-events: none; opacity: 0.7; }
         
         .backup-list {
-            max-height: 300px;
+            max-height: 280px;
             overflow-y: auto;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
+            border: 1.5px solid var(--input-border);
+            border-radius: 10px;
+            padding: 0.75rem;
         }
-        
         .backup-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
+            padding: 0.65rem 0.75rem;
+            margin-bottom: 0.4rem;
             background: var(--bg-color);
-            border-radius: 6px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: background 0.2s;
         }
-        
-        .backup-item:last-child {
-            margin-bottom: 0;
-        }
-        
+        .backup-item:hover { background: var(--hover-bg); }
+        .backup-item:last-child { margin-bottom: 0; }
         .info-box {
-            background: rgba(37, 99, 235, 0.1);
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 1rem;
+            background: rgba(var(--primary-rgb), 0.06);
+            border: 1.5px solid rgba(var(--primary-rgb), 0.2);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
             margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
         }
-        
+        .info-box i {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
         .success-box {
-            background: rgba(16, 185, 129, 0.1);
-            border: 2px solid #28a745;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1.5px solid var(--secondary-color);
             border-radius: 8px;
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             margin-top: 1rem;
             display: none;
+            font-size: 0.9rem;
+            font-weight: 600;
         }
-        
         .success-box.show {
-            display: block;
-            animation: slideInRight 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: settingsFadeUp 0.3s ease;
         }
-        
+        /* Settings Toast */
+        .settings-toast {
+            position: fixed;
+            top: 80px; right: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-left: 4px solid var(--secondary-color);
+            border-radius: 10px;
+            padding: 0.85rem 1.25rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 1100;
+            transform: translateX(calc(100% + 2rem));
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.9rem;
+            font-weight: 600;
+            max-width: 360px;
+        }
+        .settings-toast.show { transform: translateX(0); }
+        .settings-toast .toast-check { color: var(--secondary-color); font-size: 1.15rem; }
+        /* System Info Tiles */
+        .sys-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .sys-info-tile {
+            background: var(--bg-color);
+            border: 1px solid var(--input-border);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .sys-info-tile:hover { border-color: var(--primary-color); }
+        .sys-info-tile .tile-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            margin-bottom: 0.35rem;
+        }
+        .sys-info-tile .tile-value {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-color);
+            word-break: break-all;
+        }
+        /* Theme Picker */
+        .theme-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+        .theme-option {
+            padding: 1.5rem 1rem;
+            border: 2px solid var(--input-border);
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .theme-option:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        .theme-option.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+        }
+        .theme-option .theme-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .theme-option .theme-name { font-weight: 700; font-size: 0.9rem; }
+        .theme-option .theme-check {
+            position: absolute;
+            top: 8px; right: 8px;
+            width: 22px; height: 22px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+        }
+        .theme-option.selected .theme-check { display: flex; }
+        .theme-option.light-opt { background: #ffffff; color: #1e293b; }
+        .theme-option.dark-opt { background: #1e293b; color: #f1f5f9; }
+        /* Animations */
+        @keyframes settingsFadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Responsive */
         @media (max-width: 768px) {
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
+            .settings-container { padding: 0 1rem 2rem; }
+            .settings-header { padding: 1.5rem 1.25rem; border-radius: 12px; }
+            .settings-header h1 { font-size: 1.35rem; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .settings-card { padding: 1.25rem; }
+            .tab-button { padding: 0.5rem 0.85rem; font-size: 0.8rem; }
+            .tab-button span { display: none; }
+            .sys-info-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -242,40 +493,40 @@ while ($row = $settings_result->fetch_assoc()) {
     <?php include 'header-component.php'; ?>
     
     <div class="settings-container">
-        <div style="margin-bottom: 2rem;">
-            <h1>⚙️ System Settings</h1>
-            <p style="color: var(--text-color); opacity: 0.8;">Configure all aspects of your pharmacy management system</p>
+        <div class="settings-header">
+            <h1><i class="fa-solid fa-gear"></i> System Settings</h1>
+            <p>Configure all aspects of your pharmacy management system</p>
         </div>
         
         <!-- Settings Tabs -->
         <div class="settings-tabs">
-            <button class="tab-button active" onclick="showTab('company')">
-                🏪 Company Info
+            <button class="tab-button active" onclick="showTab('company', this)">
+                <i class="fa-solid fa-building"></i> <span>Company</span>
             </button>
-            <button class="tab-button" onclick="showTab('tax')">
-                💰 Tax & Currency
+            <button class="tab-button" onclick="showTab('tax', this)">
+                <i class="fa-solid fa-percent"></i> <span>Tax & Currency</span>
             </button>
-            <button class="tab-button" onclick="showTab('email')">
-                📧 Email Server
+            <button class="tab-button" onclick="showTab('email', this)">
+                <i class="fa-solid fa-envelope"></i> <span>Email</span>
             </button>
-            <button class="tab-button" onclick="showTab('receipt')">
-                🧾 Receipt Settings
+            <button class="tab-button" onclick="showTab('receipt', this)">
+                <i class="fa-solid fa-receipt"></i> <span>Receipts</span>
             </button>
-            <button class="tab-button" onclick="showTab('alerts')">
-                ⚠️ Alerts
+            <button class="tab-button" onclick="showTab('alerts', this)">
+                <i class="fa-solid fa-bell"></i> <span>Alerts</span>
             </button>
-            <button class="tab-button" onclick="showTab('backup')">
-                💾 Backup & Restore
+            <button class="tab-button" onclick="showTab('backup', this)">
+                <i class="fa-solid fa-database"></i> <span>Backup</span>
             </button>
-            <button class="tab-button" onclick="showTab('system')">
-                🔧 System
+            <button class="tab-button" onclick="showTab('system', this)">
+                <i class="fa-solid fa-server"></i> <span>System</span>
             </button>
         </div>
         
         <!-- Company Information Tab -->
         <div id="company-tab" class="tab-content active">
             <div class="settings-card">
-                <h3>🏪 Company Information</h3>
+                <h3><span class="card-icon blue"><i class="fa-solid fa-building"></i></span> Company Information</h3>
                 <form id="companyForm" onsubmit="saveCompanySettings(event)">
                     <div class="form-group">
                         <label for="company_name">Company Name *</label>
@@ -319,7 +570,7 @@ while ($row = $settings_result->fetch_assoc()) {
                     </div>
                     
                     <?php if ($auth->hasPermission('settings.edit')): ?>
-                    <button type="submit" class="btn btn-primary">💾 Save Company Information</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Company Info</button>
                     <?php endif; ?>
                     
                     <div class="success-box" id="company-success">
@@ -333,7 +584,7 @@ while ($row = $settings_result->fetch_assoc()) {
         <div id="tax-tab" class="tab-content">
             <div class="settings-grid">
                 <div class="settings-card">
-                    <h3>💰 Tax Configuration</h3>
+                    <h3><span class="card-icon green"><i class="fa-solid fa-percent"></i></span> Tax Configuration</h3>
                     <form id="taxForm" onsubmit="saveTaxSettings(event)">
                         <div class="form-group">
                             <label for="tax_rate">Tax Rate (%)</label>
@@ -342,17 +593,20 @@ while ($row = $settings_result->fetch_assoc()) {
                             <small>Default tax rate applied to all sales</small>
                         </div>
                         
-                        <div class="form-group">
-                            <label>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <div class="toggle-label">Enable Tax Calculation</div>
+                                <small>Turn off to disable tax on all transactions</small>
+                            </div>
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="enable_tax" name="enable_tax" 
                                        <?php echo ($settings['enable_tax'] ?? '1') == '1' ? 'checked' : ''; ?>>
-                                Enable tax calculation
+                                <span class="slider"></span>
                             </label>
-                            <small>Turn off to disable tax on all transactions</small>
                         </div>
                         
                         <?php if ($auth->hasPermission('settings.edit')): ?>
-                        <button type="submit" class="btn btn-primary">💾 Save Tax Settings</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Tax Settings</button>
                         <?php endif; ?>
                         
                         <div class="success-box" id="tax-success">
@@ -362,7 +616,7 @@ while ($row = $settings_result->fetch_assoc()) {
                 </div>
                 
                 <div class="settings-card">
-                    <h3>💱 Currency Settings</h3>
+                    <h3><span class="card-icon amber"><i class="fa-solid fa-coins"></i></span> Currency Settings</h3>
                     <form id="currencyForm" onsubmit="saveCurrencySettings(event)">
                         <div class="form-group">
                             <label for="currency">Currency Code</label>
@@ -383,7 +637,7 @@ while ($row = $settings_result->fetch_assoc()) {
                         </div>
                         
                         <?php if ($auth->hasPermission('settings.edit')): ?>
-                        <button type="submit" class="btn btn-primary">💾 Save Currency Settings</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Currency</button>
                         <?php endif; ?>
                         
                         <div class="success-box" id="currency-success">
@@ -397,10 +651,13 @@ while ($row = $settings_result->fetch_assoc()) {
         <!-- Email Server Tab -->
         <div id="email-tab" class="tab-content">
             <div class="settings-card">
-                <h3>📧 Email Server Configuration</h3>
+                <h3><span class="card-icon purple"><i class="fa-solid fa-envelope"></i></span> Email Server Configuration</h3>
                 <div class="info-box">
-                    <strong>ℹ️ SMTP Configuration</strong><br>
-                    Configure your email server settings to send automated emails for alerts, reports, and notifications.
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div>
+                        <strong>SMTP Configuration</strong><br>
+                        Configure your email server settings to send automated emails for alerts, reports, and notifications.
+                    </div>
                 </div>
                 
                 <form id="emailForm" onsubmit="saveEmailSettings(event)">
@@ -415,7 +672,8 @@ while ($row = $settings_result->fetch_assoc()) {
                         <div class="form-group">
                             <label for="email_port">SMTP Port *</label>
                             <input type="number" id="email_port" name="email_port" 
-                                   value="<?php echo htmlspecialchars($settings['email_port'] ?? '587'); ?>">
+                                   value="465" readonly>
+                            <small>SSL mode uses port 465.</small>
                         </div>
                     </div>
                     
@@ -451,16 +709,15 @@ while ($row = $settings_result->fetch_assoc()) {
                     <div class="form-group">
                         <label for="email_encryption">Encryption</label>
                         <select id="email_encryption" name="email_encryption">
-                            <option value="tls" <?php echo ($settings['email_encryption'] ?? 'tls') == 'tls' ? 'selected' : ''; ?>>TLS (Recommended)</option>
-                            <option value="ssl" <?php echo ($settings['email_encryption'] ?? '') == 'ssl' ? 'selected' : ''; ?>>SSL</option>
-                            <option value="none" <?php echo ($settings['email_encryption'] ?? '') == 'none' ? 'selected' : ''; ?>>None</option>
+                            <option value="ssl" selected>SSL (Forced)</option>
                         </select>
+                        <small>SMTP is optimized for SSL-only mode (port 465).</small>
                     </div>
                     
                     <?php if ($auth->hasPermission('settings.edit')): ?>
                     <div style="display: flex; gap: 1rem;">
-                        <button type="submit" class="btn btn-primary">💾 Save Email Settings</button>
-                        <button type="button" class="btn btn-secondary" onclick="testEmail()">📧 Send Test Email</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Email Settings</button>
+                        <button type="button" class="btn btn-secondary" onclick="testEmail()"><i class="fa-solid fa-paper-plane"></i> Send Test</button>
                     </div>
                     <?php endif; ?>
                     
@@ -474,7 +731,7 @@ while ($row = $settings_result->fetch_assoc()) {
         <!-- Receipt Settings Tab -->
         <div id="receipt-tab" class="tab-content">
             <div class="settings-card">
-                <h3>🧾 Receipt Customization</h3>
+                <h3><span class="card-icon teal"><i class="fa-solid fa-receipt"></i></span> Receipt Customization</h3>
                 <form id="receiptForm" onsubmit="saveReceiptSettings(event)">
                     <div class="form-group">
                         <label for="receipt_header">Receipt Header</label>
@@ -489,19 +746,25 @@ while ($row = $settings_result->fetch_assoc()) {
                     </div>
                     
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>
+                        <div class="toggle-row" style="padding: 0.5rem 0;">
+                            <div class="toggle-info">
+                                <div class="toggle-label">Show Company Logo</div>
+                            </div>
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="receipt_show_logo" name="receipt_show_logo" 
                                        <?php echo ($settings['receipt_show_logo'] ?? '1') == '1' ? 'checked' : ''; ?>>
-                                Show Company Logo
+                                <span class="slider"></span>
                             </label>
                         </div>
                         
-                        <div class="form-group">
-                            <label>
+                        <div class="toggle-row" style="padding: 0.5rem 0;">
+                            <div class="toggle-info">
+                                <div class="toggle-label">Show Receipt Barcode</div>
+                            </div>
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="receipt_show_barcode" name="receipt_show_barcode" 
                                        <?php echo ($settings['receipt_show_barcode'] ?? '1') == '1' ? 'checked' : ''; ?>>
-                                Show Receipt Barcode
+                                <span class="slider"></span>
                             </label>
                         </div>
                     </div>
@@ -517,7 +780,7 @@ while ($row = $settings_result->fetch_assoc()) {
                     </div>
                     
                     <?php if ($auth->hasPermission('settings.edit')): ?>
-                    <button type="submit" class="btn btn-primary">💾 Save Receipt Settings</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Receipt Settings</button>
                     <?php endif; ?>
                     
                     <div class="success-box" id="receipt-success">
@@ -530,7 +793,7 @@ while ($row = $settings_result->fetch_assoc()) {
         <!-- Alerts Tab -->
         <div id="alerts-tab" class="tab-content">
             <div class="settings-card">
-                <h3>⚠️ Alert Configuration</h3>
+                <h3><span class="card-icon amber"><i class="fa-solid fa-bell"></i></span> Alert Configuration</h3>
                 <form id="alertsForm" onsubmit="saveAlertsSettings(event)">
                     <div class="form-group">
                         <label for="low_stock_threshold">Low Stock Threshold</label>
@@ -546,13 +809,16 @@ while ($row = $settings_result->fetch_assoc()) {
                         <small>Alert when products are expiring within this many days</small>
                     </div>
                     
-                    <div class="form-group">
-                        <label>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label">Enable Email Alerts</div>
+                            <small>Send automated email alerts for low stock and expiry</small>
+                        </div>
+                        <label class="toggle-switch">
                             <input type="checkbox" id="enable_email_alerts" name="enable_email_alerts" 
                                    <?php echo ($settings['enable_email_alerts'] ?? '0') == '1' ? 'checked' : ''; ?>>
-                            Enable Email Alerts
+                            <span class="slider"></span>
                         </label>
-                        <small>Send automated email alerts for low stock and expiry</small>
                     </div>
                     
                     <div class="form-group">
@@ -563,7 +829,7 @@ while ($row = $settings_result->fetch_assoc()) {
                     </div>
                     
                     <?php if ($auth->hasPermission('settings.edit')): ?>
-                    <button type="submit" class="btn btn-primary">💾 Save Alert Settings</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Alert Settings</button>
                     <?php endif; ?>
                     
                     <div class="success-box" id="alerts-success">
@@ -577,19 +843,22 @@ while ($row = $settings_result->fetch_assoc()) {
         <div id="backup-tab" class="tab-content">
             <div class="settings-grid">
                 <div class="settings-card">
-                    <h3>💾 Database Backup</h3>
+                    <h3><span class="card-icon green"><i class="fa-solid fa-database"></i></span> Database Backup</h3>
                     <div class="info-box">
-                        <strong>ℹ️ Automatic Backups</strong><br>
-                        Products are automatically backed up when modified. Create manual backups for complete database snapshots.
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div>
+                            <strong>Automatic Backups</strong><br>
+                            Products are automatically backed up when modified. Create manual backups for complete database snapshots.
+                        </div>
                     </div>
                     
                     <?php if ($auth->hasPermission('settings.backup')): ?>
                     <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
                         <button class="btn btn-success" onclick="createManualBackup()">
-                            📦 Create Full Backup
+                            <i class="fa-solid fa-box-archive"></i> Create Full Backup
                         </button>
                         <button class="btn btn-secondary" onclick="loadBackupList()">
-                            🔄 Refresh List
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
                         </button>
                     </div>
                     <?php endif; ?>
@@ -607,13 +876,16 @@ while ($row = $settings_result->fetch_assoc()) {
                 </div>
                 
                 <div class="settings-card">
-                    <h3>⚙️ Backup Configuration</h3>
+                    <h3><span class="card-icon slate"><i class="fa-solid fa-sliders"></i></span> Backup Configuration</h3>
                     <form id="backupConfigForm" onsubmit="saveBackupConfig(event)">
-                        <div class="form-group">
-                            <label>
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <div class="toggle-label">Enable Automatic Backups</div>
+                            </div>
+                            <label class="toggle-switch">
                                 <input type="checkbox" id="auto_backup_enabled" name="auto_backup_enabled" 
                                        <?php echo ($settings['auto_backup_enabled'] ?? '1') == '1' ? 'checked' : ''; ?>>
-                                Enable Automatic Backups
+                                <span class="slider"></span>
                             </label>
                         </div>
                         
@@ -634,7 +906,7 @@ while ($row = $settings_result->fetch_assoc()) {
                         </div>
                         
                         <?php if ($auth->hasPermission('settings.edit')): ?>
-                        <button type="submit" class="btn btn-primary">💾 Save Backup Config</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Backup Config</button>
                         <?php endif; ?>
                         
                         <div class="success-box" id="backup-config-success">
@@ -649,49 +921,51 @@ while ($row = $settings_result->fetch_assoc()) {
         <div id="system-tab" class="tab-content">
             <div class="settings-grid">
                 <div class="settings-card">
-                    <h3>ℹ️ System Information</h3>
-                    <table style="width: 100%;">
-                        <tr>
-                            <td style="padding: 0.75rem 0; font-weight: 600; width: 50%;">System Version:</td>
-                            <td style="padding: 0.75rem 0;"><?php echo $settings['system_version'] ?? '1.0.0'; ?></td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.75rem 0; font-weight: 600;">PHP Version:</td>
-                            <td style="padding: 0.75rem 0;"><?php echo PHP_VERSION; ?></td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.75rem 0; font-weight: 600;">Database:</td>
-                            <td style="padding: 0.75rem 0;">MySQL <?php echo $conn->server_info; ?></td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.75rem 0; font-weight: 600;">Server:</td>
-                            <td style="padding: 0.75rem 0;"><?php echo $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'; ?></td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.75rem 0; font-weight: 600;">Last Backup:</td>
-                            <td style="padding: 0.75rem 0;" id="lastBackupDate"><?php echo $settings['last_backup_date'] ?? 'Never'; ?></td>
-                        </tr>
-                    </table>
+                    <h3><span class="card-icon blue"><i class="fa-solid fa-circle-info"></i></span> System Information</h3>
+                    <div class="sys-info-grid">
+                        <div class="sys-info-tile">
+                            <div class="tile-label">Version</div>
+                            <div class="tile-value"><?php echo $settings['system_version'] ?? '1.0.0'; ?></div>
+                        </div>
+                        <div class="sys-info-tile">
+                            <div class="tile-label">PHP</div>
+                            <div class="tile-value"><?php echo PHP_VERSION; ?></div>
+                        </div>
+                        <div class="sys-info-tile">
+                            <div class="tile-label">MySQL</div>
+                            <div class="tile-value"><?php echo $conn->server_info; ?></div>
+                        </div>
+                        <div class="sys-info-tile">
+                            <div class="tile-label">Server</div>
+                            <div class="tile-value"><?php echo htmlspecialchars($_SERVER['SERVER_SOFTWARE'] ?? 'Unknown', ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+                        <div class="sys-info-tile">
+                            <div class="tile-label">Last Backup</div>
+                            <div class="tile-value" id="lastBackupDate"><?php echo $settings['last_backup_date'] ?? 'Never'; ?></div>
+                        </div>
+                    </div>
                     
-                    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-                        <button class="btn btn-danger" onclick="if(confirm('This will log you out. Continue?')) window.location.href='logout.php'">
-                            🚪 Logout
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-danger" onclick="customConfirm('Logout', 'This will log you out. Continue?', 'logout', { confirmText: 'Yes, Logout', cancelText: 'Stay' }).then(ok => { if(ok) window.location.href='logout.php'; })">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
                         </button>
                     </div>
                 </div>
                 
                 <div class="settings-card">
-                    <h3>🎨 Appearance</h3>
+                    <h3><span class="card-icon purple"><i class="fa-solid fa-palette"></i></span> Appearance</h3>
                     <div class="form-group">
                         <label>Theme</label>
-                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                            <div style="flex: 1; padding: 2rem; background: #ffffff; color: #1a1a2e; border: 3px solid transparent; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.3s;" onclick="setTheme('light')" id="light-theme">
-                                <div style="font-size: 2rem;">☀️</div>
-                                <div><strong>Light Mode</strong></div>
+                        <div class="theme-options">
+                            <div class="theme-option light-opt" onclick="setTheme('light')" id="light-theme">
+                                <div class="theme-check"><i class="fa-solid fa-check"></i></div>
+                                <div class="theme-icon">☀️</div>
+                                <div class="theme-name">Light</div>
                             </div>
-                            <div style="flex: 1; padding: 2rem; background: #1a1a2e; color: #ffffff; border: 3px solid transparent; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.3s;" onclick="setTheme('dark')" id="dark-theme">
-                                <div style="font-size: 2rem;">🌙</div>
-                                <div><strong>Dark Mode</strong></div>
+                            <div class="theme-option dark-opt" onclick="setTheme('dark')" id="dark-theme">
+                                <div class="theme-check"><i class="fa-solid fa-check"></i></div>
+                                <div class="theme-icon">🌙</div>
+                                <div class="theme-name">Dark</div>
                             </div>
                         </div>
                     </div>
@@ -700,34 +974,52 @@ while ($row = $settings_result->fetch_assoc()) {
         </div>
     </div>
     
+    <!-- Toast Notification -->
+    <div class="settings-toast" id="settingsToast">
+        <i class="fa-solid fa-circle-check toast-check"></i>
+        <span id="toastMessage">Settings saved!</span>
+    </div>
+
     <script src="theme.js"></script>
     <script src="global-polish.js"></script>
     <script>
         // Tab Management
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected tab
+        function showTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
+            if (btn) btn.classList.add('active');
+        }
+        
+        // Toast notification
+        function showSettingsToast(message) {
+            const toast = document.getElementById('settingsToast');
+            const msg = document.getElementById('toastMessage');
+            msg.textContent = message || 'Settings saved!';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
         
         // Save functions
-        async function saveSettings(formId, action, successId) {
+        async function saveSettings(formId, action, successId, toastMsg) {
             const form = document.getElementById(formId);
+            const btn = form.querySelector('button[type="submit"]');
             const formData = new FormData(form);
             formData.append('action', action);
             
-            // Handle checkboxes
+            // Handle checkboxes + toggle switches
             form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 formData.set(checkbox.name, checkbox.checked ? '1' : '0');
             });
+            // Also grab toggles in the same card
+            const card = form.closest('.settings-card');
+            if (card) {
+                card.querySelectorAll('.toggle-row input[type="checkbox"]').forEach(cb => {
+                    formData.set(cb.name, cb.checked ? '1' : '0');
+                });
+            }
+            
+            if (btn) btn.classList.add('saving');
             
             try {
                 const response = await fetch('api_settings.php', {
@@ -738,14 +1030,19 @@ while ($row = $settings_result->fetch_assoc()) {
                 const result = await response.json();
                 
                 if (result.success) {
+                    showSettingsToast(toastMsg || 'Settings saved successfully!');
                     const successBox = document.getElementById(successId);
-                    successBox.classList.add('show');
-                    setTimeout(() => successBox.classList.remove('show'), 3000);
+                    if (successBox) {
+                        successBox.classList.add('show');
+                        setTimeout(() => successBox.classList.remove('show'), 3000);
+                    }
                 } else {
-                    alert('Error: ' + result.message);
+                    customAlert('Settings Error', 'Error: ' + result.message, 'error');
                 }
             } catch (error) {
-                alert('Error saving settings: ' + error.message);
+                customAlert('Settings Error', 'Error saving settings: ' + error.message, 'error');
+            } finally {
+                if (btn) btn.classList.remove('saving');
             }
         }
         
@@ -800,7 +1097,12 @@ while ($row = $settings_result->fetch_assoc()) {
         
         // Test Email
         async function testEmail() {
-            const testEmail = prompt('Enter email address to send test email:');
+            const testEmail = await customPrompt(
+                'Test Email',
+                'Enter email address to send test email:',
+                'info',
+                { inputType: 'email', placeholder: 'name@example.com', confirmText: 'Send Test' }
+            );
             if (!testEmail) return;
             
             const formData = new FormData();
@@ -814,15 +1116,16 @@ while ($row = $settings_result->fetch_assoc()) {
                 });
                 
                 const result = await response.json();
-                alert(result.message);
+                customAlert('Email Test', result.message, result.success ? 'success' : 'error');
             } catch (error) {
-                alert('Error: ' + error.message);
+                customAlert('Email Error', 'Error: ' + error.message, 'error');
             }
         }
         
         // Backup functions
         async function createManualBackup() {
-            if (!confirm('Create a full database backup? This may take a moment.')) return;
+            const ok = await customConfirm('Create Backup', 'Create a full database backup? This may take a moment.', 'backup', { confirmText: 'Yes, Backup Now', cancelText: 'Cancel' });
+            if (!ok) return;
             
             const formData = new FormData();
             formData.append('action', 'create_backup');
@@ -840,10 +1143,10 @@ while ($row = $settings_result->fetch_assoc()) {
                     setTimeout(() => document.getElementById('backup-success').classList.remove('show'), 3000);
                     loadBackupList();
                 } else {
-                    alert('Error: ' + result.message);
+                    customAlert('Backup Error', 'Error: ' + result.message, 'error');
                 }
             } catch (error) {
-                alert('Error creating backup: ' + error.message);
+                customAlert('Backup Error', 'Error creating backup: ' + error.message, 'error');
             }
         }
         
@@ -855,14 +1158,16 @@ while ($row = $settings_result->fetch_assoc()) {
         // Theme handling
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('calloway_theme', theme);
             localStorage.setItem('theme', theme);
             updateThemeUI();
         }
         
         function updateThemeUI() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.getElementById('light-theme').style.borderColor = theme === 'light' ? 'var(--primary-color)' : 'transparent';
-            document.getElementById('dark-theme').style.borderColor = theme === 'dark' ? 'var(--primary-color)' : 'transparent';
+            const theme = localStorage.getItem('calloway_theme') || localStorage.getItem('theme') || 'light';
+            document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('selected'));
+            const activeEl = document.getElementById(theme + '-theme');
+            if (activeEl) activeEl.classList.add('selected');
         }
         
         // Initialize

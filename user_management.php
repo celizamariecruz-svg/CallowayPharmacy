@@ -20,12 +20,21 @@ $page_title = 'User Management';
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js?v=2"></script>
     <style>
         .user-container {
             max-width: 1400px;
@@ -788,7 +797,8 @@ $page_title = 'User Management';
         
         // Delete user
         async function deleteUser(id) {
-            if (!confirm('Are you sure you want to delete this user?')) return;
+            const ok = await customConfirm('Delete User', 'Are you sure you want to delete this user? This action cannot be undone.', 'danger', { confirmText: 'Yes, Delete', cancelText: 'Cancel' });
+            if (!ok) return;
             
             try {
                 const response = await fetch(`user_api.php?action=delete_user`, {
@@ -814,7 +824,7 @@ $page_title = 'User Management';
         
         // View role permissions
         function viewRolePermissions(roleId, roleName) {
-            alert(`Viewing permissions for role: ${roleName}\n\nThis feature shows all permissions assigned to this role.`);
+            customAlert('Role Permissions', `Viewing permissions for role: ${roleName}\n\nThis feature shows all permissions assigned to this role.`, 'info');
         }
         
         // Close user modal

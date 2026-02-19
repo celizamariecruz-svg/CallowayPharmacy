@@ -62,6 +62,13 @@ try {
             testEmail($conn);
             break;
             
+        case 'test_low_stock_alert':
+            if (!$auth->hasPermission('settings.edit')) {
+                throw new Exception('No permission to edit settings');
+            }
+            testLowStockAlert($conn);
+            break;
+            
         case 'create_backup':
             if (!$auth->hasPermission('settings.backup')) {
                 throw new Exception('No permission to create backups');
@@ -79,7 +86,8 @@ try {
         default:
             throw new Exception('Invalid action');
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
+    http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()
@@ -162,21 +170,68 @@ function saveTaxSettings($conn) {
 
 function saveEmailSettings($conn) {
     $email_host = $_POST['email_host'] ?? '';
-    $email_port = $_POST['email_port'] ?? '587';
+    $email_port = $_POST['email_port'] ?? '465';
     $email_username = $_POST['email_username'] ?? '';
     $email_password = $_POST['email_password'] ?? '';
     $email_from_name = $_POST['email_from_name'] ?? '';
     $email_from_address = $_POST['email_from_address'] ?? '';
-    $email_encryption = $_POST['email_encryption'] ?? 'tls';
+    $email_encryption = 'ssl';
+
+    $email_host = trim((string) $email_host);
+    if ($email_host === '') {
+        $email_host = 'smtp.gmail.com';
+    }
+
+    $email_port = '465';
     
+    if ($email_password === '') {
+        $stmt = $conn->prepare("SELECT setting_value FROM settings WHERE setting_key = 'email_password' LIMIT 1");
+        if ($stmt && $stmt->execute()) {
+            $result = $stmt->get_result();
+            if ($result && $row = $result->fetch_assoc()) {
+                $email_password = $row['setting_value'];
+            }
+        }
+
+        if ($email_password === '') {
+            $stmt = $conn->prepare("SELECT setting_value FROM settings WHERE setting_key = 'smtp_password' LIMIT 1");
+            if ($stmt && $stmt->execute()) {
+                $result = $stmt->get_result();
+                if ($result && $row = $result->fetch_assoc()) {
+                    $email_password = $row['setting_value'];
+                }
+            }
+        }
+    } else {
+        $hostLower = strtolower((string) $email_host);
+        if (strpos($hostLower, 'gmail.com') !== false) {
+            $email_password = preg_replace('/\s+/', '', $email_password);
+        }
+        // Use proper AES-256-CBC encryption for credentials
+        require_once __DIR__ . '/CryptoManager.php';
+        $email_password = CryptoManager::encrypt($email_password);
+    }
+
+    $fromEmail = $email_from_address !== '' ? $email_from_address : $email_username;
+    $fromName = $email_from_name !== '' ? $email_from_name : 'Calloway Pharmacy';
+    if ($email_username === '' && $fromEmail !== '') {
+        $email_username = $fromEmail;
+    }
+
     $settings = [
         'email_host' => $email_host,
         'email_port' => $email_port,
         'email_username' => $email_username,
-        'email_password' => base64_encode($email_password), // Basic encryption
-        'email_from_name' => $email_from_name,
-        'email_from_address' => $email_from_address,
-        'email_encryption' => $email_encryption
+        'email_password' => $email_password,
+        'email_from_name' => $fromName,
+        'email_from_address' => $fromEmail,
+        'email_encryption' => $email_encryption,
+        'smtp_host' => $email_host,
+        'smtp_port' => $email_port,
+        'smtp_username' => $email_username,
+        'smtp_password' => $email_password,
+        'smtp_from_name' => $fromName,
+        'smtp_from_email' => $fromEmail
     ];
     
     foreach ($settings as $key => $value) {
@@ -250,17 +305,17 @@ function testEmail($conn) {
         throw new Exception('Test email address is required');
     }
     
-    // Get email settings
-    $query = "SELECT setting_key, setting_value FROM settings WHERE category = 'email'";
-    $result = $conn->query($query);
-    $settings = [];
-    while ($row = $result->fetch_assoc()) {
-        $settings[$row['setting_key']] = $row['setting_value'];
+    require_once 'email_service.php';
+
+    $emailService = new EmailService($conn);
+    $isSent = $emailService->sendTestEmail($test_email);
+
+    if (!$isSent) {
+        $smtpError = trim($emailService->getLastError());
+        $baseMessage = 'Failed to send test email. Please verify SMTP host, SSL port 465, Gmail address, and App Password.';
+        throw new Exception($smtpError !== '' ? ($baseMessage . ' SMTP error: ' . $smtpError) : $baseMessage);
     }
-    
-    // TODO: Implement actual email sending using PHPMailer
-    // For now, just simulate success
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Test email sent successfully to ' . $test_email
@@ -279,15 +334,18 @@ function createDatabaseBackup($conn) {
     $db_name = 'calloway_pharmacy';
     
     // Build mysqldump command
-    // Note: For Windows, you may need to specify full path to mysqldump
-    $command = sprintf(
-        'mysqldump --user=root --password= --host=localhost %s > %s',
-        $db_name,
-        $backup_file
-    );
+    // SECURITY HARDENED: Use secure backup method
+    require_once __DIR__ . '/remediation_utils.php';
     
-    // Execute backup
-    exec($command, $output, $return_var);
+    try {
+        // Validate table name first
+        RemediationUtils::validateTableName($db_name);
+        RemediationUtils::createDatabaseBackup('localhost', 'root', '', $db_name, $backup_file);
+        $return_var = 0;
+    } catch (Exception $e) {
+        $return_var = 1;
+        error_log("Backup error: " . $e->getMessage());
+    }
     
     if ($return_var === 0) {
         echo json_encode([
@@ -324,6 +382,79 @@ function restoreBackup($conn) {
         ]);
     } else {
         throw new Exception('Failed to restore database: ' . $conn->error);
+    }
+}
+
+function testLowStockAlert($conn) {
+    require_once 'email_service.php';
+    
+    // Detect column names dynamically (same logic as email_cron.php)
+    $nameCol = 'name';
+    $stockCol = 'stock_quantity';
+    $reorderCol = 'reorder_level';
+    
+    $colCheck = $conn->query("SHOW COLUMNS FROM products LIKE 'product_name'");
+    if ($colCheck && $colCheck->num_rows > 0) $nameCol = 'product_name';
+    
+    $colCheck = $conn->query("SHOW COLUMNS FROM products LIKE 'quantity'");
+    if ($colCheck && $colCheck->num_rows > 0) {
+        $colCheck2 = $conn->query("SHOW COLUMNS FROM products LIKE 'stock_quantity'");
+        if (!$colCheck2 || $colCheck2->num_rows === 0) $stockCol = 'quantity';
+    }
+    
+    // Get low stock threshold from settings
+    $threshold = 20;
+    $tRes = $conn->query("SELECT setting_value FROM settings WHERE setting_key = 'low_stock_threshold' LIMIT 1");
+    if ($tRes && $row = $tRes->fetch_assoc()) {
+        $threshold = intval($row['setting_value']) ?: 20;
+    }
+    
+    // Build active condition
+    $activeCondition = '';
+    $colCheck = $conn->query("SHOW COLUMNS FROM products LIKE 'is_active'");
+    if ($colCheck && $colCheck->num_rows > 0) {
+        $activeCondition = "AND is_active = 1";
+    }
+    
+    // Build reorder condition
+    $reorderCondition = "$stockCol < $threshold";
+    $colCheck = $conn->query("SHOW COLUMNS FROM products LIKE 'reorder_level'");
+    if ($colCheck && $colCheck->num_rows > 0) {
+        $reorderCondition = "($stockCol <= reorder_level OR $stockCol < $threshold)";
+    }
+    
+    $query = "SELECT $nameCol as product_name, $stockCol as stock_quantity FROM products WHERE $reorderCondition $activeCondition ORDER BY $stockCol ASC LIMIT 50";
+    $result = $conn->query($query);
+    
+    $products = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+    }
+    
+    if (empty($products)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'No low-stock products found (threshold: ' . $threshold . '). All products are well-stocked!'
+        ]);
+        return;
+    }
+    
+    $emailService = new EmailService($conn);
+    $sent = $emailService->sendLowStockAlert($products);
+    
+    if ($sent) {
+        echo json_encode([
+            'success' => true,
+            'message' => '✅ Low stock alert sent! Found ' . count($products) . ' low-stock product(s). Email delivered to pharmacy owner.'
+        ]);
+    } else {
+        $error = $emailService->getLastError();
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to send low stock alert email. ' . ($error ? 'Error: ' . $error : 'Check SMTP settings.')
+        ]);
     }
 }
 ?>

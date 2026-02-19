@@ -26,7 +26,9 @@ $page_title = 'Supplier Management';
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js?v=2"></script>
     <style>
         .supplier-container {
             max-width: 1400px;
@@ -483,7 +485,8 @@ $page_title = 'Supplier Management';
             const supplier = allSuppliers.find(s => s.supplier_id === id);
             if (!supplier) return;
             
-            if (!confirm(`Are you sure you want to delete "${supplier.name}"?`)) {
+            const ok = await customConfirm('Delete Supplier', `Are you sure you want to delete "${supplier.name}"?`, 'danger', { confirmText: 'Yes, Delete', cancelText: 'Cancel' });
+            if (!ok) {
                 return;
             }
             

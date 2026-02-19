@@ -102,7 +102,7 @@ if ($conn->query($sql) === TRUE) {
 // Insert default SMTP settings if they don't exist
 $defaultSettings = [
     ['smtp_host', 'smtp.gmail.com', 'text', 'SMTP server hostname'],
-    ['smtp_port', '587', 'number', 'SMTP server port'],
+    ['smtp_port', '465', 'number', 'SMTP server port'],
     ['smtp_username', '', 'text', 'SMTP username/email'],
     ['smtp_password', '', 'password', 'SMTP password'],
     ['smtp_from_email', 'noreply@callowaypharmacy.com', 'email', 'From email address'],

@@ -36,7 +36,7 @@
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     
     # Content Security Policy (adjust as needed)
-    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com;"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;"
     
     # Remove server signature
     Header always unset X-Powered-By
@@ -82,7 +82,8 @@ Options -Indexes
 # ============================================
 
 # Block debug and test files
-<FilesMatch "^(test_|debug_|check_|verify_|phpinfo).*\.php$">
+# NOTE: verify_email.php is a production endpoint and must remain accessible.
+<FilesMatch "^(test_|debug_|check_|phpinfo).*\.php$">
     Require all denied
 </FilesMatch>
 

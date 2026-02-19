@@ -10,19 +10,44 @@
 require_once 'db_connection.php';
 require_once 'email_service.php';
 
+function columnExists($conn, $table, $column) {
+    $stmt = $conn->prepare("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1");
+    if (!$stmt) {
+        return false;
+    }
+    $stmt->bind_param('ss', $table, $column);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result && $result->num_rows > 0;
+}
+
 echo "Starting email notifications cron job...\n";
 echo "Timestamp: " . date('Y-m-d H:i:s') . "\n\n";
 
 try {
     $emailService = new EmailService($conn);
+
+    $productNameCol = columnExists($conn, 'products', 'name') ? 'name' : (columnExists($conn, 'products', 'product_name') ? 'product_name' : null);
+    $stockCol = columnExists($conn, 'products', 'stock_quantity') ? 'stock_quantity' : (columnExists($conn, 'products', 'quantity') ? 'quantity' : null);
+    $reorderExists = columnExists($conn, 'products', 'reorder_level');
+    $expiryCol = columnExists($conn, 'products', 'expiry_date') ? 'expiry_date' : (columnExists($conn, 'products', 'expiration_date') ? 'expiration_date' : null);
+    $batchExists = columnExists($conn, 'products', 'batch_number');
+    $isActiveExists = columnExists($conn, 'products', 'is_active');
+
+    if ($productNameCol === null || $stockCol === null) {
+        throw new Exception('Products table is missing required stock columns for email alerts.');
+    }
     
     // 1. Check for low stock products
     echo "Checking for low stock products...\n";
-    $query = "SELECT product_id, product_name, stock_quantity, reorder_level 
-              FROM products 
-              WHERE is_active = 1 
-              AND stock_quantity <= reorder_level 
-              ORDER BY stock_quantity ASC";
+    $reorderSelect = $reorderExists ? 'reorder_level' : '10 AS reorder_level';
+    $activeFilter = $isActiveExists ? 'is_active = 1 AND ' : '';
+    $lowStockCondition = $reorderExists ? "$stockCol <= reorder_level" : "$stockCol <= 10";
+
+    $query = "SELECT product_id, $productNameCol AS product_name, $stockCol AS stock_quantity, $reorderSelect
+              FROM products
+              WHERE {$activeFilter}{$lowStockCondition}
+              ORDER BY $stockCol ASC";
     
     $result = $conn->query($query);
     $lowStockProducts = [];
@@ -49,30 +74,36 @@ try {
     $today = date('Y-m-d');
     $futureDate = date('Y-m-d', strtotime('+30 days'));
     
-    $query = "SELECT product_id, product_name, batch_number, expiry_date, stock_quantity 
-              FROM products 
-              WHERE is_active = 1 
-              AND expiry_date BETWEEN '$today' AND '$futureDate' 
-              ORDER BY expiry_date ASC";
-    
-    $result = $conn->query($query);
-    $expiringProducts = [];
-    
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $expiringProducts[] = $row;
-        }
-        
-        if (!empty($expiringProducts)) {
-            echo "Found " . count($expiringProducts) . " expiring products. Sending warning...\n";
-            if ($emailService->sendExpiryWarning($expiringProducts, 30)) {
-                echo "✓ Expiry warning sent successfully!\n\n";
-            } else {
-                echo "✗ Failed to send expiry warning.\n\n";
+    if ($expiryCol !== null) {
+        $batchSelect = $batchExists ? 'batch_number' : "'' AS batch_number";
+        $expiryActiveFilter = $isActiveExists ? 'is_active = 1 AND ' : '';
+
+        $query = "SELECT product_id, $productNameCol AS product_name, $batchSelect, $expiryCol AS expiry_date, $stockCol AS stock_quantity
+                  FROM products
+                  WHERE {$expiryActiveFilter}$expiryCol BETWEEN '$today' AND '$futureDate'
+                  ORDER BY $expiryCol ASC";
+
+        $result = $conn->query($query);
+        $expiringProducts = [];
+
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $expiringProducts[] = $row;
             }
+
+            if (!empty($expiringProducts)) {
+                echo "Found " . count($expiringProducts) . " expiring products. Sending warning...\n";
+                if ($emailService->sendExpiryWarning($expiringProducts, 30)) {
+                    echo "✓ Expiry warning sent successfully!\n\n";
+                } else {
+                    echo "✗ Failed to send expiry warning.\n\n";
+                }
+            }
+        } else {
+            echo "No products expiring in the next 30 days.\n\n";
         }
     } else {
-        echo "No products expiring in the next 30 days.\n\n";
+        echo "Skipping expiry check: no expiry date column found.\n\n";
     }
     
     // 3. Send daily sales summary (for yesterday)

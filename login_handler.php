@@ -75,6 +75,29 @@ $result = $auth->login($username, $password);
 
 // Handle result
 if ($result['success']) {
+    // Check login_type restriction (separate admin/customer login pages)
+    $loginType = $data['login_type'] ?? '';
+    $roleName = $_SESSION['role_name'] ?? '';
+
+    if ($loginType === 'admin' && $roleName === 'customer') {
+        // Customer trying to use staff login - reject
+        $auth->logout();
+        Security::jsonResponse([
+            'success' => false,
+            'message' => 'This login is for staff only. Please use the Customer Login page.'
+        ]);
+    }
+
+    if ($loginType === 'customer' && $roleName !== 'customer') {
+        // Staff trying to use customer login - reject
+        $auth->logout();
+        Security::jsonResponse([
+            'success' => false,
+            'message' => 'Staff accounts must use the Staff Login page.',
+            'redirect' => 'admin_login.php'
+        ]);
+    }
+
     // Reset login attempts on successful login
     Security::resetLoginAttempts($identifier);
     
@@ -93,6 +116,11 @@ if ($result['success']) {
     // Include role_name for client-side redirect logic
     $result['role_name'] = $_SESSION['role_name'] ?? '';
 } else {
+    // If needs email verification, don't count as failed attempt
+    if (!empty($result['needs_verification'])) {
+        Security::jsonResponse($result);
+    }
+
     // Record failed login attempt
     Security::recordFailedLogin($identifier);
     

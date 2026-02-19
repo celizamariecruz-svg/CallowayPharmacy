@@ -11,7 +11,11 @@ class ActivityLogger
     public function __construct($db_connection)
     {
         $this->conn = $db_connection;
-        $this->ensureTables();
+        try {
+            $this->ensureTables();
+        } catch (Throwable $e) {
+            error_log("ActivityLogger::ensureTables skipped: " . $e->getMessage());
+        }
     }
 
     /**

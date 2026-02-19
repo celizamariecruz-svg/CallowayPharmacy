@@ -8,8 +8,6 @@ require_once 'vendor/autoload.php'; // For TCPDF via Composer
 require_once 'db_connection.php';
 require_once 'Auth.php';
 
-use TCPDF;
-
 class ReceiptGenerator {
     private $conn;
     private $pdf;
@@ -184,30 +182,14 @@ class ReceiptGenerator {
         try {
             $emailService = new EmailService($this->conn);
             $saleData = $this->getSaleData($saleId);
-            
-            $mailer = new PHPMailer\PHPMailer\PHPMailer(true);
-            
-            // Configure (simplified, should use EmailService settings)
-            $mailer->isSMTP();
-            $mailer->setFrom('noreply@callowaypharmacy.com', 'Calloway Pharmacy');
-            $mailer->addAddress($email);
-            
-            $mailer->isHTML(true);
-            $mailer->Subject = 'Receipt #' . $saleData['sale_reference'] . ' - Calloway Pharmacy';
-            
-            $body = '<h2>Thank you for your purchase!</h2>';
-            $body .= '<p>Please find your receipt attached.</p>';
-            $body .= '<p><strong>Receipt #:</strong> ' . $saleData['sale_reference'] . '</p>';
-            $body .= '<p><strong>Total:</strong> ₱' . number_format($saleData['total'], 2) . '</p>';
-            
-            $mailer->Body = $body;
-            
-            // Attach PDF
-            $mailer->addStringAttachment($pdfContent, 'receipt_' . $saleData['sale_reference'] . '.pdf');
-            
-            $mailer->send();
-            
-            return true;
+
+            return $emailService->sendReceiptEmail(
+                $email,
+                $saleData['sale_reference'],
+                $saleData['total'],
+                $pdfContent,
+                'receipt_' . $saleData['sale_reference'] . '.pdf'
+            );
         } catch (Exception $e) {
             error_log("Email receipt error: " . $e->getMessage());
             return false;

@@ -43,11 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             case 'restore':
                 $filename = $_POST['filename'] ?? '';
-                if (confirm("Are you sure you want to restore from this backup? Current data will be replaced!")) {
-                    $result = $backup->restoreBackup($filename);
-                    $message = $result['message'];
-                    $message_type = $result['success'] ? 'success' : 'error';
-                }
+                $result = $backup->restoreBackup($filename);
+                $message = $result['message'];
+                $message_type = $result['success'] ? 'success' : 'error';
                 break;
                 
             case 'delete':
@@ -78,13 +76,22 @@ $page_title = 'Database Backup Manager';
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?></title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js?v=2"></script>
 </head>
 <body>
     <?php include 'header-component.php'; ?>
@@ -204,7 +211,7 @@ $page_title = 'Database Backup Manager';
                                     
                                     <!-- Restore -->
                                     <form method="POST" style="display: inline-block;" 
-                                          onsubmit="return confirm('⚠️ WARNING: This will replace all current data with this backup. Are you absolutely sure?');">
+                                          onsubmit="return customFormConfirm(event, 'Restore Backup', 'WARNING: This will replace all current data with this backup. Are you absolutely sure?', 'danger');">
                                         <?php echo CSRF::getTokenField(); ?>
                                         <input type="hidden" name="action" value="restore">
                                         <input type="hidden" name="filename" value="<?php echo htmlspecialchars($b['filename']); ?>">
@@ -216,7 +223,7 @@ $page_title = 'Database Backup Manager';
                                     <!-- Delete -->
                                     <?php if ($b['type'] === 'manual'): ?>
                                     <form method="POST" style="display: inline-block;" 
-                                          onsubmit="return confirm('Delete this backup?');">
+                                          onsubmit="return customFormConfirm(event, 'Delete Backup', 'Delete this backup? This cannot be undone.', 'danger');">
                                         <?php echo CSRF::getTokenField(); ?>
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="filename" value="<?php echo htmlspecialchars($b['filename']); ?>">

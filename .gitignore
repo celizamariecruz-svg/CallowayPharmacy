@@ -61,3 +61,11 @@ test_*.php
 debug_*.php
 check_*.php
 phpinfo.php
+
+# ========================================
+# DEPLOYMENT ARTIFACTS
+# ========================================
+_deploy_bundle/
+deploy_ready_*.zip
+_archive_dev/
+__pycache__/

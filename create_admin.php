@@ -13,16 +13,15 @@ if (php_sapi_name() !== 'cli' && !defined('ALLOW_SETUP')) {
     die("This script can only be run from the command line or authorized setup flow.");
 }
 
-// Default credentials (CHANGE THESE IN PRODUCTION)
-$username = 'admin';
-$password = 'admin123';
-$email = 'admin@callowaypharmacy.com';
-$full_name = 'System Administrator';
+// SECURITY HARDENED: Get credentials from environment variables
+// Set via: export ADMIN_PASSWORD="secure_password"
+require_once 'remediation_utils.php';
 
-echo "⚠️  SECURITY WARNING: Using default credentials.\n";
-echo "   User: $username\n";
-echo "   Pass: $password\n";
-echo "   Please change these immediately after logging in.\n\n";
+echo "🔐 Creating admin user with environment variables...\n";
+echo "   Set ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EMAIL, ADMIN_FULLNAME\n\n";
+
+RemediationUtils::createAdminSecure();
+exit;
 
 // Hash the password using bcrypt (cost 12)
 $password_hash = Security::hashPassword($password);

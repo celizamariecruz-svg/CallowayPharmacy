@@ -1,168 +1,220 @@
 <?php
 /**
- * Password Reset Utility
- * DELETE THIS FILE AFTER USE FOR SECURITY
+ * Password Reset Page
+ * Accepts a token from the email link and lets the user set a new password.
  */
 
-require_once 'config.php';
+require_once 'db_connection.php';
+require_once 'Security.php';
 
-$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+Security::initSession();
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+$token   = trim($_GET['token'] ?? '');
 $message = '';
-$users = [];
+$validToken = false;
+$username = '';
 
-// Get existing users
-$result = $conn->query("SELECT user_id, username, email, full_name, role_id FROM users ORDER BY user_id");
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $users[] = $row;
+// ── Validate token on page load ──
+if (!empty($token)) {
+    $stmt = $conn->prepare(
+        "SELECT user_id, username FROM users
+         WHERE password_reset_token = ?
+           AND password_reset_expires > NOW()
+           AND is_active = 1
+         LIMIT 1"
+    );
+    $stmt->bind_param("s", $token);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+
+    if ($user) {
+        $validToken = true;
+        $username   = $user['username'];
     }
 }
 
-// Handle password reset
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['reset_password'])) {
-        $user_id = (int)$_POST['user_id'];
-        $new_password = $_POST['new_password'];
-        
-        if (strlen($new_password) < 6) {
-            $message = '<div class="error">Password must be at least 6 characters!</div>';
+// ── Handle new-password form submission ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['token'])) {
+    $postToken   = trim($_POST['token']);
+    $newPassword = $_POST['new_password'] ?? '';
+    $confirmPw   = $_POST['confirm_password'] ?? '';
+
+    if (strlen($newPassword) < 6) {
+        $message = '<div class="msg error">Password must be at least 6 characters.</div>';
+    } elseif ($newPassword !== $confirmPw) {
+        $message = '<div class="msg error">Passwords do not match.</div>';
+    } else {
+        // Re-validate token
+        $stmt = $conn->prepare(
+            "SELECT user_id, username FROM users
+             WHERE password_reset_token = ?
+               AND password_reset_expires > NOW()
+               AND is_active = 1
+             LIMIT 1"
+        );
+        $stmt->bind_param("s", $postToken);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+
+        if (!$user) {
+            $message = '<div class="msg error">This reset link has expired or is invalid. Please request a new one.</div>';
         } else {
-            $hash = password_hash($new_password, PASSWORD_BCRYPT);
-            $stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE user_id = ?");
-            $stmt->bind_param("si", $hash, $user_id);
-            
-            if ($stmt->execute()) {
-                $message = '<div class="success">✅ Password reset successfully! You can now login.</div>';
-            } else {
-                $message = '<div class="error">Error: ' . $conn->error . '</div>';
-            }
+            // Update password & clear token
+            $hash = password_hash($newPassword, PASSWORD_BCRYPT);
+            $stmt = $conn->prepare(
+                "UPDATE users
+                 SET password_hash = ?,
+                     password_reset_token = NULL,
+                     password_reset_expires = NULL
+                 WHERE user_id = ?"
+            );
+            $stmt->bind_param("si", $hash, $user['user_id']);
+            $stmt->execute();
+
+            $message = '<div class="msg success">Your password has been reset successfully! You can now <a href="login.php">log in</a>.</div>';
+            $validToken = false; // hide form
+            $token = ''; // prevent reuse
         }
     }
-    
-    // Create new admin user
-    if (isset($_POST['create_admin'])) {
-        $username = trim($_POST['username']);
-        $email = trim($_POST['email']);
-        $password = $_POST['password'];
-        $full_name = trim($_POST['full_name']);
-        
-        if (empty($username) || empty($password)) {
-            $message = '<div class="error">Username and password are required!</div>';
-        } else {
-            // Get admin role_id
-            $role_result = $conn->query("SELECT role_id FROM roles WHERE role_name = 'admin' LIMIT 1");
-            $role_id = 1;
-            if ($role_result && $row = $role_result->fetch_assoc()) {
-                $role_id = $row['role_id'];
-            }
-            
-            $hash = password_hash($password, PASSWORD_BCRYPT);
-            $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, full_name, role_id, is_active) VALUES (?, ?, ?, ?, ?, 1)");
-            $stmt->bind_param("ssssi", $username, $email, $hash, $full_name, $role_id);
-            
-            if ($stmt->execute()) {
-                $message = '<div class="success">✅ Admin user created! Username: ' . htmlspecialchars($username) . '</div>';
-                // Refresh user list
-                header("Location: " . $_SERVER['PHP_SELF']);
-                exit;
-            } else {
-                $message = '<div class="error">Error: ' . $conn->error . '</div>';
-            }
+
+    // Keep form visible on validation errors
+    if ($validToken === false && strpos($message, 'error') !== false) {
+        // Re-check if token is still valid for the form
+        $stmt = $conn->prepare(
+            "SELECT user_id, username FROM users
+             WHERE password_reset_token = ?
+               AND password_reset_expires > NOW()
+             LIMIT 1"
+        );
+        $stmt->bind_param("s", $postToken);
+        $stmt->execute();
+        $u = $stmt->get_result()->fetch_assoc();
+        if ($u) {
+            $validToken = true;
+            $username   = $u['username'];
+            $token      = $postToken;
         }
     }
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Password Reset - Calloway Pharmacy</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reset Password - Calloway Pharmacy</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background: #f0f4f8; }
-        .card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2563eb; text-align: center; }
-        h2 { color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
-        .success { color: #16a34a; background: #dcfce7; padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .error { color: #dc2626; background: #fee2e2; padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .warning { color: #d97706; background: #fef3c7; padding: 15px; border-radius: 8px; margin: 15px 0; }
-        label { display: block; margin: 10px 0 5px; font-weight: 600; color: #333; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        input:focus, select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        button { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; width: 100%; }
-        button:hover { background: #1d4ed8; }
-        .user-list { background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .user-item { padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
-        .user-item:last-child { border-bottom: none; }
-        .delete-warning { text-align: center; margin-top: 30px; padding: 15px; background: #fef2f2; border: 2px dashed #dc2626; border-radius: 8px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e0ecff 0%, #f0f4ff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            max-width: 440px;
+            width: 100%;
+            padding: 2.5rem;
+            text-align: center;
+        }
+        .card img.logo { height: 80px; margin-bottom: 1rem; }
+        .card h1 { font-size: 1.5rem; color: #1e3a5f; margin-bottom: 0.3rem; }
+        .card p.subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem; }
+        .form-group {
+            text-align: left;
+            margin-bottom: 1.1rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.35rem;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+        }
+        button.submit-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background 0.2s;
+        }
+        button.submit-btn:hover { background: #1d4ed8; }
+        .msg {
+            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.2rem;
+            font-size: 0.93rem;
+            text-align: left;
+        }
+        .msg.success { background: #dcfce7; color: #166534; }
+        .msg.error   { background: #fee2e2; color: #991b1b; }
+        .msg a { color: #2563eb; font-weight: 600; }
+        .back-link {
+            display: inline-block;
+            margin-top: 1.2rem;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.93rem;
+        }
+        .back-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <h1>🔐 Password Reset</h1>
-    
-    <?php echo $message; ?>
-    
-    <?php if (count($users) > 0): ?>
     <div class="card">
-        <h2>Reset Existing User Password</h2>
-        
-        <div class="user-list">
-            <strong>Existing Users:</strong>
-            <?php foreach ($users as $user): ?>
-            <div class="user-item">
-                <strong><?php echo htmlspecialchars($user['username']); ?></strong>
-                (<?php echo htmlspecialchars($user['email'] ?: 'No email'); ?>) - 
-                <?php echo htmlspecialchars($user['full_name']); ?>
+        <img src="logo.png" alt="Calloway Pharmacy" class="logo">
+        <h1>Reset Your Password</h1>
+
+        <?php echo $message; ?>
+
+        <?php if ($validToken): ?>
+            <p class="subtitle">Hi <strong><?php echo htmlspecialchars($username); ?></strong>, enter your new password below.</p>
+            <form method="POST" action="reset_password.php">
+                <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password" required minlength="6" placeholder="Min 6 characters">
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required minlength="6" placeholder="Re-enter password">
+                </div>
+                <button type="submit" class="submit-btn">Set New Password</button>
+            </form>
+        <?php elseif (empty($message)): ?>
+            <div class="msg error">
+                This password reset link is invalid or has expired.<br>
+                Please request a new one from the login page.
             </div>
-            <?php endforeach; ?>
-        </div>
-        
-        <form method="POST">
-            <label>Select User:</label>
-            <select name="user_id" required>
-                <?php foreach ($users as $user): ?>
-                <option value="<?php echo $user['user_id']; ?>">
-                    <?php echo htmlspecialchars($user['username']); ?> - <?php echo htmlspecialchars($user['full_name']); ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
-            
-            <label>New Password:</label>
-            <input type="password" name="new_password" required minlength="6" placeholder="Enter new password (min 6 characters)">
-            
-            <button type="submit" name="reset_password">Reset Password</button>
-        </form>
-    </div>
-    <?php else: ?>
-    <div class="warning">No users found in database. Create a new admin user below.</div>
-    <?php endif; ?>
-    
-    <div class="card">
-        <h2>Create New Admin User</h2>
-        <form method="POST">
-            <label>Username:</label>
-            <input type="text" name="username" required placeholder="admin">
-            
-            <label>Email:</label>
-            <input type="email" name="email" placeholder="admin@pharmacy.com">
-            
-            <label>Full Name:</label>
-            <input type="text" name="full_name" placeholder="Administrator">
-            
-            <label>Password:</label>
-            <input type="password" name="password" required minlength="6" placeholder="Enter password (min 6 characters)">
-            
-            <button type="submit" name="create_admin">Create Admin User</button>
-        </form>
-    </div>
-    
-    <div class="delete-warning">
-        <strong>⚠️ SECURITY WARNING</strong><br>
-        Delete this file after resetting your password!<br>
-        <code>reset_password.php</code>
+        <?php endif; ?>
+
+        <a href="login.php" class="back-link">&larr; Back to Login</a>
     </div>
 </body>
 </html>

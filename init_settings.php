@@ -47,12 +47,12 @@ $defaultSettings = [
     
     // Email Settings
     ['email_host', '', 'email', 'SMTP server host'],
-    ['email_port', '587', 'email', 'SMTP server port'],
+    ['email_port', '465', 'email', 'SMTP server port'],
     ['email_username', '', 'email', 'SMTP username'],
     ['email_password', '', 'email', 'SMTP password (encrypted)'],
     ['email_from_name', 'Calloway Pharmacy', 'email', 'From name for emails'],
     ['email_from_address', '', 'email', 'From email address'],
-    ['email_encryption', 'tls', 'email', 'Email encryption (tls/ssl)'],
+    ['email_encryption', 'ssl', 'email', 'Email encryption (ssl)'],
     
     // Receipt Settings
     ['receipt_header', 'Thank you for shopping with us!', 'receipt', 'Receipt header message'],

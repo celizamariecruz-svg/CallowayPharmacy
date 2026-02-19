@@ -92,6 +92,26 @@ class Auth
 
             // Check if user is active
             if (!$user['is_active']) {
+                // Check if it's an unverified email (vs deactivated by admin)
+                $needsVerify = false;
+                $checkVerify = $this->conn->query("SHOW COLUMNS FROM users LIKE 'email_verified'");
+                if ($checkVerify && $checkVerify->num_rows > 0) {
+                    $vStmt = $this->conn->prepare("SELECT email_verified FROM users WHERE user_id = ?");
+                    $vStmt->bind_param("i", $user['user_id']);
+                    $vStmt->execute();
+                    $vRes = $vStmt->get_result()->fetch_assoc();
+                    if ($vRes && !$vRes['email_verified']) {
+                        $needsVerify = true;
+                    }
+                }
+                if ($needsVerify) {
+                    return [
+                        'success' => false,
+                        'needs_verification' => true,
+                        'email' => $user['email'],
+                        'message' => 'Please verify your email before logging in.'
+                    ];
+                }
                 $this->logActivity($user['user_id'], 'login_failed', 'Authentication', 'Inactive user login attempt');
                 return [
                     'success' => false,
@@ -115,6 +135,9 @@ class Auth
             $_SESSION['role_id'] = $user['role_id'];
             $_SESSION['role_name'] = $user['role_name'];
             $_SESSION['last_activity'] = time();
+            
+            // Regenerate session ID to prevent session fixation attacks
+            session_regenerate_id(true);
 
             // Update last login time
             $updateStmt = $this->conn->prepare("UPDATE users SET last_login = NOW() WHERE user_id = ?");
@@ -124,10 +147,14 @@ class Auth
             // Log successful login
             $this->logActivity($user['user_id'], 'login_success', 'Authentication', 'User logged in successfully');
 
-            // Record login session for tracking
-            require_once __DIR__ . '/ActivityLogger.php';
-            $logger = new ActivityLogger($this->conn);
-            $logger->recordLogin($user['user_id'], $user['username'], $user['full_name']);
+            // Record login session for tracking (non-blocking)
+            try {
+                require_once __DIR__ . '/ActivityLogger.php';
+                $logger = new ActivityLogger($this->conn);
+                $logger->recordLogin($user['user_id'], $user['username'], $user['full_name']);
+            } catch (Throwable $loggingError) {
+                error_log("Activity logging skipped during login: " . $loggingError->getMessage());
+            }
 
             // Remove sensitive data before returning
             unset($user['password_hash']);
@@ -138,7 +165,7 @@ class Auth
                 'user' => $user
             ];
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             error_log("Login error: " . $e->getMessage());
             return [
                 'success' => false,
@@ -156,9 +183,13 @@ class Auth
             $this->logActivity($_SESSION['user_id'], 'logout', 'Authentication', 'User logged out');
 
             // Record logout session
-            require_once __DIR__ . '/ActivityLogger.php';
-            $logger = new ActivityLogger($this->conn);
-            $logger->recordLogout($_SESSION['user_id'], 'logged_out');
+            try {
+                require_once __DIR__ . '/ActivityLogger.php';
+                $logger = new ActivityLogger($this->conn);
+                $logger->recordLogout($_SESSION['user_id'], 'logged_out');
+            } catch (Throwable $loggingError) {
+                error_log("Activity logging skipped during logout: " . $loggingError->getMessage());
+            }
         }
 
         // Clear all session data

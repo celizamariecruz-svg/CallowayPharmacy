@@ -1,10 +1,44 @@
 import json
+import re
 import sys
 from datetime import datetime
 
 from escpos.printer import Win32Raw
 
 LINE_WIDTH = 32
+
+
+def normalize_printer_name(name):
+    return re.sub(r"[^a-z0-9]", "", (name or "").lower())
+
+
+def resolve_printer_name(requested_name):
+    requested_name = (requested_name or "").strip()
+    if not requested_name:
+        return requested_name
+
+    try:
+        import win32print
+
+        flags = win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
+        printers = win32print.EnumPrinters(flags)
+        available_names = [p[2] for p in printers if len(p) >= 3 and p[2]]
+
+        if requested_name in available_names:
+            return requested_name
+
+        wanted_norm = normalize_printer_name(requested_name)
+        for candidate in available_names:
+            if normalize_printer_name(candidate) == wanted_norm:
+                return candidate
+
+        for candidate in available_names:
+            if requested_name.lower() in candidate.lower() or candidate.lower() in requested_name.lower():
+                return candidate
+
+        return requested_name
+    except Exception:
+        return requested_name
 
 
 def wrap_text(text, width):
@@ -53,9 +87,9 @@ def print_receipt(data, printer_name):
     tendered = float(data.get("amount_tendered", total))
     change = max(0.0, tendered - total)
 
-    printer.set(align="center", width=2, height=2, text_type="B")
+    printer.set(align="center", width=2, height=2, bold=True)
     printer.text("Calloway Pharmacy\n")
-    printer.set(align="center", width=1, height=1, text_type="A")
+    printer.set(align="center", width=1, height=1, bold=False)
     printer.text("Official Receipt\n")
     printer.text("\n")
 
@@ -87,9 +121,9 @@ def print_receipt(data, printer_name):
 
     total_line("Subtotal", subtotal)
     total_line("VAT 12%", tax)
-    printer.set(text_type="B")
+    printer.set(bold=True)
     total_line("TOTAL", total)
-    printer.set(text_type="A")
+    printer.set(bold=False)
     total_line(f"Paid ({payment_method})", tendered)
     total_line("Change", change)
 
@@ -104,7 +138,7 @@ def main():
         sys.exit(1)
 
     receipt_path = sys.argv[1]
-    printer_name = sys.argv[2]
+    printer_name = resolve_printer_name(sys.argv[2])
 
     with open(receipt_path, "r", encoding="utf-8") as f:
         data = json.load(f)

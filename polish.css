@@ -158,7 +158,7 @@
     border-collapse: separate;
     border-spacing: 0;
     width: 100%;
-    background: white;
+    background: var(--card-bg);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -179,7 +179,7 @@
 
 .table-enhanced tbody tr {
     transition: all 0.3s ease;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--divider-color);
 }
 
 .table-enhanced tbody tr:hover {
@@ -191,6 +191,7 @@
 .table-enhanced tbody td {
     padding: 1rem;
     vertical-align: middle;
+    color: var(--text-color);
 }
 
 /* Status badges */

@@ -1,7 +1,7 @@
 <?php
 return [
     // Set this to the exact Windows printer name once installed
-    'printer_name' => 'REPLACE_WITH_PRINTER_NAME',
-    // Use the Python executable in PATH, or set full path like C:\\Python311\\python.exe
-    'python_path' => 'python'
+    'printer_name' => 'Generic / Text Only',
+    // Use project venv Python (has python-escpos installed)
+    'python_path' => __DIR__ . '\\.venv\\Scripts\\python.exe'
 ];

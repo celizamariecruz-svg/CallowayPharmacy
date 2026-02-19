@@ -9,13 +9,16 @@ ob_start();
 require_once 'db_connection.php';
 require_once 'CacheManager.php';
 require_once 'ActivityLogger.php';
-require_once 'Security.php';
+require_once 'Auth.php';
 
-Security::initSession();
+$auth = new Auth($conn);
+$auth->requireAuth('login.php');
 
-// Redirect to login if not logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+$currentUser = $auth->getCurrentUser();
+
+// Only admin can manage employees
+if (strtolower($currentUser['role_name'] ?? '') !== 'admin') {
+    header('Location: dashboard.php');
     exit;
 }
 
@@ -305,12 +308,21 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+<script>
+// Apply theme immediately to prevent flash
+(function() {
+  const theme = localStorage.getItem('calloway_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Employee Management - Calloway Pharmacy</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="polish.css">
+<link rel="stylesheet" href="custom-modal.css?v=2">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="custom-modal.js?v=2"></script>
 <style>
   main {
     width: 100%;
@@ -937,8 +949,9 @@ document.addEventListener('DOMContentLoaded', function() {
     .finally(() => { hideLoading(); attachEventListeners(); });
   });
 
-  function removeEmployee(btn) {
-    if (!confirm('Remove this employee?')) return false;
+  async function removeEmployee(btn) {
+    const ok = await customConfirm('Remove Employee', 'Are you sure you want to remove this employee?', 'danger', { confirmText: 'Yes, Remove', cancelText: 'Cancel' });
+    if (!ok) return false;
     showLoading();
     const fd = new FormData();
     fd.append('remove_employee', btn.value);

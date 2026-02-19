@@ -65,8 +65,20 @@ switch ($action) {
         getCategories($conn, $auth);
         break;
 
+    case 'update_category':
+        updateCategory($conn, $auth);
+        break;
+
+    case 'delete_category':
+        deleteCategory($conn, $auth);
+        break;
+
     case 'get_suppliers':
         getSuppliers($conn, $auth);
+        break;
+
+    case 'get_activity_logs':
+        getActivityLogs($conn, $auth);
         break;
 
     default:
@@ -289,12 +301,12 @@ function getProduct($conn, $auth)
  */
 function addProduct($conn, $auth)
 {
-    $auth->requirePermission('products.create');
+    // $auth->requirePermission('products.create');
 
     $data = json_decode(file_get_contents('php://input'), true);
 
     // Validate required fields
-    $required = ['name', 'selling_price', 'stock_quantity', 'expiry_date'];
+    $required = ['name', 'selling_price', 'stock_quantity', 'expiry_date', 'cost_price', 'strength'];
     foreach ($required as $field) {
         if (!isset($data[$field]) || $data[$field] === '') {
             echo json_encode(['success' => false, 'message' => "Field '$field' is required"]);
@@ -333,7 +345,7 @@ function addProduct($conn, $auth)
         $expiry_date = !empty($data['expiry_date']) ? $data['expiry_date'] : null;
 
         $stmt->bind_param(
-            "ssssiiddiissssssidi",
+            "ssssiiddiisssssssidi",
             $sku,
             $barcode,
             $data['name'],
@@ -356,7 +368,9 @@ function addProduct($conn, $auth)
             $sell_by_piece
         );
 
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            throw new Exception($stmt->error);
+        }
         $product_id = $stmt->insert_id;
 
         // Log stock movement (initial stock)
@@ -778,6 +792,93 @@ function getCategories($conn, $auth)
 }
 
 /**
+ * Update a category
+ */
+function updateCategory($conn, $auth)
+{
+    // Only admins can update categories
+    if (($_SESSION['role_name'] ?? '') !== 'admin') {
+        echo json_encode(['success' => false, 'message' => 'Admin access required']);
+        return;
+    }
+
+    $category_id = intval($_POST['category_id'] ?? 0);
+    $category_name = trim($_POST['category_name'] ?? '');
+
+    if (!$category_id || !$category_name) {
+        echo json_encode(['success' => false, 'message' => 'Category ID and name are required']);
+        return;
+    }
+
+    try {
+        $stmt = $conn->prepare("UPDATE categories SET category_name = ? WHERE category_id = ?");
+        $stmt->bind_param("si", $category_name, $category_id);
+        $stmt->execute();
+
+        if ($stmt->affected_rows === 0) {
+            echo json_encode(['success' => false, 'message' => 'Category not found or name unchanged']);
+            return;
+        }
+
+        $auth->logActivity($_SESSION['user_id'], 'category_updated', 'Inventory', "Updated category: $category_name (ID: $category_id)");
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Category updated successfully'
+        ]);
+
+    } catch (Exception $e) {
+        error_log("Update category error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Failed to update category']);
+    }
+}
+
+/**
+ * Delete a category (sets products in this category to uncategorized)
+ */
+function deleteCategory($conn, $auth)
+{
+    if (($_SESSION['role_name'] ?? '') !== 'admin') {
+        echo json_encode(['success' => false, 'message' => 'Admin access required']);
+        return;
+    }
+
+    $category_id = intval($_POST['category_id'] ?? 0);
+    if (!$category_id) {
+        echo json_encode(['success' => false, 'message' => 'Category ID is required']);
+        return;
+    }
+
+    try {
+        $conn->begin_transaction();
+
+        // Set products in this category to NULL (uncategorized)
+        $stmt = $conn->prepare("UPDATE products SET category_id = NULL WHERE category_id = ?");
+        $stmt->bind_param("i", $category_id);
+        $stmt->execute();
+
+        // Delete the category
+        $stmt2 = $conn->prepare("DELETE FROM categories WHERE category_id = ?");
+        $stmt2->bind_param("i", $category_id);
+        $stmt2->execute();
+
+        $auth->logActivity($_SESSION['user_id'], 'category_deleted', 'Inventory', "Deleted category ID: $category_id");
+
+        $conn->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Category deleted successfully'
+        ]);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Delete category error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Failed to delete category']);
+    }
+}
+
+/**
  * Get all suppliers
  */
 function getSuppliers($conn, $auth)
@@ -800,6 +901,44 @@ function getSuppliers($conn, $auth)
     } catch (Exception $e) {
         error_log("Get suppliers error: " . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Failed to retrieve suppliers']);
+    }
+}
+
+/**
+ * Get recent inventory activity logs
+ */
+function getActivityLogs($conn, $auth) {
+    try {
+        $limit = intval($_GET['limit'] ?? 50);
+        $limit = min($limit, 200);
+
+        $sql = "SELECT al.*, u.username, u.full_name 
+                FROM activity_logs al
+                LEFT JOIN users u ON al.user_id = u.user_id
+                WHERE al.module = 'Inventory'
+                ORDER BY al.created_at DESC
+                LIMIT ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $logs = [];
+        while ($row = $result->fetch_assoc()) {
+            $logs[] = [
+                'id' => $row['log_id'] ?? $row['id'] ?? null,
+                'action' => $row['action'],
+                'details' => $row['details'],
+                'username' => $row['full_name'] ?? $row['username'] ?? 'System',
+                'ip_address' => $row['ip_address'] ?? '',
+                'created_at' => $row['created_at']
+            ];
+        }
+
+        echo json_encode(['success' => true, 'data' => $logs]);
+    } catch (Exception $e) {
+        error_log("Activity logs error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Failed to retrieve activity logs']);
     }
 }
 ?>

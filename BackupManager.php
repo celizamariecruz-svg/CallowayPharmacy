@@ -59,18 +59,16 @@ class BackupManager {
             $filename = "backup_{$type}_{$timestamp}.sql";
             $filepath = $this->backup_dir . '/' . $filename;
             
-            // Create backup using mysqldump
-            $command = sprintf(
-                'mysqldump --host=%s --user=%s --password=%s --databases %s --add-drop-table --complete-insert --extended-insert --quote-names --routines --triggers > %s',
-                escapeshellarg($db_host),
-                escapeshellarg($db_user),
-                escapeshellarg($db_pass),
-                escapeshellarg($db_name),
-                escapeshellarg($filepath)
-            );
+            // Create backup using mysqldump (secure with environment variable for password)
+            require_once __DIR__ . '/remediation_utils.php';
             
-            // Execute mysqldump
-            exec($command, $output, $return_var);
+            try {
+                RemediationUtils::createDatabaseBackup($db_host, $db_user, $db_pass, $db_name, $filepath);
+                $return_var = 0;
+            } catch (Exception $e) {
+                $return_var = 1;
+                error_log("Backup error: " . $e->getMessage());
+            }
             
             if ($return_var !== 0) {
                 // Fallback to PHP backup method

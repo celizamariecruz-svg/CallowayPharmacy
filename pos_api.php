@@ -53,7 +53,7 @@ switch ($action) {
                 $qty = intval($item['qty']);
                 $perPiece = !empty($item['perPiece']);
 
-                $lookupStmt = $conn->prepare("SELECT product_id, name, price, stock_quantity, pieces_per_box FROM products WHERE product_id = ? AND is_active = 1");
+                $lookupStmt = $conn->prepare("SELECT product_id, name, selling_price, price_per_piece, stock_quantity, pieces_per_box FROM products WHERE product_id = ? AND is_active = 1");
                 $lookupStmt->bind_param("i", $productId);
                 $lookupStmt->execute();
                 $product = $lookupStmt->get_result()->fetch_assoc();
@@ -63,11 +63,14 @@ switch ($action) {
                     throw new Exception("Product not found (ID: $productId)");
                 }
 
-                $realPrice = floatval($product['price']);
-                // For per-piece, price = box price / pieces_per_box
                 if ($perPiece) {
-                    $ppb = max(1, intval($product['pieces_per_box'] ?? $item['piecesPerBox'] ?? 1));
-                    $realPrice = round($realPrice / $ppb, 2);
+                    $realPrice = floatval($product['price_per_piece'] ?? 0);
+                    if ($realPrice <= 0) {
+                        $ppb = max(1, intval($product['pieces_per_box'] ?? 1));
+                        $realPrice = round(floatval($product['selling_price']) / $ppb, 2);
+                    }
+                } else {
+                    $realPrice = floatval($product['selling_price']);
                 }
 
                 $lineTotal = $realPrice * $qty;
@@ -84,16 +87,36 @@ switch ($action) {
                 ];
             }
 
-            // Use server-calculated total
-            $total = $serverTotal;
+            // Apply 12% VAT and optional discount
+            $subtotal = $serverTotal;
+            $taxAmount = round($subtotal * 0.12, 2);
+            $beforeDiscount = round($subtotal + $taxAmount, 2);
+            
+            // Apply discount if provided (e.g., 20% SC/PWD discount)
+            $discountPercent = floatval($input['discount_percent'] ?? 0);
+            $discountAmount = 0;
+            if ($discountPercent > 0 && $discountPercent <= 100) {
+                // Enforce ₱200 minimum subtotal for 20% SC/PWD discount
+                if ($discountPercent == 20 && $subtotal < 200) {
+                    echo json_encode(['success' => false, 'message' => 'Subtotal must be at least ₱200.00 to apply the 20% Senior/PWD discount.']);
+                    ob_end_flush();
+                    exit;
+                }
+                $discountAmount = round($beforeDiscount * ($discountPercent / 100), 2);
+            }
+            $total = round($beforeDiscount - $discountAmount, 2);
             $changeAmount = max(0, $amountTendered - $total);
 
-            // 1. Insert sale header
+            // 1. Ensure discount columns exist on sales table
+            $conn->query("ALTER TABLE sales ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0");
+            $conn->query("ALTER TABLE sales ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(10,2) DEFAULT 0");
+
+            // 2. Insert sale header with subtotal, tax, discount
             $stmt = $conn->prepare("
-                INSERT INTO sales (sale_reference, total, payment_method, paid_amount, change_amount, cashier)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO sales (sale_reference, subtotal, tax_amount, discount_percent, discount_amount, total, payment_method, paid_amount, change_amount, cashier)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->bind_param("sdsdds", $receiptNo, $total, $paymentMethod, $amountTendered, $changeAmount, $cashier);
+            $stmt->bind_param("sdddddsdds", $receiptNo, $subtotal, $taxAmount, $discountPercent, $discountAmount, $total, $paymentMethod, $amountTendered, $changeAmount, $cashier);
             $stmt->execute();
             $saleId = $stmt->insert_id;
 
@@ -141,12 +164,56 @@ switch ($action) {
 
             $conn->commit();
 
-            echo json_encode([
+            // 4. Generate one-time reward QR code for this POS sale
+            $rewardQrCode = null;
+            $rewardQrExpires = null;
+            try {
+                $conn->query("CREATE TABLE IF NOT EXISTS reward_qr_codes (
+                    qr_id INT AUTO_INCREMENT PRIMARY KEY,
+                    qr_code VARCHAR(100) NOT NULL UNIQUE,
+                    source_type ENUM('pos','online') NOT NULL DEFAULT 'pos',
+                    source_order_id INT NULL,
+                    sale_reference VARCHAR(50) NULL,
+                    generated_for_user INT NULL,
+                    generated_for_name VARCHAR(100) NULL,
+                    redeemed_by_user INT NULL,
+                    redeemed_by_name VARCHAR(100) NULL,
+                    points_value INT NOT NULL DEFAULT 0,
+                    is_redeemed TINYINT(1) NOT NULL DEFAULT 0,
+                    redeemed_at DATETIME NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at DATETIME NULL,
+                    INDEX idx_qr_code (qr_code),
+                    INDEX idx_redeemed (is_redeemed)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+                $rewardQrCode = 'RWD-' . strtoupper(bin2hex(random_bytes(6))) . '-' . time();
+                $rewardQrExpires = date('Y-m-d H:i:s', strtotime('+30 days'));
+                $qrSourceType = 'pos';
+                $qrPointsVal = intval(floor(floatval($beforeDiscount) / 500) * 25);
+                $qrCustomerName = 'Walk-in Customer';
+
+                $qrStmt = $conn->prepare("INSERT INTO reward_qr_codes (qr_code, source_type, source_order_id, sale_reference, generated_for_user, generated_for_name, points_value, expires_at) VALUES (?, ?, ?, ?, NULL, ?, ?, ?)");
+                $qrStmt->bind_param("ssissis", $rewardQrCode, $qrSourceType, $saleId, $receiptNo, $qrCustomerName, $qrPointsVal, $rewardQrExpires);
+                $qrStmt->execute();
+                $qrStmt->close();
+            } catch (Exception $e) {
+                error_log('POS Reward QR generation error: ' . $e->getMessage());
+            }
+
+            $response = [
                 'success'        => true,
                 'message'        => 'Sale recorded successfully',
                 'sale_id'        => $saleId,
                 'sale_reference' => $receiptNo
-            ]);
+            ];
+            
+            if ($rewardQrCode) {
+                $response['reward_qr_code'] = $rewardQrCode;
+                $response['reward_qr_expires'] = $rewardQrExpires;
+            }
+            
+            echo json_encode($response);
 
         } catch (Exception $e) {
             $conn->rollback();

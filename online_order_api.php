@@ -62,6 +62,9 @@ switch ($action) {
     case 'update_order_status':
         updateOrderStatus($conn);
         break;
+    case 'mark_picked_up':
+        markPickedUp($conn);
+        break;
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
@@ -145,8 +148,18 @@ function getOrderDetails($conn) {
 }
 
 function getOnlineOrders($conn) {
+    if (!isset($_GET['status'])) {
+        // Default behavior if status not set or empty
+    }
     $statusFilter = $_GET['status'] ?? '';
     $limit = intval($_GET['limit'] ?? 50);
+
+    // Be robust: Check if table exists first (optional, but good practice if schema is in flux)
+    $chk = $conn->query("SHOW TABLES LIKE 'online_orders'");
+    if ($chk->num_rows == 0) {
+        echo json_encode(['success' => true, 'orders' => []]);
+        return;
+    }
 
     $sql = "
         SELECT o.*, 
@@ -154,14 +167,28 @@ function getOnlineOrders($conn) {
         FROM online_orders o
     ";
 
+    $stmt = null; // Initialize variable
+
     if ($statusFilter && $statusFilter !== 'all') {
         $sql .= " WHERE o.status = ?";
         $sql .= " ORDER BY o.created_at DESC LIMIT ?";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            // Handle prepare error
+            error_log("Prepare failed: " . $conn->error);
+            echo json_encode(['success' => false, 'message' => 'Database error']);
+            return;
+        }
         $stmt->bind_param("si", $statusFilter, $limit);
     } else {
+        // Using FIELD for custom sort order
         $sql .= " ORDER BY FIELD(o.status, 'Pending','Confirmed','Preparing','Ready','Completed','Cancelled'), o.created_at DESC LIMIT ?";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+             error_log("Prepare failed: " . $conn->error);
+             echo json_encode(['success' => false, 'message' => 'Database error']);
+             return;
+        }
         $stmt->bind_param("i", $limit);
     }
 
@@ -170,6 +197,7 @@ function getOnlineOrders($conn) {
     $orders = [];
     while ($row = $result->fetch_assoc()) {
         $row['order_ref'] = 'ONL-' . str_pad($row['order_id'], 6, '0', STR_PAD_LEFT);
+        if (!isset($row['item_count'])) $row['item_count'] = 0; // Fallback
         $orders[] = $row;
     }
     $stmt->close();
@@ -179,6 +207,13 @@ function getOnlineOrders($conn) {
 
 function getPendingCount($conn) {
     $result = $conn->query("SELECT COUNT(*) as count FROM online_orders WHERE status IN ('Pending','Confirmed','Preparing','Ready')");
+    if (!$result) {
+        // Log SQL error and return 0
+        // echo json_encode(['success' => false, 'message' => $conn->error]); 
+        // Better yet, return 0 to avoid breaking UI
+        echo json_encode(['success' => true, 'count' => 0]); 
+        return;
+    }
     $row = $result->fetch_assoc();
     echo json_encode(['success' => true, 'count' => intval($row['count'])]);
 }
@@ -326,6 +361,219 @@ function updateOrderStatus($conn) {
         error_log('Order status update error: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Failed to update order: ' . $e->getMessage()]);
     }
+}
+
+function markPickedUp($conn) {
+    // Only accept POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['success' => false, 'message' => 'POST required']);
+        return;
+    }
+
+    $orderId = intval($_POST['order_id'] ?? 0);
+    $saleId = intval($_POST['sale_id'] ?? 0);
+
+    if ($orderId <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid order ID']);
+        return;
+    }
+
+    // Get current user from session
+    session_start();
+    $userId = $_SESSION['user_id'] ?? 0;
+    $userName = $_SESSION['username'] ?? 'Unknown';
+
+    if ($userId <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+        return;
+    }
+
+    $conn->begin_transaction();
+
+    try {
+        // Check if order exists and is Ready
+        $stmt = $conn->prepare("SELECT status FROM online_orders WHERE order_id = ?");
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $order = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$order) {
+            throw new Exception('Order not found');
+        }
+
+        if ($order['status'] !== 'Ready' && $order['status'] !== 'Completed') {
+            throw new Exception('Order must be in Ready status to process pickup');
+        }
+
+        // Update order with pickup info and link to POS sale
+        if ($saleId > 0) {
+            $stmt = $conn->prepare("
+                UPDATE online_orders 
+                SET picked_up_at = NOW(), 
+                    picked_up_by = ?, 
+                    pos_sale_id = ?,
+                    status = 'Completed',
+                    updated_at = NOW()
+                WHERE order_id = ?
+            ");
+            $stmt->bind_param("iii", $userId, $saleId, $orderId);
+        } else {
+            $stmt = $conn->prepare("
+                UPDATE online_orders 
+                SET picked_up_at = NOW(), 
+                    picked_up_by = ?, 
+                    status = 'Completed',
+                    updated_at = NOW()
+                WHERE order_id = ?
+            ");
+            $stmt->bind_param("ii", $userId, $orderId);
+        }
+        
+        $stmt->execute();
+        $stmt->close();
+
+        // Create notification
+        $orderRef = 'ONL-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
+        $title = "✅ Order #$orderRef Picked Up";
+        $message = "Order picked up by customer\nProcessed by: $userName\nTime: " . date('M d, Y h:i A');
+        $stmt = $conn->prepare("INSERT INTO pos_notifications (order_id, type, title, message) VALUES (?, 'pickup', ?, ?)");
+        $stmt->bind_param("iss", $orderId, $title, $message);
+        $stmt->execute();
+        $stmt->close();
+
+        // ===== AUTO-AWARD LOYALTY POINTS TO ONLINE CUSTOMER =====
+        $loyaltyResult = awardLoyaltyForPickup($conn, $orderId);
+
+        $conn->commit();
+        
+        $responseMsg = 'Order marked as picked up';
+        if (!empty($loyaltyResult['awarded'])) {
+            $responseMsg .= '. Customer earned ' . $loyaltyResult['points'] . ' loyalty points!';
+        }
+        echo json_encode(['success' => true, 'message' => $responseMsg, 'loyalty' => $loyaltyResult]);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log('Mark picked up error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Failed to mark as picked up: ' . $e->getMessage()]);
+    }
+}
+
+/**
+ * Auto-award loyalty points when a POS cashier processes an online order pickup.
+ * Rule: ₱500 spent = 25 points earned (1 point = ₱1 discount when redeemed).
+ */
+function awardLoyaltyForPickup($conn, $orderId) {
+    $result = ['awarded' => false, 'points' => 0, 'reason' => ''];
+
+    try {
+        // Get order details including customer info
+        $stmt = $conn->prepare("SELECT customer_id, customer_name, total_amount, email FROM online_orders WHERE order_id = ?");
+        $stmt->bind_param("i", $orderId);
+        $stmt->execute();
+        $order = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$order || empty($order['customer_id'])) {
+            $result['reason'] = 'No linked customer account';
+            return $result;
+        }
+
+        $customerId = intval($order['customer_id']);
+        $totalAmount = floatval($order['total_amount']);
+
+        // Get user email from users table (customer_id may reference users.user_id)
+        $email = $order['email'] ?? '';
+        if (empty($email)) {
+            $stmt = $conn->prepare("SELECT email FROM users WHERE user_id = ? LIMIT 1");
+            $stmt->bind_param("i", $customerId);
+            $stmt->execute();
+            $user = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            $email = $user['email'] ?? '';
+        }
+
+        if (empty($email)) {
+            $result['reason'] = 'No email found for customer';
+            return $result;
+        }
+
+        // Check loyalty_members table exists
+        $chk = $conn->query("SHOW TABLES LIKE 'loyalty_members'");
+        if (!$chk || $chk->num_rows === 0) {
+            $result['reason'] = 'Loyalty system not set up';
+            return $result;
+        }
+
+        // Find or create loyalty member
+        $stmt = $conn->prepare("SELECT member_id, points FROM loyalty_members WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $member = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $memberId = null;
+        if ($member) {
+            $memberId = $member['member_id'];
+        } else {
+            // Auto-create loyalty member
+            $customerName = $order['customer_name'] ?? 'Online Customer';
+            $stmt = $conn->prepare("INSERT INTO loyalty_members (name, email, points, member_since) VALUES (?, ?, 0, CURDATE())");
+            $stmt->bind_param("ss", $customerName, $email);
+            $stmt->execute();
+            $memberId = $conn->insert_id;
+            $stmt->close();
+        }
+
+        // Calculate points: floor(total / 500) * 25
+        $pointsEarned = floor($totalAmount / 500) * 25;
+
+        if ($pointsEarned <= 0) {
+            $result['reason'] = 'Order total below ₱500 threshold';
+            return $result;
+        }
+
+        // Check if points were already awarded for this order (prevent double-award)
+        $refId = 'ORDER-' . $orderId;
+        $chk2 = $conn->query("SHOW TABLES LIKE 'loyalty_points_log'");
+        if ($chk2 && $chk2->num_rows > 0) {
+            $stmt = $conn->prepare("SELECT 1 FROM loyalty_points_log WHERE reference_id = ? AND transaction_type = 'EARN' LIMIT 1");
+            $stmt->bind_param("s", $refId);
+            $stmt->execute();
+            $existing = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            if ($existing) {
+                $result['reason'] = 'Points already awarded for this order';
+                return $result;
+            }
+        }
+
+        // Award points
+        $stmt = $conn->prepare("UPDATE loyalty_members SET points = points + ? WHERE member_id = ?");
+        $stmt->bind_param("ii", $pointsEarned, $memberId);
+        $stmt->execute();
+        $stmt->close();
+
+        // Log the earning
+        if ($chk2 && $chk2->num_rows > 0) {
+            $stmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id) VALUES (?, ?, 'EARN', ?)");
+            $stmt->bind_param("iis", $memberId, $pointsEarned, $refId);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        $result['awarded'] = true;
+        $result['points'] = $pointsEarned;
+        $result['reason'] = 'Points awarded successfully';
+
+    } catch (Exception $e) {
+        error_log('Loyalty award error for order ' . $orderId . ': ' . $e->getMessage());
+        $result['reason'] = 'Error: ' . $e->getMessage();
+    }
+
+    return $result;
 }
 
 ob_end_flush();

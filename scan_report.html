@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calloway Pharmacy - Security Scan Report</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .stats { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .stat-box { text-align: center; border-left: 4px solid #ddd; padding: 15px; }
+        .critical { border-left-color: #dc3545; color: #dc3545; }
+        .high { border-left-color: #fd7e14; color: #fd7e14; }
+        .medium { border-left-color: #ffc107; color: #ffc107; }
+        .low { border-left-color: #28a745; color: #28a745; }
+        .findings { background: white; border-radius: 8px; overflow: hidden; }
+        .finding { border-bottom: 1px solid #eee; padding: 20px; }
+        .finding:last-child { border-bottom: none; }
+        .severity-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; margin-right: 10px; }
+        .badge-critical { background: #dc3545; color: white; }
+        .badge-high { background: #fd7e14; color: white; }
+        .badge-medium { background: #ffc107; color: #333; }
+        .badge-low { background: #28a745; color: white; }
+        .file-link { font-family: monospace; color: #667eea; font-weight: 500; }
+        .message { margin: 10px 0; }
+        .code { background: #f8f8f8; padding: 10px; border-left: 3px solid #667eea; font-family: monospace; font-size: 12px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Calloway Pharmacy Security Scan Report</h1>
+        <p>Generated: 2026-02-15 05:35:27</p>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-box critical">
+            <div style="font-size: 28px; font-weight: bold;">2</div>
+            <div>Critical Issues</div>
+        </div>
+        <div class="stat-box high">
+            <div style="font-size: 28px; font-weight: bold;">55</div>
+            <div>High Issues</div>
+        </div>
+        <div class="stat-box medium">
+            <div style="font-size: 28px; font-weight: bold;">91</div>
+            <div>Medium Issues</div>
+        </div>
+        <div class="stat-box low">
+            <div style="font-size: 28px; font-weight: bold;">0</div>
+            <div>Low Issues</div>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-box" style="grid-column: 1/3; border-left-color: #667eea; color: #667eea;">
+            <div style="font-size: 24px;">308</div>
+            <div>Files Scanned</div>
+        </div>
+        <div class="stat-box" style="grid-column: 3/5; border-left-color: #667eea; color: #667eea;">
+            <div style="font-size: 24px;">83122</div>
+            <div>Lines of Code</div>
+        </div>
+    </div>
+    
+    <div class="findings">        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">ApiHelper.php:33</span>
+            </div>
+            <div class="message"><strong>Weak Crypto</strong></div>
+            <div class="message">MD5 is cryptographically broken - use PASSWORD_BCRYPT</div>
+            <div class="code">md5(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">api_settings.php:338</span>
+            </div>
+            <div class="message"><strong>Command Injection</strong></div>
+            <div class="message">Dangerous function: shell command execution</div>
+            <div class="code">exec(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">BackupManager.php:134</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">Potential SQL Injection: Dynamic SQL concatenation</div>
+            <div class="code">$sql .= &quot;DROP TABLE IF EXISTS `$table_name</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">BackupManager.php:73</span>
+            </div>
+            <div class="message"><strong>Command Injection</strong></div>
+            <div class="message">Dangerous function: shell command execution</div>
+            <div class="code">exec(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">backup_cron.php:29</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $log_messag</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">backup_manager.php:81</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">BehaviorTreeEngine.php:379</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">String concatenation in SQL - use prepared statements</div>
+            <div class="code">$message = &quot;$alert_type Alert: &quot; . $entity</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-critical">CRITICAL</span>
+                <span class="file-link">create_admin.php:18</span>
+            </div>
+            <div class="message"><strong>Hardcoded Secret</strong></div>
+            <div class="message">Hardcoded password detected</div>
+            <div class="code">password = &#039;admin123&#039;</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">dashboard.php:190</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">DatabaseHelper.php:223</span>
+            </div>
+            <div class="message"><strong>Weak Crypto</strong></div>
+            <div class="message">MD5 is cryptographically broken - use PASSWORD_BCRYPT</div>
+            <div class="code">md5(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">expiry-monitoring.php:74</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">String concatenation in SQL - use prepared statements</div>
+            <div class="code">$message = &quot;Database error: &quot; . $e</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">expiry-monitoring.php:825</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $totalProduct</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">header-component.php:34</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $current_page</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">index.php:57</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $isCustomer</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">inventory_management.php:26</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">list_permissions.php:9</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $row[</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">logs_viewer.php:332</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $success_messag</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">loyalty_qr.php:27</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">medicine-locator.php:107</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">String concatenation in SQL - use prepared statements</div>
+            <div class="code">$error_message = &quot;Database error: &quot; . $e</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">medicine-locator.php:1008</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $totalMedicine</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">onlineordering.php:2582</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $ico</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">order_handler.php:469</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">Potential SQL Injection: Dynamic SQL concatenation</div>
+            <div class="code">$notifMessage .= &quot;Payment: $paymentMethod</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">pos.php:22</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">print_receipt.php:47</span>
+            </div>
+            <div class="message"><strong>Command Injection</strong></div>
+            <div class="message">Dangerous function: shell command execution</div>
+            <div class="code">exec(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">purchase_orders.php:25</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">reports.php:25</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">reset_password.php:194</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $messag</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">scan.php:316</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">Potential SQL Injection: Dynamic SQL concatenation</div>
+            <div class="code">$output .= &quot;🔴 Critical: {$this</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">scan.php:510</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $repor</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">Security.php:219</span>
+            </div>
+            <div class="message"><strong>Weak Crypto</strong></div>
+            <div class="message">MD5 is cryptographically broken - use PASSWORD_BCRYPT</div>
+            <div class="code">md5(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">settings.php:26</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-critical">CRITICAL</span>
+                <span class="file-link">settings_enhanced.php:670</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Unescaped user/server input in output</div>
+            <div class="code">echo $_SERVER</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">settings_enhanced.php:33</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">supplier_management.php:25</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">tools/defense_backup.php:40</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">Potential SQL Injection: Dynamic SQL concatenation</div>
+            <div class="code">$insertSql .= &quot;INSERT INTO `{$table}</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">tools/defense_backup.php:17</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $message</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">tools/defense_preflight.php:87</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $allOk</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">tools/defense_restore.php:103</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $ok</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">tools/defense_restore.php:69</span>
+            </div>
+            <div class="message"><strong>Command Injection</strong></div>
+            <div class="message">Dangerous function: shell command execution</div>
+            <div class="code">exec(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">tools/smtp_diagnostic.php:15</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $row[</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">user_management.php:25</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $page_titl</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_data.php:20</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $row[</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_schema.php:8</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $row[</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_table_structure.php:19</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $column[</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_checkout.php:194</span>
+            </div>
+            <div class="message"><strong>Command Injection</strong></div>
+            <div class="message">Dangerous function: shell command execution</div>
+            <div class="code">exec(</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_orders.php:14</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $row[</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/session_debug.php:126</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $auth</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/test_products.php:10</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $conn</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_142042/posbackup.php:261</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $selectedCategory</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_142042/posbackup1.php:71</span>
+            </div>
+            <div class="message"><strong>SQL Injection</strong></div>
+            <div class="message">String concatenation in SQL - use prepared statements</div>
+            <div class="code">$db_error = &quot;DB Error: &quot; . $conn</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_142042/posbackup1.php:472</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $selectedCategory</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_142042/system_check.php:451</span>
+            </div>
+            <div class="message"><strong>XSS</strong></div>
+            <div class="message">Variable output not escaped - may allow XSS</div>
+            <div class="code">echo $successRate</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">add_condoms.php:15</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT category_id FROM categories WHERE category_name=&#039;&quot; . $conn-</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">add_sexual_health.php:16</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT category_id FROM categories WHERE category_name=&#039;&quot; . $conn-</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">ApiHelper.php:88</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$content = file_get_contents($file);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">api_orders.php:10</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+
+switch ($action) {
+    case &#039;track&#039;:
+        $ref =</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">api_orders.php:68</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATAB</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">api_settings.php:359</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$sql = file_get_contents($backup_file);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">api_settings.php:15</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;action&#039;] ?? $_GET[&#039;action&#039;] ?? &#039;&#039;;
+
+try {
+    switch ($action) {</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">BackupManager.php:182</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$fp_in = fopen($filepath, &#039;rb&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">backup_manager.php:35</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;action&#039;] ?? &#039;&#039;;
+        
+        switch ($action) {
+            case</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">behavior_examples.php:17</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Use of global variables - pass as parameters instead</div>
+            <div class="code">global $engine</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">behavior_examples.php:110</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;])) {
+    switch ($_GET[&#039;action&#039;]) {
+        case &#039;full_cycle&#039;:</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">CacheManager.php:77</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$content = file_get_contents($file);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">create_admin.php:120</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT role_id FROM roles WHERE role_name = &#039;admin&#039; LIMIT 1&quot;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">CSRF.php:85</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;csrf_token&#039;] ?? &#039;&#039;;
+        
+        if (empty($provided_token)) {</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">DatabaseHelper.php:434</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Use of global variables - pass as parameters instead</div>
+            <div class="code">global $conn</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">diagnostic.php:29</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as c FROM products&quot;);
+$row = $res-&gt;fetch_assoc();</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">employee-management.php:55</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;add_employee&#039;])) {
+            $name = trim($_POST[&#039;name&#039;] ?? &#039;&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">employee-management.php:207</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT user_id, username, full_name FROM users WHERE is_active = 1</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">ErrorLogger.php:212</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$content = file_get_contents($backup_file);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">forgot_password_handler.php:36</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = json_decode(file_get_contents(&#039;php://input&#039;), true);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">get_reports_data.php:194</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$output = fopen(&#039;php://output&#039;, &#039;w&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">get_reports_data.php:20</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+$startDate = $_GET[&#039;start&#039;] ?? date(&#039;Y-m-d&#039;);
+$endDate</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">header.php:7</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;dev&#039;]) || file_exists(__DIR__ . DIRECTORY_SEPARATOR . &#039;.dev_pos&#039;)) {</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">inventory.php:22</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;action&#039;])) {
+    $action = $_POST[&#039;action&#039;];
+
+    if ($action === &#039;ad</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">inventory.php:198</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&#039;SELECT product_id, name, category, price, stock_quantity, expiry_d</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">inventory_api.php:302</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$data = json_decode(file_get_contents(&#039;php://input&#039;), true);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">inventory_api.php:28</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+
+// Route requests
+switch ($action) {
+    case &#039;get_p</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">inventory_api.php:772</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT * FROM categories ORDER BY category_name ASC&quot;);
+        $c</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">list_permissions.php:6</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT permission_name FROM permissions ORDER BY permission_name&quot;)</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">login_handler.php:28</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = file_get_contents(&#039;php://input&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">logs_viewer.php:15</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;action&#039;])) {
+    CSRF::validateOrDie();
+    
+    if ($_POST[&#039;action&#039;]</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">medicine-locator.php:14</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;search&#039;])) {
+        $search = trim($_GET[&#039;search&#039;]);
+    }
+    if (is</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">medicine-locator.php:71</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT 
+      COUNT(CASE WHEN stock_quantity = 0 THEN 1 END) as o</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">migrations/fix_product_categories.php:13</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT DISTINCT category FROM products WHERE category IS NOT NULL</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">migrations/migrate_003_create_categories.php:85</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS W</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">migrations/migrate_005_complete_schema.php:78</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as count FROM settings&quot;);
+    if ($check-&gt;fetch_a</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">online_order_api.php:30</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? $_POST[&#039;action&#039;] ?? &#039;&#039;;
+
+// Read-only actions only need log</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">online_order_api.php:90</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as count FROM pos_notifications WHERE is_read = 0&quot;</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">order_handler.php:141</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Use of global variables - pass as parameters instead</div>
+            <div class="code">global $__columnExistsCache</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">order_handler.php:257</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATAB</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">pos_api.php:29</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = json_decode(file_get_contents(&#039;php://input&#039;), true);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">pos_api.php:24</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+
+switch ($action) {
+
+    case &#039;create_sale&#039;:</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">print_receipt.php:27</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$raw = file_get_contents(&#039;php://input&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">process_sale.php:54</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = file_get_contents(&#039;php://input&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">process_sale_working.php:54</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = file_get_contents(&#039;php://input&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">process_transaction.php:5</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;medicine&#039;];
+    $quantity = $_POST[&#039;quantity&#039;];
+    $customer = $_POST</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">purchase_order_api.php:23</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = json_decode(file_get_contents(&#039;php://input&#039;), true);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">purchase_order_api.php:24</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+$currentUser = $auth-&gt;getCurrentUser();
+
+try {
+    sw</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">receipt_generator.php:201</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;sale_id&#039;])) {
+    require_once &#039;Auth.php&#039;;
+    
+    $auth = new Auth($</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">register_handler.php:22</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = file_get_contents(&#039;php://input&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">reset_password.php:12</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;token&#039;] ?? &#039;&#039;);
+$message = &#039;&#039;;
+$validToken = false;
+$username = &#039;&#039;;</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">reward_qr_api.php:81</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? $_POST[&#039;action&#039;] ?? &#039;&#039;;
+
+switch ($action) {
+
+    case &#039;ge</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">scan.php:220</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$content = file_get_contents($file);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">seed_complete_ph_pharmacy.php:43</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT category_id FROM categories WHERE category_name=&#039;&quot; . $conn-</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">seed_ph_medicines.php:35</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT category_id FROM categories WHERE category_name=&#039;$cat&#039;&quot;)-&gt;f</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">settings_api.php:90</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$data = json_decode(file_get_contents(&#039;php://input&#039;), true);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">settings_api.php:15</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+$method = $_SERVER[&#039;REQUEST_METHOD&#039;];
+
+// Helper to ge</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">settings_api.php:58</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT setting_key, setting_value FROM settings&quot;);
+            wh</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">setup_database.php:26</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$schema = file_get_contents(&#039;database_schema.sql&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">setup_permissions.php:91</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT permission_id FROM permissions WHERE permission_name = &#039;{$p</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">simple_api.php:28</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;get_products&#039;;
+$limit = intval($_GET[&#039;limit&#039;] ?? 1000);
+$s</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">supplier_api.php:24</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = json_decode(file_get_contents(&#039;php://input&#039;), true);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">supplier_api.php:25</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+
+try {
+    switch ($action) {
+        case &#039;get_all&#039;:</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">tools/defense_backup.php:25</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT * FROM `{$table}`&quot;);
+    if (!$rows || $rows-&gt;num_rows ===</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">tools/defense_preflight.php:18</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) c FROM `{$table}`&quot;);
+    if (!$res) {
+        re</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">tools/defense_restore.php:52</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;backup_file&#039;] ?? &#039;&#039;);
+    $confirm = trim($_POST[&#039;confirm_text&#039;] ?? &#039;&#039;)</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">tools/smtp_diagnostic.php:18</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;to&#039;] ?? ($argv[1]</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">tools/smtp_diagnostic.php:13</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT setting_key, setting_value FROM settings WHERE setting_key</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">upload_product_image.php:29</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;product_id&#039;] ?? 0);
+
+    if (!isset($_FILES[&#039;image&#039;]) || $_FILES[&#039;imag</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">user_api.php:144</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = json_decode(file_get_contents(&#039;php://input&#039;), true);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">user_api.php:49</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;action&#039;] ?? &#039;&#039;;
+
+switch($action) {
+    case &#039;get_stats&#039;:
+        if (</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">user_api.php:16</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS WHERE TABLE</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">verify_image_system.php:57</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$content = file_get_contents(__DIR__ . &#039;/&#039; . $file);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">verify_image_system.php:21</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as cnt FROM products WHERE image_url IS NOT NULL A</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">verify_products.php:5</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&#039;SELECT COUNT(*) as count FROM products&#039;);
+$row = $result-&gt;fetch_a</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_data.php:5</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&#039;SELECT COUNT(*) as count FROM products&#039;);
+echo &quot;Products: &quot; . $re</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_db.php:30</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as count FROM products&quot;);
+        $count = $count</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_products.php:22</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as total FROM products&quot;);
+$count = $count_result-</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_sales.php:7</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&#039;SELECT * FROM sales ORDER BY sale_id DESC LIMIT 5&#039;);
+echo &quot;Recent</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/check_table_structure.php:25</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as total FROM products&quot;);
+$total = $count-&gt;fetch_</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_checkout.php:18</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT DATABASE()&quot;)-&gt;fetch_row()[0] . &quot;&lt;br&gt;&quot;;
+} catch (Exception</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_images.php:5</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT product_id, name, image_url FROM products WHERE name LIKE &#039;</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_orders.php:30</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&#039;SELECT COUNT(*) as c FROM online_orders&#039;);
+$row = $res-&gt;fetch_ass</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_products.php:47</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as total FROM products&quot;);
+if ($count) {
+    $tot</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_supplier_fk.php:5</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&#039;SELECT supplier_id, supplier_name FROM suppliers ORDER BY supplier</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/debug_transactions.php:114</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_POST[&#039;create_test&#039;])) {
+    $product_id = filter_var($_POST[&#039;product_id&#039;], FI</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/fix_acyclovir_image.php:10</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&#039;SELECT product_id, name, image_url FROM products WHERE product_id</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_141036/process_sale_debug.php:54</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Missing error handling for risky function</div>
+            <div class="code">$input = file_get_contents(&#039;php://input&#039;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/session_debug.php:157</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as count FROM products WHERE is_active = 1&quot;);</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/test_api.php:32</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as total FROM products WHERE is_active = 1&quot;);
+$to</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/test_fk_fix.php:7</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT product_id, name FROM products LIMIT 1&quot;);
+$p = $r-&gt;fetch_a</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/test_process_sale.php:24</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT DATABASE()&quot;)-&gt;fetch_row()[0] . &quot;\n&quot;;
+} catch (Exception $e</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_141036/test_product_access.php:68</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as total FROM products&quot;);
+if ($products) {
+    $</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_142042/posbackup.php:31</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;category&#039;] ?? &#039;All&#039;;
+$filteredProducts = $selectedCategory === &#039;All&#039; ? $</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-medium">MEDIUM</span>
+                <span class="file-link">_archive_dev/20260213_142042/posbackup1.php:91</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">Direct use of $_GET/$_POST without validation</div>
+            <div class="code">$_GET[&#039;category&#039;] ?? &#039;All&#039;;
+$filteredProducts = $selectedCategory === &#039;All&#039; ? $</div>
+        </div>        <div class="finding">
+            <div>
+                <span class="severity-badge badge-high">HIGH</span>
+                <span class="file-link">_archive_dev/20260213_142042/system_check.php:255</span>
+            </div>
+            <div class="message"><strong>Best Practices</strong></div>
+            <div class="message">SQL query with variable concatenation - use prepared statements</div>
+            <div class="code">$conn-&gt;query(&quot;SELECT COUNT(*) as count FROM $table&quot;);
+                    $coun</div>
+        </div>    </div>
+    
+    <footer style="text-align: center; margin-top: 40px; color: #999; font-size: 12px;">
+        <p>Full audit report available in SECURITY_AUDIT_REPORT.md</p>
+    </footer>
+</body>
+</html>

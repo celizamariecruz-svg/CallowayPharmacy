@@ -13,6 +13,13 @@ $auth = new Auth($conn);
 $auth->requireAuth('login.php');
 
 $currentUser = $auth->getCurrentUser();
+
+// Block customer role from dashboard
+if (strtolower($currentUser['role_name'] ?? '') === 'customer') {
+    header('Location: onlineordering.php');
+    exit;
+}
+
 $page_title = 'Dashboard';
 
 // Get today's date
@@ -178,6 +185,13 @@ $salesTrend = getSalesTrend($conn);
 <html lang="en" data-theme="light">
 
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
@@ -348,6 +362,54 @@ $salesTrend = getSalesTrend($conn);
             align-items: center;
             gap: 0.5rem;
         }
+
+        /* Dark mode fixes for dashboard */
+        [data-theme="dark"] .stat-card-premium {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        [data-theme="dark"] .table-enhanced {
+            background: rgba(15, 23, 42, 0.9);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .table-enhanced tbody td {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .table-enhanced tbody tr {
+            border-bottom-color: rgba(255, 255, 255, 0.06);
+        }
+
+        [data-theme="dark"] .table-enhanced tbody td span[style*="font-family: monospace"] {
+            color: #e2e8f0 !important;
+        }
+
+        [data-theme="dark"] .table-responsive td,
+        [data-theme="dark"] .table-responsive th {
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .table-responsive td[style*="font-weight: 700"] {
+            color: #93c5fd;
+        }
+
+        [data-theme="dark"] .table-responsive td[style*="color: var(--text-light)"] {
+            color: #94a3b8 !important;
+        }
+
+        [data-theme="dark"] .dashboard-container .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            color: #e2e8f0;
+        }
+
+        [data-theme="dark"] .stat-content .value {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .stat-content h3 {
+            color: #94a3b8;
+        }
     </style>
 </head>
 
@@ -470,7 +532,7 @@ $salesTrend = getSalesTrend($conn);
                                                 <?php echo htmlspecialchars($tx['sale_reference']); ?>
                                             </span>
                                         </td>
-                                        <td style="font-weight: 700;">₱<?php echo number_format($tx['total'], 2); ?></td>
+                                        <td style="font-weight: 700; color: var(--primary-color);">₱<?php echo number_format($tx['total'], 2); ?></td>
                                         <td style="color: var(--text-light); font-size: 0.9rem;">
                                             <?php echo date('g:i A', strtotime($tx['created_at'])); ?>
                                         </td>

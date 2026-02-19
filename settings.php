@@ -21,13 +21,22 @@ $page_title = 'System Settings';
 <html lang="en" data-theme="light">
 
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="custom-modal.js?v=2"></script>
     <style>
         .settings-container {
             max-width: 1200px;
@@ -434,6 +443,9 @@ $page_title = 'System Settings';
 
                     <?php if ($auth->hasPermission('settings.edit')): ?>
                         <button type="submit" class="btn btn-primary">💾 Save Alert Settings</button>
+                        <button type="button" class="btn btn-secondary" onclick="testLowStockAlert()" style="margin-left: 0.5rem; background: #f59e0b; color: #fff; border: none;">
+                            📧 Test Low Stock Alert Email
+                        </button>
                     <?php endif; ?>
                 </form>
             </div>
@@ -463,7 +475,7 @@ $page_title = 'System Settings';
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
                     <button class="btn btn-warning" onclick="clearCache()">🗑️ Clear Cache</button>
                     <button class="btn btn-danger"
-                        onclick="if(confirm('This will log you out. Continue?')) window.location.href='logout.php'">
+                        onclick="customConfirm('Logout', 'This will log you out. Continue?', 'logout', { confirmText: 'Yes, Logout', cancelText: 'Stay' }).then(ok => { if(ok) window.location.href='logout.php'; })">
                         🚪 Logout
                     </button>
                 </div>
@@ -555,6 +567,34 @@ $page_title = 'System Settings';
             };
 
             await saveSettingsToApi(settings, 'Alert settings saved successfully');
+        }
+
+        // Test Low Stock Alert Email
+        async function testLowStockAlert() {
+            const btn = event.target;
+            const origText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+            try {
+                const formData = new FormData();
+                formData.append('action', 'test_low_stock_alert');
+                const res = await fetch('api_settings.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || 'Low stock alert email sent!', 'success');
+                } else {
+                    showToast(data.message || 'Failed to send alert email', 'error');
+                }
+            } catch (err) {
+                console.error('Test low stock alert error:', err);
+                showToast('Network error sending test alert', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = origText;
+            }
         }
 
         // Helper to save to API

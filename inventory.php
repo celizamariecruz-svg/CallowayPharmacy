@@ -241,6 +241,8 @@ if (isset($_GET['expiring']) && in_array($_GET['expiring'], ['soon','expired']))
   <title>Inventory - Calloway Pharmacy</title>
   <!-- Bootstrap 5 CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="custom-modal.css?v=2">
+  <script src="custom-modal.js?v=2"></script>
   <style>
     :root{--primary:#0a74da}
     body{font-family:Segoe UI,Arial,Helvetica,sans-serif;background:#f5f7fa}
@@ -511,10 +513,11 @@ document.getElementById('products-tbody').addEventListener('click', async (e)=>{
     return;
   }
   if (action === 'deactivate'){
-    if (!confirm('Toggle active state for this product?')) return;
+    const ok = await customConfirm('Toggle Active State', 'Toggle active state for this product?', 'warning', { confirmText: 'Yes, Toggle', cancelText: 'Cancel' });
+    if (!ok) return;
     const fd = new FormData(); fd.append('action','deactivate_product'); fd.append('product_id',id);
     const res = await fetch('inventory.php',{method:'POST',body:fd}); const js = await res.json();
-    if (!js.ok) return alert(js.error||'Error');
+    if (!js.ok) return customAlert('Error', js.error||'Error', 'error');
     loadProducts(); loadLogs();
     return;
   }
@@ -534,7 +537,7 @@ document.getElementById('adjust-form').addEventListener('submit', async (e)=>{
   const fd = new FormData(); fd.append('product_id', id); fd.append('quantity', qty);
   fd.append('action', mode==='add'?'add_stock':'reduce_stock');
   const res = await fetch('inventory.php',{method:'POST',body:fd}); const js = await res.json();
-  if (!js.ok) return alert(js.error||'Error');
+  if (!js.ok) return customAlert('Error', js.error||'Error', 'error');
   bootstrap.Modal.getInstance(document.getElementById('adjustModal')).hide();
   loadProducts(); loadLogs();
 });
@@ -545,7 +548,7 @@ document.getElementById('edit-form').addEventListener('submit', async (e)=>{
   const fd = new FormData(e.target);
   fd.append('action','edit_product');
   const res = await fetch('inventory.php',{method:'POST',body:fd}); const js = await res.json();
-  if (!js.ok) return alert(js.error||'Error');
+  if (!js.ok) return customAlert('Error', js.error||'Error', 'error');
   bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
   loadProducts(); loadLogs();
 });
@@ -554,7 +557,7 @@ document.getElementById('edit-form').addEventListener('submit', async (e)=>{
 document.getElementById('confirm-delete-btn').addEventListener('click', async function(){
   const id = this.dataset.id; const fd = new FormData(); fd.append('action','delete_product'); fd.append('product_id', id);
   const res = await fetch('inventory.php',{method:'POST',body:fd}); const js = await res.json();
-  if (!js.ok) return alert(js.error||'Error');
+  if (!js.ok) return customAlert('Error', js.error||'Error', 'error');
   bootstrap.Modal.getInstance(document.getElementById('confirmDelete')).hide();
   loadProducts(); loadLogs();
 });

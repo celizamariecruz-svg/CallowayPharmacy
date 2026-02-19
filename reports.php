@@ -20,6 +20,13 @@ $page_title = 'Reports & Analytics';
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
@@ -175,6 +182,32 @@ $page_title = 'Reports & Analytics';
             padding: 0.5rem;
             border-radius: 8px;
         }
+
+        .charts-grid {
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        }
+
+        .chart-card {
+            min-height: 360px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-wrap canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .kpi-subtext {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
         
         table {
             width: 100%;
@@ -305,35 +338,105 @@ $page_title = 'Reports & Analytics';
             <div class="metric-card">
                 <h3>Total Revenue</h3>
                 <div class="value" id="totalRevenue">₱0.00</div>
-                <div style="color: var(--text-light); font-size: 0.9rem;">
-                    For selected period
-                </div>
+                <div class="kpi-subtext">Selected period</div>
+            </div>
+            <div class="metric-card">
+                <h3>Revenue Growth</h3>
+                <div class="value" id="revenueGrowth">0%</div>
+                <div class="kpi-subtext">Vs previous period</div>
+            </div>
+            <div class="metric-card">
+                <h3>Gross Profit</h3>
+                <div class="value" id="grossProfit">₱0.00</div>
+                <div class="kpi-subtext">Estimated margin</div>
+            </div>
+            <div class="metric-card">
+                <h3>Gross Margin</h3>
+                <div class="value" id="grossMargin">0%</div>
+                <div class="kpi-subtext">Profitability</div>
             </div>
             <div class="metric-card">
                 <h3>Total Transactions</h3>
                 <div class="value" id="totalSales">0</div>
-                <div style="color: var(--text-light); font-size: 0.9rem;">
-                    Completed orders
-                </div>
+                <div class="kpi-subtext">Completed sales</div>
             </div>
             <div class="metric-card">
                 <h3>Avg. Transaction</h3>
                 <div class="value" id="avgTransaction">₱0.00</div>
-                <div style="color: var(--text-light); font-size: 0.9rem;">
-                    Per customer
-                </div>
+                <div class="kpi-subtext">Per sale</div>
             </div>
             <div class="metric-card">
                 <h3>Products Sold</h3>
                 <div class="value" id="productsSold">0</div>
-                <div style="color: var(--text-light); font-size: 0.9rem;">
-                   Units moved
+                <div class="kpi-subtext">Units moved</div>
+            </div>
+            <div class="metric-card">
+                <h3>Expiry Risk Value</h3>
+                <div class="value" id="expiryRiskValue">₱0.00</div>
+                <div class="kpi-subtext">Next 30 days</div>
+            </div>
+            <div class="metric-card">
+                <h3>Pickup Cycle</h3>
+                <div class="value" id="pickupCycleTime">0m</div>
+                <div class="kpi-subtext">Avg order to pickup</div>
+            </div>
+            <div class="metric-card">
+                <h3>Rx Approval Rate</h3>
+                <div class="value" id="rxApprovalRate">0%</div>
+                <div class="kpi-subtext">Approved Rx orders</div>
+            </div>
+            <div class="metric-card">
+                <h3>Repeat Customers</h3>
+                <div class="value" id="repeatRate">0%</div>
+                <div class="kpi-subtext">2+ orders in period</div>
+            </div>
+            <div class="metric-card">
+                <h3>Loyalty Points</h3>
+                <div class="value" id="loyaltyPoints">0</div>
+                <div class="kpi-subtext">Outstanding points</div>
+            </div>
+        </div>
+
+        <div class="reports-grid charts-grid">
+            <div class="report-card chart-card">
+                <h2><i class="fas fa-chart-area"></i> Revenue Trend</h2>
+                <div class="chart-wrap">
+                    <canvas id="revenueTrendChart"></canvas>
+                </div>
+            </div>
+            <div class="report-card chart-card">
+                <h2><i class="fas fa-chart-pie"></i> Payment Mix</h2>
+                <div class="chart-wrap">
+                    <canvas id="paymentMixChart"></canvas>
                 </div>
             </div>
         </div>
 
+        <div class="reports-grid charts-grid">
+            <div class="report-card chart-card">
+                <h2><i class="fas fa-layer-group"></i> Category Share</h2>
+                <div class="chart-wrap">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="report-card">
+                <h2><i class="fas fa-route"></i> Online Order Status</h2>
+                <table id="orderStatusTable">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Orders</th>
+                            <th>Share</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="reports-grid">
-            <!-- Top Selling -->
             <div class="report-card">
                 <h2><i class="fas fa-trophy"></i> Top Selling Products</h2>
                 <table id="topProductsTable">
@@ -351,26 +454,25 @@ $page_title = 'Reports & Analytics';
                 </table>
             </div>
 
-            <!-- Categories -->
             <div class="report-card">
-                <h2><i class="fas fa-tags"></i> Sales by Category</h2>
-                <table id="categoryTable">
+                <h2><i class="fas fa-balance-scale"></i> Top Products by Profit</h2>
+                <table id="topProfitTable">
                     <thead>
                         <tr>
-                            <th>Category</th>
-                            <th>Revenue</th>
-                            <th>Share</th>
+                            <th>Rank</th>
+                            <th>Product</th>
+                            <th>Profit</th>
+                            <th>Margin</th>
                         </tr>
                     </thead>
                     <tbody>
-                         <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                        <tr><td colspan="4" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
-        
+
         <div class="reports-grid">
-             <!-- Low Stock -->
             <div class="report-card">
                 <h2><i class="fas fa-exclamation-triangle"></i> Low Stock Alerts</h2>
                 <table id="lowStockTable">
@@ -382,12 +484,11 @@ $page_title = 'Reports & Analytics';
                         </tr>
                     </thead>
                     <tbody>
-                         <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                        <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
-            
-             <!-- Expiring -->
+
             <div class="report-card">
                 <h2><i class="fas fa-clock"></i> Expiring Soon</h2>
                 <table id="expiringTable">
@@ -399,7 +500,77 @@ $page_title = 'Reports & Analytics';
                         </tr>
                     </thead>
                     <tbody>
-                         <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                        <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="reports-grid">
+            <div class="report-card">
+                <h2><i class="fas fa-snowflake"></i> Dead Stock (90+ days)</h2>
+                <table id="deadStockTable">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Stock</th>
+                            <th>Last Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="report-card">
+                <h2><i class="fas fa-tachometer-alt"></i> Slow Movers (90 days)</h2>
+                <table id="slowMoversTable">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty Sold</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="reports-grid">
+            <div class="report-card">
+                <h2><i class="fas fa-prescription"></i> Recent Rx Decisions</h2>
+                <table id="rxLogTable">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Product</th>
+                            <th>Pharmacist</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="report-card">
+                <h2><i class="fas fa-users"></i> Top Customers</h2>
+                <table id="topCustomersTable">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Orders</th>
+                            <th>Total Spent</th>
+                            <th>Last Order</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -410,7 +581,12 @@ $page_title = 'Reports & Analytics';
 
     <script src="theme.js"></script>
     <script src="shared-polish.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        let revenueTrendChart = null;
+        let paymentMixChart = null;
+        let categoryChart = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             // Set today as default filter on page load
             const today = new Date();
@@ -456,6 +632,26 @@ $page_title = 'Reports & Analytics';
             loadReports();
         }
         
+        async function safeFetchJson(url) {
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                try {
+                    const data = JSON.parse(text);
+                    if (!res.ok) {
+                        console.error('Report endpoint error:', url, data);
+                    }
+                    return data;
+                } catch (parseErr) {
+                    console.error('Non-JSON response:', url, text.slice(0, 300));
+                    return { success: false, message: 'Invalid JSON response' };
+                }
+            } catch (err) {
+                console.error('Fetch failed:', url, err);
+                return { success: false, message: 'Network error' };
+            }
+        }
+
         async function loadReports() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
@@ -463,21 +659,77 @@ $page_title = 'Reports & Analytics';
 
             try {
                 // Fetch all data in parallel
-                const [metricsRes, topProductsRes, categoryRes, lowStockRes, expiringRes] = await Promise.all([
-                    fetch(`${base}&action=metrics`).then(r => r.json()),
-                    fetch(`${base}&action=top_products&limit=10`).then(r => r.json()),
-                    fetch(`${base}&action=category_sales`).then(r => r.json()),
-                    fetch('inventory_api.php?action=low_stock_alert').then(r => r.json()),
-                    fetch('inventory_api.php?action=expiring_products').then(r => r.json())
+                const [
+                    metricsRes,
+                    trendRes,
+                    paymentRes,
+                    categoryRes,
+                    topProductsRes,
+                    topProfitRes,
+                    inventoryRiskRes,
+                    deadStockRes,
+                    slowMoversRes,
+                    orderStatusRes,
+                    operationalRes,
+                    rxRes,
+                    customerRes,
+                    loyaltyRes,
+                    lowStockRes,
+                    expiringRes
+                ] = await Promise.all([
+                    safeFetchJson(`${base}&action=metrics`),
+                    safeFetchJson(`${base}&action=sales_trend`),
+                    safeFetchJson(`${base}&action=payment_mix`),
+                    safeFetchJson(`${base}&action=category_sales`),
+                    safeFetchJson(`${base}&action=top_products&limit=10`),
+                    safeFetchJson(`${base}&action=top_products_profit&limit=10`),
+                    safeFetchJson(`${base}&action=inventory_risk`),
+                    safeFetchJson(`${base}&action=dead_stock&limit=10`),
+                    safeFetchJson(`${base}&action=slow_movers&limit=10`),
+                    safeFetchJson(`${base}&action=order_status`),
+                    safeFetchJson(`${base}&action=operational_stats`),
+                    safeFetchJson(`${base}&action=rx_stats&limit=10`),
+                    safeFetchJson(`${base}&action=customer_stats&limit=10`),
+                    safeFetchJson(`${base}&action=loyalty_stats`),
+                    safeFetchJson('inventory_api.php?action=low_stock_alert'),
+                    safeFetchJson('inventory_api.php?action=expiring_products')
                 ]);
 
                 // -- Metrics cards --
                 if (metricsRes.success) {
                     const m = metricsRes.data;
-                    document.getElementById('totalRevenue').textContent = '₱' + Number(m.revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('totalRevenue').textContent = formatCurrency(m.revenue);
+                    document.getElementById('revenueGrowth').textContent = formatPercent(m.revenue_growth_pct);
+                    document.getElementById('grossProfit').textContent = formatCurrency(m.gross_profit);
+                    document.getElementById('grossMargin').textContent = formatPercent(m.gross_margin_pct);
                     document.getElementById('totalSales').textContent = m.sales_count || 0;
-                    document.getElementById('avgTransaction').textContent = '₱' + Number(m.avg_transaction || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('avgTransaction').textContent = formatCurrency(m.avg_transaction);
                     document.getElementById('productsSold').textContent = m.products_sold || 0;
+                }
+
+                if (inventoryRiskRes.success) {
+                    const r = inventoryRiskRes.data;
+                    document.getElementById('expiryRiskValue').textContent = formatCurrency(r.risk_30_value);
+                }
+
+                if (operationalRes.success) {
+                    const o = operationalRes.data;
+                    document.getElementById('pickupCycleTime').textContent = formatMinutes(o.avg_cycle_minutes);
+                }
+
+                if (rxRes.success) {
+                    const r = rxRes.data;
+                    document.getElementById('rxApprovalRate').textContent = formatPercent(r.approval_rate);
+                }
+
+                if (customerRes.success) {
+                    const c = customerRes.data;
+                    document.getElementById('repeatRate').textContent = formatPercent(c.repeat_rate);
+                }
+
+                if (loyaltyRes.success) {
+                    const l = loyaltyRes.data;
+                    document.getElementById('loyaltyPoints').textContent = Number(l.points_total || 0).toLocaleString();
                 }
 
                 // -- Top Products table --
@@ -486,27 +738,35 @@ $page_title = 'Reports & Analytics';
                         i + 1,
                         p.product_name || p.name,
                         p.total_quantity,
-                        '₱' + Number(p.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2})
+                        formatCurrency(p.total_revenue)
                     ]);
                     mockTable('topProductsTable', rows);
                 } else {
                     mockTable('topProductsTable', [['—', 'No sales data for this period', '—', '—']]);
                 }
 
-                // -- Category Sales table --
-                if (categoryRes.success && categoryRes.data.length > 0) {
-                    const catTotal = categoryRes.data.reduce((s, c) => s + Number(c.total_revenue || 0), 0);
-                    const rows = categoryRes.data.map(c => {
-                        const pct = catTotal > 0 ? ((Number(c.total_revenue) / catTotal) * 100).toFixed(1) + '%' : '0%';
-                        return [
-                            c.category_name || c.category,
-                            '₱' + Number(c.total_revenue).toLocaleString(undefined, {minimumFractionDigits: 2}),
-                            pct
-                        ];
-                    });
-                    mockTable('categoryTable', rows);
+                if (topProfitRes.success && topProfitRes.data.length > 0) {
+                    const rows = topProfitRes.data.map((p, i) => [
+                        i + 1,
+                        p.product_name || p.name,
+                        formatCurrency(p.gross_profit),
+                        formatPercent(p.margin_pct)
+                    ]);
+                    mockTable('topProfitTable', rows);
                 } else {
-                    mockTable('categoryTable', [['—', '—', '—']]);
+                    mockTable('topProfitTable', [['—', 'No profit data for this period', '—', '—']]);
+                }
+
+                // -- Category Sales table --
+                if (orderStatusRes.success && orderStatusRes.data.length > 0) {
+                    const totalOrders = orderStatusRes.data.reduce((s, r) => s + Number(r.order_count || 0), 0);
+                    const rows = orderStatusRes.data.map(r => {
+                        const pct = totalOrders > 0 ? ((Number(r.order_count) / totalOrders) * 100).toFixed(1) + '%' : '0%';
+                        return [r.status, r.order_count, pct];
+                    });
+                    mockTable('orderStatusTable', rows);
+                } else {
+                    mockTable('orderStatusTable', [['—', 'No online orders in this period', '—']]);
                 }
 
                 // -- Low Stock table --
@@ -537,10 +797,168 @@ $page_title = 'Reports & Analytics';
                     mockTable('expiringTable', [['—', '—', 'No products expiring soon']]);
                 }
 
+                if (deadStockRes.success && deadStockRes.data.length > 0) {
+                    const rows = deadStockRes.data.map(p => [
+                        p.product_name || p.name,
+                        p.stock_quantity,
+                        p.last_sale_date || 'Never'
+                    ]);
+                    mockTable('deadStockTable', rows);
+                } else {
+                    mockTable('deadStockTable', [['—', 'No dead stock found', '—']]);
+                }
+
+                if (slowMoversRes.success && slowMoversRes.data.length > 0) {
+                    const rows = slowMoversRes.data.map(p => [
+                        p.product_name || p.name,
+                        p.qty_90_days,
+                        p.stock_quantity
+                    ]);
+                    mockTable('slowMoversTable', rows);
+                } else {
+                    mockTable('slowMoversTable', [['—', 'No slow movers found', '—']]);
+                }
+
+                if (rxRes.success && rxRes.data.recent_logs && rxRes.data.recent_logs.length > 0) {
+                    const rows = rxRes.data.recent_logs.map(l => [
+                        l.action,
+                        l.product_name || 'Unknown',
+                        l.pharmacist_name || 'Unknown',
+                        l.created_at
+                    ]);
+                    mockTable('rxLogTable', rows);
+                } else {
+                    mockTable('rxLogTable', [['—', 'No recent Rx actions', '—', '—']]);
+                }
+
+                if (customerRes.success && customerRes.data.top_customers && customerRes.data.top_customers.length > 0) {
+                    const rows = customerRes.data.top_customers.map(c => [
+                        c.customer_name || c.email || 'Unknown',
+                        c.order_count,
+                        formatCurrency(c.total_spent),
+                        c.last_order_date || '—'
+                    ]);
+                    mockTable('topCustomersTable', rows);
+                } else {
+                    mockTable('topCustomersTable', [['—', 'No customer data for this period', '—', '—']]);
+                }
+
+                if (trendRes.success && trendRes.data.length > 0) {
+                    const labels = trendRes.data.map(r => r.sale_date);
+                    const values = trendRes.data.map(r => Number(r.revenue || 0));
+                    revenueTrendChart = renderLineChart(revenueTrendChart, 'revenueTrendChart', labels, values, 'Revenue');
+                } else {
+                    revenueTrendChart = renderLineChart(revenueTrendChart, 'revenueTrendChart', [], [], 'Revenue');
+                }
+
+                if (paymentRes.success && paymentRes.data.length > 0) {
+                    const labels = paymentRes.data.map(r => r.payment_method || 'Unknown');
+                    const values = paymentRes.data.map(r => Number(r.total_amount || 0));
+                    paymentMixChart = renderDoughnutChart(paymentMixChart, 'paymentMixChart', labels, values);
+                } else {
+                    paymentMixChart = renderDoughnutChart(paymentMixChart, 'paymentMixChart', [], []);
+                }
+
+                if (categoryRes.success && categoryRes.data.length > 0) {
+                    const labels = categoryRes.data.map(r => r.category_name || r.category);
+                    const values = categoryRes.data.map(r => Number(r.total_revenue || 0));
+                    categoryChart = renderBarChart(categoryChart, 'categoryChart', labels, values, 'Revenue');
+                } else {
+                    categoryChart = renderBarChart(categoryChart, 'categoryChart', [], [], 'Revenue');
+                }
+
             } catch (err) {
                 console.error('Error loading reports:', err);
                 showToast('Failed to load report data', 'error');
             }
+        }
+
+        function formatCurrency(value) {
+            return '₱' + Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatPercent(value) {
+            if (value === null || value === undefined || isNaN(value)) return 'N/A';
+            return Number(value).toFixed(1) + '%';
+        }
+
+        function formatMinutes(value) {
+            if (!value || isNaN(value)) return '0m';
+            const minutes = Math.round(Number(value));
+            if (minutes < 60) return `${minutes}m`;
+            const hours = Math.floor(minutes / 60);
+            const rem = minutes % 60;
+            return `${hours}h ${rem}m`;
+        }
+
+        function renderLineChart(existing, canvasId, labels, data, label) {
+            if (existing) existing.destroy();
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label,
+                        data,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: value => '₱' + value } }
+                    }
+                }
+            });
+        }
+
+        function renderDoughnutChart(existing, canvasId, labels, data) {
+            if (existing) existing.destroy();
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: ['#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#7c3aed', '#0ea5e9']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function renderBarChart(existing, canvasId, labels, data, label) {
+            if (existing) existing.destroy();
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label,
+                        data,
+                        backgroundColor: 'rgba(37, 99, 235, 0.7)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: value => '₱' + value } }
+                    }
+                }
+            });
         }
         
         function escHtml(str) {
@@ -551,7 +969,11 @@ $page_title = 'Reports & Analytics';
 
         function mockTable(id, rows) {
             const tbody = document.querySelector(`#${id} tbody`);
-            tbody.innerHTML = rows.map(r => `<tr>${r.map(c => `<td>${escHtml(c)}</td>`).join('')}</tr>`).join('');
+            tbody.innerHTML = rows.map(r => `<tr>${r.map(c => {
+                // If the cell contains HTML markup (badges), render it directly; otherwise escape
+                if (typeof c === 'string' && c.includes('<span')) return `<td>${c}</td>`;
+                return `<td>${escHtml(c)}</td>`;
+            }).join('')}</tr>`).join('');
         }
         
         function exportReport(type) {

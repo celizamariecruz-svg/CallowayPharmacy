@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $isCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'customer');
+$isCashier = (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'cashier');
 $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
 ?>
 <!DOCTYPE html>
@@ -75,6 +76,7 @@ $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
           </div>
           <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </a>
+        <?php if (!$isCashier): ?>
         <a href="inventory_management.php" class="home-card" style="--i:1">
           <div class="home-card-icon" aria-hidden="true">📦</div>
           <div class="home-card-body">
@@ -83,6 +85,7 @@ $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
           </div>
           <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </a>
+        <?php endif; ?>
         <a href="medicine-locator.php" class="home-card" style="--i:2">
           <div class="home-card-icon" aria-hidden="true">🔍</div>
           <div class="home-card-body">
@@ -91,6 +94,7 @@ $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
           </div>
           <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </a>
+        <?php if (!$isCashier): ?>
         <a href="expiry-monitoring.php" class="home-card" style="--i:3">
           <div class="home-card-icon" aria-hidden="true">📅</div>
           <div class="home-card-body">
@@ -99,29 +103,7 @@ $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
           </div>
           <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </a>
-      </div>
-    </section>
-
-    <!-- Supply Chain -->
-    <section class="home-section">
-      <h3 class="home-section-label">Supply Chain</h3>
-      <div class="home-card-grid">
-        <a href="supplier_management.php" class="home-card" style="--i:0">
-          <div class="home-card-icon" aria-hidden="true">🚚</div>
-          <div class="home-card-body">
-            <h2 class="home-card-title">Supplier Management</h2>
-            <p class="home-card-desc">Manage suppliers, contacts, and procurement relationships.</p>
-          </div>
-          <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
-        <a href="purchase_orders.php" class="home-card" style="--i:1">
-          <div class="home-card-icon" aria-hidden="true">📋</div>
-          <div class="home-card-body">
-            <h2 class="home-card-title">Purchase Orders</h2>
-            <p class="home-card-desc">Create and track purchase orders for inventory restocking.</p>
-          </div>
-          <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
+        <?php endif; ?>
       </div>
     </section>
     <?php endif; ?>
@@ -138,7 +120,15 @@ $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
           </div>
           <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </a>
-        <a href="loyalty_qr.php" class="home-card" style="--i:5">
+        <a href="order_status.php" class="home-card" style="--i:5">
+          <div class="home-card-icon" aria-hidden="true">📋</div>
+          <div class="home-card-body">
+            <h2 class="home-card-title">Order Status</h2>
+            <p class="home-card-desc"><?php echo $isCustomer ? 'Track your orders and view delivery status.' : 'View and manage online order statuses.'; ?></p>
+          </div>
+          <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+        <a href="loyalty_qr.php" class="home-card" style="--i:6">
           <div class="home-card-icon" aria-hidden="true">🎁</div>
           <div class="home-card-body">
             <h2 class="home-card-title">Loyalty & QR</h2>
@@ -149,7 +139,7 @@ $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
       </div>
     </section>
 
-    <?php if (!$isCustomer): ?>
+    <?php if (!$isCustomer && !$isCashier): ?>
     <!-- Administration -->
     <section class="home-section">
       <h3 class="home-section-label">Administration</h3>
@@ -178,7 +168,7 @@ $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
           </div>
           <svg class="home-card-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </a>
-        <a href="settings.php" class="home-card" style="--i:9">
+        <a href="settings_enhanced.php" class="home-card" style="--i:9">
           <div class="home-card-icon" aria-hidden="true">⚙️</div>
           <div class="home-card-body">
             <h2 class="home-card-title">System Settings</h2>

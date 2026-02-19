@@ -5,6 +5,13 @@ include 'Auth.php';
 $auth = new Auth($conn);
 $auth->requireAuth('login.php');
 
+// Only staff can access expiry monitoring
+$currentUser = $auth->getCurrentUser();
+if (strtolower($currentUser['role_name'] ?? '') === 'customer') {
+    header('Location: onlineordering.php');
+    exit;
+}
+
 // Initialize variables
 $message = '';
 $message_type = '';
@@ -75,6 +82,13 @@ $page_title = 'Expiry Monitoring';
 <html lang="en" data-theme="light">
 
 <head>
+    <script>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const theme = localStorage.getItem('calloway_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Expiry Monitoring - Calloway Pharmacy</title>

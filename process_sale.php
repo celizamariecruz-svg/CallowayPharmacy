@@ -150,7 +150,46 @@ try {
     // Commit
     $conn->commit();
     file_put_contents($logFile, "17. Transaction committed\n", FILE_APPEND);
-    
+
+    // Generate one-time reward QR code for this sale
+    $rewardQrCode = null;
+    $rewardQrExpires = null;
+    try {
+        $conn->query("CREATE TABLE IF NOT EXISTS reward_qr_codes (
+            qr_id INT AUTO_INCREMENT PRIMARY KEY,
+            qr_code VARCHAR(100) NOT NULL UNIQUE,
+            source_type ENUM('pos','online') NOT NULL DEFAULT 'pos',
+            source_order_id INT NULL,
+            sale_reference VARCHAR(50) NULL,
+            generated_for_user INT NULL,
+            generated_for_name VARCHAR(100) NULL,
+            redeemed_by_user INT NULL,
+            redeemed_by_name VARCHAR(100) NULL,
+            points_value INT NOT NULL DEFAULT 1,
+            is_redeemed TINYINT(1) NOT NULL DEFAULT 0,
+            redeemed_at DATETIME NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at DATETIME NULL,
+            INDEX idx_qr_code (qr_code),
+            INDEX idx_redeemed (is_redeemed)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        $rewardQrCode = 'RWD-' . strtoupper(bin2hex(random_bytes(6))) . '-' . time();
+        $rewardQrExpires = date('Y-m-d H:i:s', strtotime('+30 days'));
+        $qrSourceType = 'pos';
+        $qrPointsVal = 1;
+        $qrCustomerName = 'Walk-in Customer';
+
+        $qrStmt = $conn->prepare("INSERT INTO reward_qr_codes (qr_code, source_type, source_order_id, sale_reference, generated_for_user, generated_for_name, points_value, expires_at) VALUES (?, ?, ?, ?, NULL, ?, ?, ?)");
+        $qrStmt->bind_param("ssissis", $rewardQrCode, $qrSourceType, $saleId, $saleRef, $qrCustomerName, $qrPointsVal, $rewardQrExpires);
+        $qrStmt->execute();
+        $qrStmt->close();
+        file_put_contents($logFile, "17b. Reward QR generated: $rewardQrCode\n", FILE_APPEND);
+    } catch (Exception $e) {
+        error_log('Reward QR generation error: ' . $e->getMessage());
+        file_put_contents($logFile, "17b. Reward QR failed: " . $e->getMessage() . "\n", FILE_APPEND);
+    }
+
     // Success response
     $response = [
         'success' => true,
@@ -161,6 +200,11 @@ try {
         'amount_paid' => $amountPaid,
         'change' => $change
     ];
+    
+    if ($rewardQrCode) {
+        $response['reward_qr_code'] = $rewardQrCode;
+        $response['reward_qr_expires'] = $rewardQrExpires;
+    }
     
     file_put_contents($logFile, "18. SUCCESS - Sending response\n", FILE_APPEND);
     file_put_contents($logFile, json_encode($response) . "\n", FILE_APPEND);

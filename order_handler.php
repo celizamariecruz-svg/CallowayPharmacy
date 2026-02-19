@@ -21,6 +21,14 @@ ob_clean();
 
 header('Content-Type: application/json');
 
+// Require login to place orders
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'You must be logged in to place an order. Please sign in or create an account.']);
+    ob_end_flush();
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
@@ -100,6 +108,72 @@ foreach ($items as $item) {
     ];
 }
 
+// ===== EXPIRY ENFORCEMENT (FIFO) =====
+require_once 'ExpiryEnforcement.php';
+$expiryEnforcer = new ExpiryEnforcement($conn);
+
+// Validate cart for expired products
+$expiryCheck = $expiryEnforcer->validateCart($verifiedItems);
+if (!$expiryCheck['valid']) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Cannot process order',
+        'errors' => $expiryCheck['errors']
+    ]);
+    ob_end_flush();
+    exit;
+}
+
+// ===== RX PRESCRIPTION ENFORCEMENT =====
+require_once 'RxEnforcement.php';
+$rxEnforcer = new RxEnforcement($conn);
+
+// Check if cart contains prescription medications
+$rxCheck = $rxEnforcer->checkCartForRxProducts($verifiedItems);
+$has_rx_products = $rxCheck['has_rx'];
+$rx_product_names = array_column($rxCheck['rx_products'], 'name');
+
+// ===== LOYALTY POINTS REDEMPTION =====
+$pointsRedeemed = 0;
+$loyaltyMemberId = null;
+$pointsDiscount = 0;
+
+if ($customerId !== null && isset($input['points_to_redeem']) && $input['points_to_redeem'] > 0) {
+    $requestedPoints = intval($input['points_to_redeem']);
+    
+    // Verify user has a loyalty account and enough points
+    $stmt = $conn->prepare("SELECT member_id, points FROM loyalty_members WHERE email = ? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $member = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    
+    if ($member && $member['points'] >= $requestedPoints) {
+        $availablePoints = intval($member['points']);
+        
+        // Don't let discount exceed order total
+        $maxRedeemable = min($requestedPoints, floor($totalAmount));
+        
+        if ($maxRedeemable > 0 && $maxRedeemable <= $availablePoints) {
+            $pointsRedeemed = $maxRedeemable;
+            $pointsDiscount = $pointsRedeemed; // 1 point = ₱1
+            $loyaltyMemberId = $member['member_id'];
+        }
+    }
+}
+
+// ===== SENIOR/PWD DISCOUNT CLAIM (verified at pickup, NOT applied now) =====
+$scPwdClaimed = (!empty($input['senior_discount']) && $input['senior_discount'] == 1) ? 1 : 0;
+// NOTE: The 20% discount is NOT subtracted from the order total here.
+// It will only be applied by the POS cashier after verifying the customer's
+// SC/PWD ID at pickup time. This prevents abuse of the discount.
+
+// Apply points discount to total
+$totalAmount = max(0, $totalAmount - $pointsDiscount);
+// Store original total for points earning calculation
+$originalTotal = $totalAmount + $pointsDiscount;
+
 // Schema checks (handle older migrations) — cached per-request (resettable)
 $__columnExistsCache = [];
 
@@ -162,6 +236,10 @@ function ensureOnlineOrderSchema($conn) {
     }
     if (!columnExists($conn, 'online_order_items', 'subtotal')) {
         $safeQuery("ALTER TABLE online_order_items ADD COLUMN subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00");
+    }
+    // SC/PWD discount claim flag — verified at POS pickup, not applied at checkout
+    if (!columnExists($conn, 'online_orders', 'sc_pwd_claimed')) {
+        $safeQuery("ALTER TABLE online_orders ADD COLUMN sc_pwd_claimed TINYINT(1) NOT NULL DEFAULT 0");
     }
 
     // If the table is the "medicine_id" schema, migrate it to support product_id (used by our cart/products)
@@ -362,6 +440,14 @@ try {
         $params[] = 'Pending';
     }
 
+    // SC/PWD discount claim flag
+    if (columnExists($conn, 'online_orders', 'sc_pwd_claimed')) {
+        $cols[] = 'sc_pwd_claimed';
+        $placeholders[] = '?';
+        $types .= 'i';
+        $params[] = $scPwdClaimed;
+    }
+
     $sql = 'INSERT INTO online_orders (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $placeholders) . ')';
     $stmt = $conn->prepare($sql);
 
@@ -377,6 +463,11 @@ try {
     $stmt->execute();
     $orderId = $conn->insert_id;
     $stmt->close();
+
+    // ===== FLAG ORDER FOR RX APPROVAL IF NEEDED =====
+    if ($has_rx_products) {
+        $rxEnforcer->flagOrderForRxApproval($orderId);
+    }
 
     // Insert order items (support different schemas)
     $hasProductIdCol = columnExists($conn, 'online_order_items', 'product_id');
@@ -445,14 +536,111 @@ try {
 
     $conn->commit();
 
+    // ===== LOYALTY POINTS SYSTEM =====
+    // Security rule: Online orders must NOT receive earned points or redeemable
+    // QR rewards until POS validates payment at pickup.
+    // Points are awarded in online_order_api.php (mark_picked_up -> awardLoyaltyForPickup).
+    $responseMessages = [];
+    
+    if ($customerId !== null && $customerId > 0) {
+        try {
+            // Get user details from users table
+            $stmt = $conn->prepare("SELECT full_name, email FROM users WHERE user_id = ?");
+            $stmt->bind_param("i", $customerId);
+            $stmt->execute();
+            $user = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            
+            if ($user) {
+                $userName = $user['full_name'] ?? $customerName;
+                $userEmail = $user['email'] ?? $email ?? '';
+                $userPhone = '';
+                
+                // Find or create loyalty member
+                $stmt = $conn->prepare("SELECT member_id, points FROM loyalty_members WHERE email = ? LIMIT 1");
+                $stmt->bind_param("s", $userEmail);
+                $stmt->execute();
+                $member = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                
+                $memberId = null;
+                if ($member) {
+                    $memberId = $member['member_id'];
+                } else {
+                    // Create new member with 0 points initially
+                    $stmt = $conn->prepare("INSERT INTO loyalty_members (name, email, phone, points, member_since) VALUES (?, ?, ?, 0, CURDATE())");
+                    $stmt->bind_param("sss", $userName, $userEmail, $userPhone);
+                    $stmt->execute();
+                    $memberId = $conn->insert_id;
+                    $stmt->close();
+                }
+                
+                // STEP 1: Process points redemption if requested
+                if ($pointsRedeemed > 0 && $loyaltyMemberId === $memberId) {
+                    // Deduct redeemed points
+                    $stmt = $conn->prepare("UPDATE loyalty_members SET points = points - ? WHERE member_id = ?");
+                    $stmt->bind_param("ii", $pointsRedeemed, $memberId);
+                    $stmt->execute();
+                    $stmt->close();
+                    
+                    // Log redemption
+                    $refId = 'ORDER-' . $orderId;
+                    $negativePoints = -$pointsRedeemed; // Store as negative for REDEEM
+                    $stmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id) VALUES (?, ?, 'REDEEM', ?)");
+                    $stmt->bind_param("iis", $memberId, $negativePoints, $refId);
+                    $stmt->execute();
+                    $stmt->close();
+                    
+                    $responseMessages[] = "You saved ₱{$pointsDiscount} using {$pointsRedeemed} points!";
+                }
+                
+                // IMPORTANT: Do NOT award earned points here.
+                // Online-order earnings are only granted after POS pickup validation.
+            }
+        } catch (Exception $e) {
+            // Log loyalty error but don't fail the order
+            error_log('Loyalty points error: ' . $e->getMessage());
+        }
+    }
+
     // Clean any stray output, then send JSON
     ob_clean();
-    echo json_encode([
+    
+    $successMessage = 'Order placed successfully!';
+    if (!empty($responseMessages)) {
+        $successMessage = implode(' ', $responseMessages);
+    }
+    
+    // Do NOT generate redeemable reward QR here.
+    // QR/points must only be issued after POS pickup validation.
+
+    $response = [
         'success' => true,
         'order_id' => $orderId,
         'order_ref' => $orderRef,
-        'message' => 'Order placed successfully!'
-    ]);
+        'message' => $successMessage
+    ];
+    
+    // ===== ADD RX WARNING IF ORDER CONTAINS PRESCRIPTION MEDICATIONS =====
+    if ($has_rx_products) {
+        $rxWarning = $rxEnforcer->getRxCustomerWarning();
+        $response['rx_warning'] = $rxWarning;
+        $response['requires_prescription'] = true;
+        $response['rx_products'] = $rx_product_names;
+    }
+    
+    $response['loyalty_pending_validation'] = true;
+    $response['loyalty_message'] = 'Loyalty rewards will be credited after payment is validated at pickup.';
+    if ($pointsRedeemed > 0) {
+        $response['points_redeemed'] = $pointsRedeemed;
+        $response['discount_applied'] = $pointsDiscount;
+    }
+    if ($scPwdClaimed) {
+        $response['sc_pwd_claimed'] = true;
+        $response['sc_pwd_message'] = 'SC/PWD discount will be applied after ID verification at pickup.';
+    }
+    
+    echo json_encode($response);
 
 } catch (Exception $e) {
     $conn->rollback();
