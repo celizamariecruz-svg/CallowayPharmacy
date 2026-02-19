@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calloway Pharmacy - Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🏥 Calloway Pharmacy</h1>
+            <p class="tagline">Your Health, Our Priority</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('medications')">Medications</button>
+            <button class="tab-button" onclick="showTab('prescriptions')">Prescriptions</button>
+        </div>
+
+        <!-- Medications Tab -->
+        <div id="medications-tab" class="tab-content active">
+            <div class="section-header">
+                <h2>Medication Inventory</h2>
+                <button class="btn btn-primary" onclick="showAddMedicationForm()">+ Add Medication</button>
+            </div>
+
+            <div id="add-medication-form" class="form-container" style="display: none;">
+                <h3>Add New Medication</h3>
+                <form onsubmit="addMedication(event)">
+                    <input type="text" id="med-name" placeholder="Medication Name" required>
+                    <input type="number" id="med-quantity" placeholder="Quantity" required>
+                    <input type="number" step="0.01" id="med-price" placeholder="Price" required>
+                    <textarea id="med-description" placeholder="Description" required></textarea>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-success">Save</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddMedicationForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="medications-list" class="list-container">
+                <!-- Medications will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Prescriptions Tab -->
+        <div id="prescriptions-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Prescriptions</h2>
+                <button class="btn btn-primary" onclick="showAddPrescriptionForm()">+ New Prescription</button>
+            </div>
+
+            <div id="add-prescription-form" class="form-container" style="display: none;">
+                <h3>Create New Prescription</h3>
+                <form onsubmit="addPrescription(event)">
+                    <input type="text" id="patient-name" placeholder="Patient Name" required>
+                    <select id="prescription-medication" required>
+                        <option value="">Select Medication</option>
+                    </select>
+                    <input type="number" id="prescription-quantity" placeholder="Quantity" required>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-success">Create</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddPrescriptionForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="prescriptions-list" class="list-container">
+                <!-- Prescriptions will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Calloway Pharmacy. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
