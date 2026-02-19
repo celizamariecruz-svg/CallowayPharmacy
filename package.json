@@ -8,13 +8,18 @@
     "dev": "nodemon server.js",
     "test": "echo \"No tests specified\" && exit 0"
   },
-  "keywords": ["pharmacy", "management", "healthcare"],
+  "keywords": [
+    "pharmacy",
+    "management",
+    "healthcare"
+  ],
   "author": "Calloway Pharmacy",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
     "body-parser": "^1.20.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.5.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
