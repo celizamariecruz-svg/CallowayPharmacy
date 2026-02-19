@@ -20,7 +20,12 @@ $page_title = 'Point of Sale';
     <script>
     // Apply theme immediately to prevent flash
     (function() {
-      const theme = localStorage.getItem('calloway_theme') || 'light';
+            let theme = 'light';
+            try {
+                theme = localStorage.getItem('calloway_theme') || 'light';
+            } catch (e) {
+                theme = 'light';
+            }
       document.documentElement.setAttribute('data-theme', theme);
     })();
     </script>
@@ -1762,6 +1767,38 @@ $page_title = 'Point of Sale';
         let viewMode = 'grid';
         let lastSaleData = null;
 
+        // Storage-safe helpers (for browsers with strict tracking prevention)
+        const posStorageAvailable = (() => {
+            try {
+                const key = '__pos_storage_test__';
+                localStorage.setItem(key, '1');
+                localStorage.removeItem(key);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        })();
+
+        function posStorageGet(key, fallback = null) {
+            if (!posStorageAvailable) return fallback;
+            try {
+                const value = localStorage.getItem(key);
+                return value === null ? fallback : value;
+            } catch (_) {
+                return fallback;
+            }
+        }
+
+        function posStorageSet(key, value) {
+            if (!posStorageAvailable) return false;
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
             setupEventListeners();
@@ -2065,7 +2102,11 @@ $page_title = 'Point of Sale';
 
         function holdSale() {
             if (cart.length === 0) return;
-            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            if (!posStorageAvailable) {
+                showToast('Browser storage is blocked. Hold/Resume is unavailable.', 'error');
+                return;
+            }
+            const heldSales = JSON.parse(posStorageGet('pos_held_sales', '[]') || '[]');
             const heldEntry = {
                 id: Date.now(),
                 cart: JSON.parse(JSON.stringify(cart)),
@@ -2074,7 +2115,7 @@ $page_title = 'Point of Sale';
                 total: getTotal()
             };
             heldSales.push(heldEntry);
-            localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
+            posStorageSet('pos_held_sales', JSON.stringify(heldSales));
             cart = [];
             discountEnabled = false;
             const btn = document.getElementById('discountToggle');
@@ -2085,7 +2126,7 @@ $page_title = 'Point of Sale';
         }
 
         function updateHeldBadge() {
-            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            const heldSales = JSON.parse(posStorageGet('pos_held_sales', '[]') || '[]');
             const badge = document.getElementById('heldSalesBadge');
             if (badge) {
                 if (heldSales.length > 0) {
@@ -2098,7 +2139,11 @@ $page_title = 'Point of Sale';
         }
 
         function showHeldSales() {
-            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            if (!posStorageAvailable) {
+                showToast('Browser storage is blocked. Hold/Resume is unavailable.', 'error');
+                return;
+            }
+            const heldSales = JSON.parse(posStorageGet('pos_held_sales', '[]') || '[]');
             if (heldSales.length === 0) {
                 showToast('No held sales', 'error');
                 return;
@@ -2155,9 +2200,9 @@ $page_title = 'Point of Sale';
                 } else if (deleteBtn) {
                     e.preventDefault();
                     const idx = parseInt(deleteBtn.dataset.index);
-                    const sales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+                    const sales = JSON.parse(posStorageGet('pos_held_sales', '[]') || '[]');
                     sales.splice(idx, 1);
-                    localStorage.setItem('pos_held_sales', JSON.stringify(sales));
+                    posStorageSet('pos_held_sales', JSON.stringify(sales));
                     updateHeldBadge();
                     overlay.remove();
                     if (sales.length > 0) setTimeout(() => showHeldSales(), 50);
@@ -2171,7 +2216,7 @@ $page_title = 'Point of Sale';
         }
 
         function resumeHeldSale(index) {
-            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            const heldSales = JSON.parse(posStorageGet('pos_held_sales', '[]') || '[]');
             if (index < 0 || index >= heldSales.length) return;
             const sale = heldSales[index];
             if (cart.length > 0) {
@@ -2182,7 +2227,7 @@ $page_title = 'Point of Sale';
             const btn = document.getElementById('discountToggle');
             if (btn) btn.classList.toggle('active', discountEnabled);
             heldSales.splice(index, 1);
-            localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
+            posStorageSet('pos_held_sales', JSON.stringify(heldSales));
             updateCartUI();
             updateHeldBadge();
             showToast('Sale resumed', 'success');
@@ -2358,9 +2403,34 @@ $page_title = 'Point of Sale';
                 const res = await fetch('pos_api.php?action=create_sale', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify(saleData)
                 });
-                const data = await res.json();
+
+                const raw = await res.text();
+                let data = null;
+                try {
+                    data = JSON.parse(raw);
+                } catch (_) {
+                    data = null;
+                }
+
+                if (!res.ok) {
+                    const msg = (data && data.message)
+                        ? data.message
+                        : `Sale request failed (${res.status}).`;
+                    showToast(msg, 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Complete Sale';
+                    return;
+                }
+
+                if (!data || typeof data !== 'object') {
+                    showToast('Server returned an invalid response while saving sale.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Complete Sale';
+                    return;
+                }
 
                 if (!data.success) {
                     showToast(data.message || 'Sale failed', 'error');

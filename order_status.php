@@ -19,7 +19,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 <head>
 <script>
 (function() {
-  const theme = localStorage.getItem('calloway_theme') || 'dark';
+    const theme = localStorage.getItem('calloway_theme') || 'light';
   document.documentElement.setAttribute('data-theme', theme);
 })();
 </script>
@@ -49,14 +49,14 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
     }
     .os-page-header i {
         font-size: 1.3rem;
-        color: var(--primary-blue, #2563eb);
+        color: var(--primary-color);
     }
     .os-back-link {
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
         font-size: 0.85rem;
-        color: var(--primary-blue, #2563eb);
+        color: var(--primary-color);
         text-decoration: none;
         margin-bottom: 1rem;
         font-weight: 600;
@@ -75,8 +75,8 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
     .os-filter-btn {
         padding: 0.4rem 1rem;
         border-radius: 999px;
-        border: 1.5px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.04);
+        border: 1.5px solid var(--table-border);
+        background: var(--card-bg);
         color: var(--text-light, #94a3b8);
         font-size: 0.8rem;
         font-weight: 600;
@@ -85,14 +85,14 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         white-space: nowrap;
     }
     .os-filter-btn:hover {
-        background: rgba(37,99,235,0.1);
-        color: var(--primary-blue, #2563eb);
-        border-color: rgba(37,99,235,0.3);
+        background: var(--hover-bg);
+        color: var(--primary-color);
+        border-color: rgba(var(--primary-rgb), 0.28);
     }
     .os-filter-btn.active {
-        background: var(--primary-blue, #2563eb);
+        background: var(--primary-color);
         color: white;
-        border-color: var(--primary-blue, #2563eb);
+        border-color: var(--primary-color);
     }
 
     /* Orders list */
@@ -105,10 +105,11 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
     /* Order card */
     .os-order-card {
         background: var(--card-bg, #1e293b);
-        border: 1px solid rgba(255,255,255,0.06);
+        border: 1px solid var(--table-border);
         border-radius: 14px;
         padding: 1.2rem;
         transition: transform 0.15s, box-shadow 0.15s;
+        box-shadow: var(--shadow-sm);
     }
     .os-order-card:hover {
         transform: translateY(-1px);
@@ -123,7 +124,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
     .os-order-ref {
         font-weight: 700;
         font-size: 0.95rem;
-        color: var(--primary-blue, #2563eb);
+        color: var(--primary-color);
         font-family: 'Courier New', monospace;
     }
 
@@ -158,7 +159,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         left: 28px;
         right: 28px;
         height: 3px;
-        background: rgba(255,255,255,0.06);
+        background: var(--table-border);
         z-index: 0;
     }
     .os-tracker-step {
@@ -172,7 +173,8 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.08);
+        background: var(--hover-bg);
+        box-shadow: inset 0 0 0 1px var(--table-border);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -181,9 +183,9 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         transition: all 0.3s;
     }
     .os-tracker-dot.active {
-        background: var(--primary-blue, #2563eb);
+        background: var(--primary-color);
         color: white;
-        box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+        box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
     }
     .os-tracker-dot.done {
         background: #22c55e;
@@ -200,7 +202,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         text-align: center;
         max-width: 55px;
     }
-    .os-tracker-label.active { color: var(--primary-blue, #2563eb); }
+    .os-tracker-label.active { color: var(--primary-color); }
     .os-tracker-label.done { color: #22c55e; }
 
     /* Items */
@@ -222,7 +224,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         justify-content: space-between;
         align-items: center;
         padding-top: 0.6rem;
-        border-top: 1px solid rgba(255,255,255,0.06);
+        border-top: 1px solid var(--table-border);
         margin-top: 0.4rem;
     }
     .os-order-total {
@@ -290,8 +292,8 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         border-radius: 10px;
         font-size: 0.78rem;
         font-weight: 700;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.06);
+        background: var(--card-bg);
+        border: 1px solid var(--table-border);
         color: var(--text-light, #94a3b8);
     }
     .os-summary-chip strong {

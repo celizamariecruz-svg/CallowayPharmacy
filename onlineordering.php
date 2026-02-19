@@ -3911,6 +3911,28 @@ if ($prodResult) {
     </div>
 
     <script>
+        // ─── Storage Helpers (Tracking Prevention safe) ───
+        const __storageOk = (() => {
+            try {
+                const k = '__calloway_storage_test__';
+                localStorage.setItem(k, '1');
+                localStorage.removeItem(k);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        })();
+
+        function storageGet(key) {
+            if (!__storageOk) return null;
+            try { return localStorage.getItem(key); } catch (_) { return null; }
+        }
+
+        function storageSet(key, value) {
+            if (!__storageOk) return false;
+            try { localStorage.setItem(key, value); return true; } catch (_) { return false; }
+        }
+
         // ─── Cart State (localStorage, scoped per session owner) ───
         const cartOwnerKey = <?php echo $isLoggedIn ? ('"user_' . intval($_SESSION['user_id']) . '"') : '"guest"'; ?>;
         const cartStorageKey = 'calloway_cart_' + cartOwnerKey;
@@ -3927,18 +3949,21 @@ if ($prodResult) {
 
         // One-time migration: preserve old shared cart only for guest context.
         // Logged-in users should never inherit guest cart data.
-        if (!localStorage.getItem(cartStorageKey)) {
-            if (cartOwnerKey === 'guest' && localStorage.getItem(legacyCartKey)) {
-                localStorage.setItem(cartStorageKey, localStorage.getItem(legacyCartKey) || '[]');
+        if (!storageGet(cartStorageKey)) {
+            if (cartOwnerKey === 'guest' && storageGet(legacyCartKey)) {
+                storageSet(cartStorageKey, storageGet(legacyCartKey) || '[]');
             } else {
-                localStorage.setItem(cartStorageKey, '[]');
+                storageSet(cartStorageKey, '[]');
             }
         }
 
-        let cart = safeParseCart(localStorage.getItem(cartStorageKey));
+        let cart = safeParseCart(storageGet(cartStorageKey));
         let currentCategory = null;
 
         document.addEventListener('DOMContentLoaded', () => {
+            if (!__storageOk) {
+                console.warn('Storage is blocked by the browser. Cart/wishlist will not persist after refresh.');
+            }
             updateCartUI();
             renderCartPanel();
         });
@@ -4035,18 +4060,18 @@ if ($prodResult) {
 
         // One-time migration: preserve old shared wishlist only for guest context.
         // Logged-in users should never inherit guest wishlist data.
-        if (!localStorage.getItem(wishlistStorageKey)) {
-            if (wishlistOwnerKey === 'guest' && localStorage.getItem(legacyWishlistKey)) {
-                localStorage.setItem(wishlistStorageKey, localStorage.getItem(legacyWishlistKey) || '[]');
+        if (!storageGet(wishlistStorageKey)) {
+            if (wishlistOwnerKey === 'guest' && storageGet(legacyWishlistKey)) {
+                storageSet(wishlistStorageKey, storageGet(legacyWishlistKey) || '[]');
             } else {
-                localStorage.setItem(wishlistStorageKey, '[]');
+                storageSet(wishlistStorageKey, '[]');
             }
         }
 
-        let wishlist = safeParseWishlist(localStorage.getItem(wishlistStorageKey));
+        let wishlist = safeParseWishlist(storageGet(wishlistStorageKey));
 
         function saveWishlist() {
-            localStorage.setItem(wishlistStorageKey, JSON.stringify(wishlist));
+            storageSet(wishlistStorageKey, JSON.stringify(wishlist));
             updateWishlistUI();
         }
 
@@ -4420,7 +4445,7 @@ if ($prodResult) {
         }
 
         function saveCart() {
-            localStorage.setItem(cartStorageKey, JSON.stringify(cart));
+            storageSet(cartStorageKey, JSON.stringify(cart));
             updateCartUI();
         }
 
@@ -4599,15 +4624,32 @@ if ($prodResult) {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
 
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            if (!Array.isArray(cart) || cart.length === 0) {
+                showToast('Your cart is empty!', 'info');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
+                return;
+            }
+
+            const paymentEl = document.querySelector('input[name="paymentMethod"]:checked');
+            const paymentMethod = paymentEl ? paymentEl.value : 'Cash on Pickup';
 
             // Map cart items to ensure 'qty' property exists for the backend
-            const orderItems = cart.map(item => ({
-                id: item.id,
-                name: item.name,
-                price: item.price,
-                qty: item.quantity || item.qty || 1
-            }));
+            const orderItems = cart
+                .map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    qty: item.quantity || item.qty || 1
+                }))
+                .filter(i => Number.isFinite(parseInt(i.id)) && parseInt(i.id) > 0 && Number.isFinite(parseInt(i.qty)) && parseInt(i.qty) > 0);
+
+            if (orderItems.length === 0) {
+                showToast('Your cart items are invalid. Please remove and re-add items, then try again.', 'info');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
+                return;
+            }
 
             const orderData = {
                 items: orderItems,
