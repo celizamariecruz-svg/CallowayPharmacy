@@ -75,27 +75,33 @@ $page_title = 'Point of Sale';
         .search-box {
             flex: 1;
             position: relative;
+            min-width: 0;
         }
 
         .search-box i {
             position: absolute;
-            left: 14px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-light);
             font-size: 0.9rem;
             pointer-events: none;
+            width: 1rem;
+            text-align: center;
+            line-height: 1;
+            z-index: 1;
         }
 
         .search-input {
             width: 100%;
-            padding: 0.7rem 0.7rem 0.7rem 2.4rem;
+            padding: 0.7rem 2.9rem 0.7rem 1rem;
             border: 1px solid var(--input-border);
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             background: var(--card-bg);
             color: var(--text-color);
             transition: border-color 0.15s;
+            box-sizing: border-box;
         }
 
         .search-input:focus {
@@ -106,23 +112,7 @@ $page_title = 'Point of Sale';
 
         .search-input::placeholder { color: var(--text-light); opacity: 0.7; }
 
-        .scan-btn {
-            padding: 0 1rem;
-            background: var(--card-bg);
-            color: var(--text-color);
-            border: 1px solid var(--input-border);
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
 
-        .scan-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
 
         /* -- Category tabs -- */
         .cat-tabs {
@@ -147,9 +137,19 @@ $page_title = 'Point of Sale';
             white-space: nowrap;
             transition: all 0.15s;
             letter-spacing: 0.01em;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
         }
 
-        .cat-tab:hover { color: var(--text-color); }
+        .cat-tab:hover {
+            max-width: none;
+            overflow: visible;
+            z-index: 10;
+        }
+
+        .cat-tab:hover { color: var(--text-color); background: var(--card-bg); border-radius: 6px 6px 0 0; }
 
         .cat-tab.active {
             color: var(--primary-color);
@@ -1528,18 +1528,18 @@ $page_title = 'Point of Sale';
     </div>
 
     <!-- Online Order Notification Bell -->
-    <div class="online-notif-bell" id="onlineNotifBell" onclick="toggleNotifPanel()" title="Online Orders">
+    <div class="online-notif-bell" id="onlineNotifBell" onclick="togglePosNotifPanel()" title="Online Orders">
         <i class="fas fa-bell"></i>
-        <span class="online-notif-badge hidden" id="notifBadge">0</span>
+        <span class="online-notif-badge hidden" id="posNotifBadge">0</span>
     </div>
 
     <!-- Notification Panel -->
-    <div class="online-notif-panel" id="notifPanel">
+    <div class="online-notif-panel" id="posNotifPanel">
         <div class="notif-panel-header">
             <h3><i class="fas fa-shopping-cart" style="color:var(--primary-color);"></i> Online Orders</h3>
-            <button class="notif-mark-all" onclick="markAllNotifRead()">Mark all read</button>
+            <button class="notif-mark-all" onclick="markAllPosNotifRead()">Mark all read</button>
         </div>
-        <div class="notif-panel-body" id="notifPanelBody">
+        <div class="notif-panel-body" id="posNotifPanelBody">
             <div class="notif-empty">
                 <i class="fas fa-bell-slash"></i>
                 No notifications yet
@@ -1573,9 +1573,7 @@ $page_title = 'Point of Sale';
                             <input type="text" class="search-input" id="searchInput"
                                 placeholder="Search products..." autofocus>
                         </div>
-                        <button class="scan-btn" id="scanBtn">
-                            <i class="fas fa-barcode"></i> Scan
-                        </button>
+
                     </div>
                     <div class="cat-tabs" id="categoryNav">
                         <button class="cat-tab active" data-category="all">All</button>
@@ -1641,6 +1639,10 @@ $page_title = 'Point of Sale';
                 <div class="cart-header-actions">
                     <button class="cart-action-btn" onclick="holdSale()" title="Hold sale">
                         <i class="fas fa-pause"></i>
+                    </button>
+                    <button class="cart-action-btn" onclick="showHeldSales()" title="Resume held sale" style="position:relative;">
+                        <i class="fas fa-play"></i>
+                        <span id="heldSalesBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.6rem;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;font-weight:700;">0</span>
                     </button>
                     <button class="cart-action-btn" onclick="clearCart()" title="Clear all">
                         <i class="fas fa-trash-alt"></i>
@@ -1764,6 +1766,7 @@ $page_title = 'Point of Sale';
             loadProducts();
             setupEventListeners();
             updatePrinterUI();
+            updateHeldBadge();
         });
 
         // --- Data ---
@@ -1843,7 +1846,7 @@ $page_title = 'Point of Sale';
             nav.innerHTML = cats.map(cat => {
                 const count = cat === 'all' ? products.length : products.filter(p => p.category_name === cat).length;
                 const label = cat === 'all' ? 'All' : cat;
-                return `<button class="cat-tab ${cat === 'all' ? 'active' : ''}"
+                return `<button class="cat-tab ${cat === 'all' ? 'active' : ''}" title="${label} (${count})"
                     onclick="setCategory('${cat.replace(/'/g, "\\'")}', this)">
                     ${label} <span style="opacity:0.5;font-size:0.7rem;margin-left:2px;">${count}</span>
                 </button>`;
@@ -2062,7 +2065,127 @@ $page_title = 'Point of Sale';
 
         function holdSale() {
             if (cart.length === 0) return;
-            showToast('Sale held (feature coming)', 'success');
+            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            const heldEntry = {
+                id: Date.now(),
+                cart: JSON.parse(JSON.stringify(cart)),
+                discountEnabled: discountEnabled,
+                timestamp: new Date().toLocaleString(),
+                total: getTotal()
+            };
+            heldSales.push(heldEntry);
+            localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
+            cart = [];
+            discountEnabled = false;
+            const btn = document.getElementById('discountToggle');
+            if (btn) btn.classList.remove('active');
+            updateCartUI();
+            updateHeldBadge();
+            showToast('Sale held (' + heldSales.length + ' held)', 'success');
+        }
+
+        function updateHeldBadge() {
+            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            const badge = document.getElementById('heldSalesBadge');
+            if (badge) {
+                if (heldSales.length > 0) {
+                    badge.textContent = heldSales.length;
+                    badge.style.display = 'inline-flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        function showHeldSales() {
+            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            if (heldSales.length === 0) {
+                showToast('No held sales', 'error');
+                return;
+            }
+
+            // Build modal directly in DOM so HTML renders properly
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;opacity:0;transition:opacity 0.2s;';
+
+            let itemsHtml = '';
+            heldSales.forEach((sale, i) => {
+                const itemCount = sale.cart.reduce((s, item) => s + item.qty, 0);
+                const names = sale.cart.map(item => item.name).slice(0, 3).join(', ');
+                const moreCount = sale.cart.length > 3 ? ` +${sale.cart.length - 3} more` : '';
+                itemsHtml += `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;border:1px solid var(--input-border);border-radius:10px;margin-bottom:0.5rem;background:var(--bg-color);">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;font-size:0.9rem;">${itemCount} item${itemCount !== 1 ? 's' : ''} &mdash; ₱${sale.total.toFixed(2)}</div>
+                            <div style="font-size:0.75rem;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${names}${moreCount}</div>
+                            <div style="font-size:0.7rem;color:var(--text-light);margin-top:2px;">${sale.timestamp}</div>
+                        </div>
+                        <div style="display:flex;gap:0.4rem;margin-left:0.75rem;flex-shrink:0;">
+                            <button class="held-resume-btn" data-index="${i}" style="padding:0.4rem 0.8rem;background:var(--primary-color);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;gap:4px;"><i class="fas fa-play"></i> Resume</button>
+                            <button class="held-delete-btn" data-index="${i}" style="padding:0.4rem 0.6rem;background:#ef4444;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.8rem;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+
+            overlay.innerHTML = `
+                <div data-held-modal="true" style="background:var(--card-bg);border-radius:16px;padding:1.5rem;width:90%;max-width:440px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3 style="margin:0;font-size:1.1rem;color:var(--text-color);"><i class="fas fa-pause-circle" style="color:var(--primary-color);margin-right:6px;"></i>Held Sales (${heldSales.length})</h3>
+                        <button class="held-close-btn" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-light);padding:4px 8px;">&times;</button>
+                    </div>
+                    <div style="overflow-y:auto;flex:1;">${itemsHtml}</div>
+                </div>`;
+
+            document.body.appendChild(overlay);
+            requestAnimationFrame(() => overlay.style.opacity = '1');
+
+            // Event delegation - use mousedown to avoid conflicts
+            overlay.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                const resumeBtn = e.target.closest('.held-resume-btn');
+                const deleteBtn = e.target.closest('.held-delete-btn');
+                const closeBtn = e.target.closest('.held-close-btn');
+                const modalBox = e.target.closest('[data-held-modal]');
+
+                if (resumeBtn) {
+                    e.preventDefault();
+                    const idx = parseInt(resumeBtn.dataset.index);
+                    overlay.remove();
+                    setTimeout(() => resumeHeldSale(idx), 50);
+                } else if (deleteBtn) {
+                    e.preventDefault();
+                    const idx = parseInt(deleteBtn.dataset.index);
+                    const sales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+                    sales.splice(idx, 1);
+                    localStorage.setItem('pos_held_sales', JSON.stringify(sales));
+                    updateHeldBadge();
+                    overlay.remove();
+                    if (sales.length > 0) setTimeout(() => showHeldSales(), 50);
+                    showToast('Held sale deleted', 'success');
+                } else if (closeBtn) {
+                    overlay.remove();
+                } else if (!modalBox) {
+                    overlay.remove();
+                }
+            });
+        }
+
+        function resumeHeldSale(index) {
+            const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+            if (index < 0 || index >= heldSales.length) return;
+            const sale = heldSales[index];
+            if (cart.length > 0) {
+                holdSale();
+            }
+            cart = sale.cart;
+            discountEnabled = sale.discountEnabled || false;
+            const btn = document.getElementById('discountToggle');
+            if (btn) btn.classList.toggle('active', discountEnabled);
+            heldSales.splice(index, 1);
+            localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
+            updateCartUI();
+            updateHeldBadge();
+            showToast('Sale resumed', 'success');
         }
 
         let discountEnabled = false;
@@ -2948,14 +3071,14 @@ $page_title = 'Point of Sale';
 
         // ─── Online Order Notification System ───
         let lastNotifCount = 0;
-        let notifPanelOpen = false;
+        let posNotifPanelOpen = false;
 
-        function toggleNotifPanel() {
-            const panel = document.getElementById('notifPanel');
-            notifPanelOpen = !notifPanelOpen;
-            if (notifPanelOpen) {
+        function togglePosNotifPanel() {
+            const panel = document.getElementById('posNotifPanel');
+            posNotifPanelOpen = !posNotifPanelOpen;
+            if (posNotifPanelOpen) {
                 panel.classList.add('active');
-                loadNotifications();
+                loadPosNotifications();
             } else {
                 panel.classList.remove('active');
             }
@@ -2963,28 +3086,28 @@ $page_title = 'Point of Sale';
 
         // Close panel on outside click
         document.addEventListener('click', (e) => {
-            const panel = document.getElementById('notifPanel');
+            const panel = document.getElementById('posNotifPanel');
             const bell = document.getElementById('onlineNotifBell');
-            if (notifPanelOpen && !panel.contains(e.target) && !bell.contains(e.target)) {
-                notifPanelOpen = false;
+            if (posNotifPanelOpen && !panel.contains(e.target) && !bell.contains(e.target)) {
+                posNotifPanelOpen = false;
                 panel.classList.remove('active');
             }
         });
 
-        async function loadNotifications() {
+        async function loadPosNotifications() {
             try {
                 const res = await fetch('online_order_api.php?action=get_notifications&limit=20');
                 const data = await res.json();
                 if (data.success) {
-                    renderNotifications(data.notifications);
+                    renderPosNotifications(data.notifications);
                 }
             } catch (err) {
                 console.error('Failed to load notifications:', err);
             }
         }
 
-        function renderNotifications(notifications) {
-            const body = document.getElementById('notifPanelBody');
+        function renderPosNotifications(notifications) {
+            const body = document.getElementById('posNotifPanelBody');
             if (!notifications || notifications.length === 0) {
                 body.innerHTML = '<div class="notif-empty"><i class="fas fa-bell-slash"></i>No notifications yet</div>';
                 return;
@@ -3009,27 +3132,27 @@ $page_title = 'Point of Sale';
             // Mark as read
             try {
                 await fetch('online_order_api.php?action=mark_read&notification_id=' + notifId);
-                pollUnreadCount();
-                loadNotifications();
+                pollPosUnreadCount();
+                loadPosNotifications();
             } catch (err) { /* ignore */ }
         }
 
-        async function markAllNotifRead() {
+        async function markAllPosNotifRead() {
             try {
                 await fetch('online_order_api.php?action=mark_all_read');
-                pollUnreadCount();
-                loadNotifications();
+                pollPosUnreadCount();
+                loadPosNotifications();
                 showToast('All notifications marked as read', 'success');
             } catch (err) { /* ignore */ }
         }
 
-        async function pollUnreadCount() {
+        async function pollPosUnreadCount() {
             try {
                 const res = await fetch('online_order_api.php?action=get_unread_count');
                 const data = await res.json();
                 if (data.success) {
                     const count = data.count;
-                    const badge = document.getElementById('notifBadge');
+                    const badge = document.getElementById('posNotifBadge');
                     if (count > 0) {
                         badge.textContent = count > 99 ? '99+' : count;
                         badge.classList.remove('hidden');
@@ -3070,8 +3193,8 @@ $page_title = 'Point of Sale';
         }
 
         // Poll every 10 seconds
-        pollUnreadCount();
-        setInterval(pollUnreadCount, 10000);
+        pollPosUnreadCount();
+        setInterval(pollPosUnreadCount, 10000);
 
         // Add bell shake animation
         const shakeStyle = document.createElement('style');

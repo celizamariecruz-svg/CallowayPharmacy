@@ -104,14 +104,16 @@ $page_title = 'Inventory Management';
         .search-filter-bar {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
-            padding: 1.5rem;
+            padding: 1rem 1.25rem;
             border-radius: 16px;
             box-shadow: var(--shadow-sm);
             margin-bottom: 2rem;
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
+            align-items: center;
             border: 1px solid var(--input-border);
+            box-sizing: border-box;
         }
 
         [data-theme="dark"] .search-filter-bar {
@@ -119,20 +121,21 @@ $page_title = 'Inventory Management';
         }
 
         .search-group {
-            flex: 1;
-            min-width: 300px;
+            flex: 1 1 150px;
+            min-width: 0;
             position: relative;
         }
 
         .search-input {
             width: 100%;
-            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            padding: 0.75rem 2.9rem 0.75rem 1rem;
             border: 1px solid var(--input-border);
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 0.85rem;
             background: var(--bg-color);
             transition: all 0.3s;
             color: var(--text-color);
+            box-sizing: border-box;
         }
 
         .search-input:focus {
@@ -143,20 +146,30 @@ $page_title = 'Inventory Management';
 
         .search-icon {
             position: absolute;
-            left: 1rem;
+            right: 0.95rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-light);
+            width: 1rem;
+            text-align: center;
+            line-height: 1;
+            z-index: 1;
         }
 
         .filter-group select {
-            padding: 0.8rem 1.5rem;
+            padding: 0.75rem 1rem;
             border: 1px solid var(--input-border);
             border-radius: 12px;
             background: var(--bg-color);
-            font-size: 1rem;
+            font-size: 0.85rem;
             cursor: pointer;
             color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        .filter-group {
+            flex: 0 1 auto;
+            min-width: 0;
         }
 
         .products-grid {

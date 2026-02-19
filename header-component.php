@@ -89,6 +89,9 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <a href="onlineordering.php" class="sidebar-link <?php echo $current_page === 'onlineordering.php' ? 'active' : ''; ?>">
       <i class="fas fa-cart-shopping"></i><span>Online Ordering</span>
     </a>
+    <a href="order_status.php" class="sidebar-link <?php echo $current_page === 'order_status.php' ? 'active' : ''; ?>">
+      <i class="fas fa-receipt"></i><span>Order Status</span>
+    </a>
 
     <?php else: ?>
     <!-- Admin / Manager: full nav (no supplier_management) -->
@@ -112,6 +115,9 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <div class="sidebar-section-label">Customer Services</div>
     <a href="onlineordering.php" class="sidebar-link <?php echo $current_page === 'onlineordering.php' ? 'active' : ''; ?>">
       <i class="fas fa-cart-shopping"></i><span>Online Ordering</span>
+    </a>
+    <a href="order_status.php" class="sidebar-link <?php echo $current_page === 'order_status.php' ? 'active' : ''; ?>">
+      <i class="fas fa-receipt"></i><span>Order Status</span>
     </a>
     <a href="loyalty_qr.php" class="sidebar-link <?php echo $current_page === 'loyalty_qr.php' ? 'active' : ''; ?>">
       <i class="fas fa-gift"></i><span>Loyalty & QR</span>
