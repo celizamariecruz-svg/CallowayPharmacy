@@ -14,11 +14,13 @@ $auth->requireAuth('login.php');
 
 $currentUser = $auth->getCurrentUser();
 
-// Block customer role from dashboard
+// Block customer role from dashboard — cashiers can see limited view
 if (strtolower($currentUser['role_name'] ?? '') === 'customer') {
     header('Location: onlineordering.php');
     exit;
 }
+
+$isCashier = (strtolower($currentUser['role_name'] ?? '') === 'cashier');
 
 $page_title = 'Dashboard';
 
@@ -204,7 +206,7 @@ $salesTrend = getSalesTrend($conn);
             background: var(--primary-color);
             color: white;
             padding: 2.5rem 2rem;
-            margin-top: 60px;
+            margin-top: 0;
             border-radius: 0 0 30px 30px;
             margin-bottom: 2rem;
             position: relative;
@@ -458,7 +460,7 @@ $salesTrend = getSalesTrend($conn);
             </a>
 
             <!-- Expiring Soon -->
-            <a href="expiry-monitoring.php" style="text-decoration: none;">
+            <a href="medicine-locator.php" style="text-decoration: none;">
                 <div class="stat-card-premium glass-panel"
                     style="<?php echo $stats['expiring_soon'] > 0 ? 'border-left: 4px solid var(--danger-color);' : ''; ?>">
                     <div class="stat-content">
@@ -492,10 +494,14 @@ $salesTrend = getSalesTrend($conn);
         <!-- Quick Actions -->
         <div class="quick-actions-bar">
             <a href="pos.php" class="action-btn-glass"><i class="fas fa-shopping-cart"></i> New Sale (POS)</a>
+            <?php if (!$isCashier): ?>
             <a href="inventory_management.php?action=add" class="action-btn-glass"><i class="fas fa-plus"></i> Add
                 Product</a>
-            <a href="supplier_management.php" class="action-btn-glass"><i class="fas fa-truck"></i> Manage Suppliers</a>
             <a href="reports.php" class="action-btn-glass"><i class="fas fa-chart-line"></i> View Reports</a>
+            <?php else: ?>
+            <a href="medicine-locator.php" class="action-btn-glass"><i class="fas fa-search-location"></i> Medicine &amp; Expiry</a>
+            <a href="order_status.php" class="action-btn-glass"><i class="fas fa-receipt"></i> Order Status</a>
+            <?php endif; ?>
         </div>
 
         <div class="dashboard-main-grid">

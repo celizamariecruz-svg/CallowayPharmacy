@@ -1,20 +1,21 @@
 <?php
-// Staff Login Page - Separate from customer login
+// Staff Login Page - Now redirects to unified login
 require_once 'Security.php';
-require_once 'CSRF.php';
-
 Security::initSession();
 
-// Redirect if already logged in as staff
+// Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
     if (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'customer') {
-        // Customer tried to access staff login while logged in - send to customer area
         header('Location: onlineordering.php');
     } else {
         header('Location: index.php');
     }
     exit;
 }
+
+// Redirect to unified login page
+header('Location: login.php');
+exit;
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -22,7 +23,8 @@ if (isset($_SESSION['user_id'])) {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Staff Login - Calloway Pharmacy</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="logo-removebg-preview.png">
+<link rel="shortcut icon" type="image/png" href="logo-removebg-preview.png">
 <?php echo CSRF::getTokenMeta(); ?>
 <style>
   :root {

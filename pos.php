@@ -53,6 +53,8 @@ $page_title = 'Point of Sale';
             height: calc(100vh - 60px);
             margin-top: 60px;
             padding-top: 0;
+            width: 100%;
+            min-width: 0;
         }
 
         /* === LEFT: PRODUCT CATALOG === */
@@ -61,6 +63,7 @@ $page_title = 'Point of Sale';
             flex-direction: column;
             overflow: hidden;
             background: var(--bg-color);
+            min-width: 0;
         }
 
         /* -- Toolbar: search + categories pinned -- */
@@ -203,7 +206,9 @@ $page_title = 'Point of Sale';
         .products-scroll {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 0.75rem 1.25rem 1.25rem;
+            min-width: 0;
         }
 
         .products-scroll::-webkit-scrollbar { width: 4px; }
@@ -216,6 +221,15 @@ $page_title = 'Point of Sale';
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
             gap: 0.6rem;
+            min-width: 0;
+        }
+
+        /* Desktop with always-visible sidebar: keep POS fully in content column */
+        @media (min-width: 769px) {
+            .pos-wrapper {
+                margin-top: 0 !important;
+                height: calc(100vh - 60px) !important;
+            }
         }
 
         .products-grid.list-view {

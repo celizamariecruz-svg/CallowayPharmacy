@@ -1,23 +1,35 @@
 // ═══ Sidebar & Theme Toggle ═══
 
 // --- Sidebar ---
+function isMobile() {
+  return window.innerWidth < 769;
+}
+
 function toggleSidebar() {
+  if (!isMobile()) return; // Desktop: sidebar is always visible
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar && overlay) {
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('active');
+    const isOpen = sidebar.classList.contains('open');
+    if (isOpen) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+    } else {
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+    }
   }
 }
 
 function closeSidebar() {
+  if (!isMobile()) return; // Desktop: sidebar stays open
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.remove('open');
   if (overlay) overlay.classList.remove('active');
 }
 
-// Close sidebar on Escape key
+// Close sidebar on Escape key (mobile only)
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeSidebar();
 });
@@ -44,6 +56,23 @@ function updateThemeIcon(theme) {
 
 // Apply saved theme on load
 document.addEventListener('DOMContentLoaded', function() {
+  const sidebar = document.getElementById('sidebar');
+  const sidebarNav = document.querySelector('.sidebar-nav');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar) sidebar.classList.add('open');
+  if (overlay) overlay.classList.remove('active');
+  if (sidebar) sidebar.scrollTop = 0;
+  if (sidebarNav) sidebarNav.scrollTop = 0;
+
+  // Desktop: sidebar must not scroll
+  if (window.innerWidth >= 769 && sidebar) {
+    const blockScroll = function(e) {
+      e.preventDefault();
+    };
+    sidebar.addEventListener('wheel', blockScroll, { passive: false });
+    sidebar.addEventListener('touchmove', blockScroll, { passive: false });
+  }
+
   const savedTheme = localStorage.getItem('calloway_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);

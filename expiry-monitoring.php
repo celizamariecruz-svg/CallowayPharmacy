@@ -1,4 +1,11 @@
 <?php
+// Expiry Monitoring is now combined with Medicine Locator
+// Redirect to the unified page with expiry filter pre-set
+header('Location: medicine-locator.php');
+exit;
+?>
+<?php
+// ── Legacy code below kept for reference ──
 include 'db_connection.php';
 include 'Auth.php';
 
@@ -18,7 +25,7 @@ $message_type = '';
 
 // Get unique categories for filter
 $categories = [];
-$categoriesQuery = "SELECT DISTINCT category FROM products WHERE (is_active = 1 OR is_active IS NULL) ORDER BY category";
+$categoriesQuery = "SELECT DISTINCT category FROM products WHERE (is_active = 1 OR is_active IS NULL) AND category IS NOT NULL AND category != '' ORDER BY category";
 $categoriesResult = $conn->query($categoriesQuery);
 if ($categoriesResult && $categoriesResult->num_rows > 0) {
     while ($row = $categoriesResult->fetch_assoc()) {
@@ -684,28 +691,6 @@ $page_title = 'Expiry Monitoring';
             border-radius: 3px;
         }
 
-        /* Print Button Enhanced */
-        .print-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 1.5rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
-
-        .print-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-        }
-
         /* Quick action FAB */
         .quick-action-fab {
             position: fixed;
@@ -820,9 +805,6 @@ $page_title = 'Expiry Monitoring';
                 <h1 style="margin: 0; font-size: 2.2rem; color: var(--text-color); font-weight: 800;">⏰ Expiry Monitoring</h1>
                 <p style="margin: 0.5rem 0 0; color: var(--text-light); opacity: 0.8;">Track product expiry dates and status in real-time</p>
             </div>
-            <button class="print-btn" onclick="window.print()">
-                <i class="fas fa-print"></i> Print Report
-            </button>
         </div>
 
         <!-- Stats Cards -->
@@ -1217,11 +1199,6 @@ $page_title = 'Expiry Monitoring';
 
         // Keyboard Shortcuts
         document.addEventListener('keydown', function (e) {
-            // Ctrl+P - Print
-            if (e.ctrlKey && e.key === 'p') {
-                e.preventDefault();
-                window.print();
-            }
             // Ctrl+F or F3 - Focus search
             if ((e.ctrlKey && e.key === 'f') || e.key === 'F3') {
                 e.preventDefault();

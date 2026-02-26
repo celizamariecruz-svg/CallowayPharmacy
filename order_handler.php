@@ -82,7 +82,7 @@ foreach ($items as $item) {
     
     // Fetch real price from database
     // Use selling_price when available, fall back to price
-    $stmt = $conn->prepare("SELECT product_id, name, COALESCE(selling_price, price) AS unit_price, stock_quantity FROM products WHERE product_id = ? AND is_active = 1");
+    $stmt = $conn->prepare("SELECT product_id, name, COALESCE(selling_price, price) AS unit_price, stock_quantity FROM products WHERE product_id = ? AND is_active = 1 AND stock_quantity > 0 AND (expiry_date IS NULL OR DATE(expiry_date) >= CURDATE())");
     $stmt->bind_param("i", $productId);
     $stmt->execute();
     $product = $stmt->get_result()->fetch_assoc();
@@ -90,7 +90,7 @@ foreach ($items as $item) {
     
     if (!$product) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Product not found: ' . ($item['name'] ?? $productId)]);
+        echo json_encode(['success' => false, 'message' => 'Product unavailable or expired: ' . ($item['name'] ?? $productId)]);
         ob_end_flush();
         exit;
     }

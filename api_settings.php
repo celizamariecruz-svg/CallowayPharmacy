@@ -323,39 +323,94 @@ function testEmail($conn) {
 }
 
 function createDatabaseBackup($conn) {
-    $backup_dir = 'backups';
-    if (!file_exists($backup_dir)) {
-        mkdir($backup_dir, 0755, true);
+    $backup_dir = __DIR__ . '/backups';
+    if (!is_dir($backup_dir) && !mkdir($backup_dir, 0755, true)) {
+        throw new Exception('Failed to create backup directory');
     }
-    
-    $backup_file = $backup_dir . '/full_backup_' . date('Y-m-d_His') . '.sql';
-    
-    // Get database name
-    $db_name = 'calloway_pharmacy';
-    
-    // Build mysqldump command
-    // SECURITY HARDENED: Use secure backup method
-    require_once __DIR__ . '/remediation_utils.php';
-    
-    try {
-        // Validate table name first
-        RemediationUtils::validateTableName($db_name);
-        RemediationUtils::createDatabaseBackup('localhost', 'root', '', $db_name, $backup_file);
-        $return_var = 0;
-    } catch (Exception $e) {
-        $return_var = 1;
-        error_log("Backup error: " . $e->getMessage());
+
+    $filename = 'full_backup_' . date('Y-m-d_His') . '.sql';
+    $backup_file = $backup_dir . '/' . $filename;
+
+    $sql = "-- Calloway Pharmacy Database Backup\n";
+    $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+    $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
+
+    $objects_result = $conn->query("SHOW FULL TABLES");
+    if (!$objects_result) {
+        throw new Exception('Failed to enumerate database objects');
     }
-    
-    if ($return_var === 0) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Database backup created successfully',
-            'file' => $backup_file
-        ]);
-    } else {
-        throw new Exception('Failed to create database backup');
+
+    while ($object = $objects_result->fetch_array(MYSQLI_NUM)) {
+        $object_name = $object[0];
+        $object_type = strtoupper((string) ($object[1] ?? 'BASE TABLE'));
+
+        if ($object_type === 'VIEW') {
+            $create_view_result = $conn->query("SHOW CREATE VIEW `{$object_name}`");
+            if ($create_view_result) {
+                $create_view_row = $create_view_result->fetch_assoc();
+                $create_view_sql = $create_view_row['Create View'] ?? (array_values($create_view_row)[1] ?? '');
+
+                if ($create_view_sql !== '') {
+                    $sql .= "DROP VIEW IF EXISTS `{$object_name}`;\n";
+                    $sql .= $create_view_sql . ";\n\n";
+                } else {
+                    $sql .= "-- Skipped view `{$object_name}`: unable to read CREATE VIEW statement\n\n";
+                }
+            } else {
+                $sql .= "-- Skipped view `{$object_name}`: " . $conn->real_escape_string($conn->error) . "\n\n";
+            }
+            continue;
+        }
+
+        $sql .= "DROP TABLE IF EXISTS `{$object_name}`;\n";
+
+        $create_result = $conn->query("SHOW CREATE TABLE `{$object_name}`");
+        if (!$create_result) {
+            $sql .= "-- Skipped table `{$object_name}` schema: " . $conn->real_escape_string($conn->error) . "\n\n";
+            continue;
+        }
+
+        $create_row = $create_result->fetch_assoc();
+        $create_sql = $create_row['Create Table'] ?? (array_values($create_row)[1] ?? '');
+        if ($create_sql === '') {
+            $sql .= "-- Skipped table `{$object_name}` schema: empty definition\n\n";
+            continue;
+        }
+        $sql .= $create_sql . ";\n\n";
+
+        $data_result = $conn->query("SELECT * FROM `{$object_name}`");
+        if (!$data_result) {
+            $sql .= "-- Skipped table `{$object_name}` data: " . $conn->real_escape_string($conn->error) . "\n\n";
+            continue;
+        }
+
+        if ($data_result->num_rows > 0) {
+            while ($row = $data_result->fetch_assoc()) {
+                $values = [];
+                foreach ($row as $value) {
+                    if ($value === null) {
+                        $values[] = 'NULL';
+                    } else {
+                        $values[] = "'" . $conn->real_escape_string($value) . "'";
+                    }
+                }
+                $sql .= "INSERT INTO `{$object_name}` VALUES (" . implode(', ', $values) . ");\n";
+            }
+            $sql .= "\n";
+        }
     }
+
+    $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
+
+    if (file_put_contents($backup_file, $sql) === false) {
+        throw new Exception('Failed to write backup file');
+    }
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'Database backup created successfully',
+        'file' => 'backups/' . $filename
+    ]);
 }
 
 function restoreBackup($conn) {

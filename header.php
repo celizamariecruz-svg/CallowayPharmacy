@@ -22,6 +22,8 @@ if (!$dev_bypass && !isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calloway Pharmacy IMS</title>
+    <link rel="icon" type="image/png" href="logo-removebg-preview.png">
+    <link rel="shortcut icon" type="image/png" href="logo-removebg-preview.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -51,11 +53,7 @@ if (!$dev_bypass && !isset($_SESSION['user_id'])) {
             </a>
             <a href="medicine-locator.php" class="nav-item <?php echo str_contains($_SERVER['PHP_SELF'], 'medicine-locator.php') ? 'active' : ''; ?>">
                 <i class="fas fa-search-location"></i>
-                <span>Medicine Locator</span>
-            </a>
-            <a href="expiry-monitoring.php" class="nav-item <?php echo str_contains($_SERVER['PHP_SELF'], 'expiry-monitoring.php') ? 'active' : ''; ?>">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Expiry Monitoring</span>
+                <span>Medicine &amp; Expiry</span>
             </a>
             <a href="employee-management.php" class="nav-item <?php echo str_contains($_SERVER['PHP_SELF'], 'employee-management.php') ? 'active' : ''; ?>">
                 <i class="fas fa-users"></i>

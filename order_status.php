@@ -308,6 +308,8 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         .os-tracker-dot { width: 24px; height: 24px; font-size: 0.55rem; }
         .os-tracker-label { font-size: 0.55rem; max-width: 45px; }
     }
+
+
 </style>
 </head>
 <body>

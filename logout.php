@@ -17,7 +17,7 @@ $wasCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'cus
 $auth->logout();
 
 // Determine redirect target
-$loginPage = $wasCustomer ? 'login.php' : 'admin_login.php';
+$loginPage = 'login.php';
 ?>
 <!DOCTYPE html>
 <html>

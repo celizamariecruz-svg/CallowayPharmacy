@@ -383,6 +383,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     background: var(--header-bg, var(--primary-color));
     overflow-x: auto;
     border-bottom: 2px solid var(--table-border);
+    border-radius: 16px 16px 0 0;
   }
 
   .tab-btn {
@@ -399,12 +400,14 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    border-radius: 16px 16px 0 0;
   }
 
   .tab-btn:hover { color: white; background: rgba(255,255,255,0.1); }
   .tab-btn.active {
     color: white;
     background: rgba(255,255,255,0.15);
+    border-radius: 16px 16px 0 0;
   }
   .tab-btn.active::after {
     content: '';
@@ -437,6 +440,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     margin-bottom: 2rem;
     overflow: hidden;
     border: 1px solid var(--table-border);
+    padding: 0;
   }
 
   .card-header {
@@ -448,6 +452,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    border-radius: 15px 15px 0 0;
   }
 
   .card-body { padding: 1.5rem; }
@@ -465,7 +470,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
   .form-group input, .form-group select {
     width: 100%;
     padding: 0.7rem 1rem;
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid var(--input-border);
     background: var(--card-bg);
     color: var(--text-color);
@@ -509,7 +514,12 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     top: 0;
     z-index: 10;
   }
+  thead th:first-child { border-radius: 12px 0 0 0; }
+  thead th:last-child { border-radius: 0 12px 0 0; }
   tbody td { padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--table-border); transition: background-color 0.2s ease; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:last-child td:first-child { border-radius: 0 0 0 12px; }
+  tbody tr:last-child td:last-child { border-radius: 0 0 12px 0; }
   tbody tr:hover { background-color: var(--hover-bg); }
   tr.on-leave { background-color: rgba(255, 152, 0, 0.08); }
 
@@ -569,7 +579,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
   .filter-btn {
     padding: 0.5rem 1rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     background: var(--primary-color);
     color: white;
     font-weight: 600;

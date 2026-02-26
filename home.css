@@ -254,17 +254,11 @@
 
 /* ── Light-mode surface tint ───────────────────────────────── */
 html[data-theme="light"] .home-hero {
-  background:
-    linear-gradient(135deg,
-      rgba(var(--primary-rgb), 0.028),
-      rgba(var(--primary-rgb), 0.008) 70%);
+  background: rgba(var(--primary-rgb), 0.02);
 }
 
 html[data-theme="light"] .home-card {
-  background:
-    linear-gradient(180deg,
-      rgba(var(--primary-rgb), 0.018),
-      var(--card-bg) 80%);
+  background: var(--card-bg);
 }
 
 html[data-theme="light"] .home-card-icon {

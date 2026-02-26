@@ -350,8 +350,10 @@ $page_title = 'Loyalty & QR';
             color: var(--text-color);
         }
         
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
+            box-sizing: border-box;
             padding: 0.75rem;
             border: 2px solid var(--input-border);
             border-radius: 8px;
@@ -485,7 +487,10 @@ $page_title = 'Loyalty & QR';
         <?php if ($isStaff): ?>
         <!-- Customers Tab (Staff Only) -->
         <div class="tab-content" id="customersTab">
-            <div style="margin-bottom:2rem; text-align:right;">
+            <div style="margin-bottom:1.5rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                    <input type="text" id="memberSearchInput" placeholder="🔍 Search members by name, email, or phone..." oninput="filterMembersTable()" style="width:100%; box-sizing:border-box; padding:0.75rem 1rem; border:2px solid var(--input-border); border-radius:10px; font-size:0.95rem; background:var(--bg-color); color:var(--text-color); outline:none; transition:border-color 0.3s;">
+                </div>
                 <button class="btn btn-primary" onclick="openAddCustomerModal()">➕ Add Loyalty Member</button>
             </div>
             
@@ -563,7 +568,8 @@ $page_title = 'Loyalty & QR';
             </div>
             <div class="form-group">
                 <label for="staffRedeemMember">Select Customer</label>
-                <select id="staffRedeemMember" style="width:100%; padding:0.75rem; border:2px solid var(--input-border); border-radius:8px; font-size:1rem; background:var(--bg-color); color:var(--text-color);">
+                <input type="text" id="staffRedeemSearch" placeholder="🔍 Search customer by name..." oninput="filterStaffRedeemDropdown()" style="width:100%; box-sizing:border-box; padding:0.65rem 1rem; border:2px solid var(--input-border); border-radius:8px; font-size:0.9rem; background:var(--bg-color); color:var(--text-color); margin-bottom:0.5rem; outline:none;">
+                <select id="staffRedeemMember" style="width:100%; box-sizing:border-box; padding:0.75rem; border:2px solid var(--input-border); border-radius:8px; font-size:1rem; background:var(--bg-color); color:var(--text-color);">
                     <option value="">-- Select Loyalty Member --</option>
                 </select>
             </div>
@@ -847,15 +853,16 @@ $page_title = 'Loyalty & QR';
             }
         }
         
-        function renderCustomersTable() {
+        function renderCustomersTable(filteredList) {
             const tbody = document.getElementById('customersTableBody');
+            const members = filteredList || loyaltyMembers;
             
-            if (loyaltyMembers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No loyalty members yet</td></tr>';
+            if (members.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No loyalty members found</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = loyaltyMembers.map(customer => `
+            tbody.innerHTML = members.map(customer => `
                 <tr>
                     <td><strong>${escapeHtml(customer.name)}</strong></td>
                     <td>${escapeHtml(customer.email || '')}</td>
@@ -867,6 +874,20 @@ $page_title = 'Loyalty & QR';
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function filterMembersTable() {
+            const query = document.getElementById('memberSearchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderCustomersTable();
+                return;
+            }
+            const filtered = loyaltyMembers.filter(c => 
+                (c.name && c.name.toLowerCase().includes(query)) ||
+                (c.email && c.email.toLowerCase().includes(query)) ||
+                (c.phone && c.phone.toLowerCase().includes(query))
+            );
+            renderCustomersTable(filtered);
         }
         
         function openAddCustomerModal() {
@@ -976,6 +997,23 @@ $page_title = 'Loyalty & QR';
         function closeStaffRedeemModal() {
             document.getElementById('staffRedeemModal').classList.remove('active');
             staffRedeemQrCode = '';
+            document.getElementById('staffRedeemSearch').value = '';
+        }
+
+        function filterStaffRedeemDropdown() {
+            const query = document.getElementById('staffRedeemSearch').value.toLowerCase().trim();
+            const select = document.getElementById('staffRedeemMember');
+            select.innerHTML = '<option value="">-- Select Loyalty Member --</option>';
+            const members = (loyaltyMembers && loyaltyMembers.length > 0) ? loyaltyMembers : [];
+            members.forEach(m => {
+                const name = (m.name || '').toLowerCase();
+                const email = (m.email || '').toLowerCase();
+                const phone = (m.phone || '').toLowerCase();
+                if (!query || name.includes(query) || email.includes(query) || phone.includes(query)) {
+                    const id = m.member_id || m.id;
+                    select.innerHTML += `<option value="${id}">${escapeHtml(m.name)} (${m.points || 0} pts)</option>`;
+                }
+            });
         }
 
         async function staffRedeemQR() {
@@ -1486,5 +1524,6 @@ $page_title = 'Loyalty & QR';
             });
     }
     </script>
+
 </body>
 </html>

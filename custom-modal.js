@@ -107,6 +107,7 @@
             const confirmText = opts.confirmText || 'Confirm';
             const cancelText = opts.cancelText || 'Cancel';
             const btnStyle = opts.confirmStyle || iconType;
+            const messageHTML = opts.html ? message : escapeHTML(message);
 
             const overlay = document.createElement('div');
             overlay.className = 'cmodal-overlay';
@@ -117,7 +118,7 @@
                     </div>
                     <div class="cmodal-body">
                         <h3 class="cmodal-title">${escapeHTML(title)}</h3>
-                        <p class="cmodal-message">${escapeHTML(message)}</p>
+                        <div class="cmodal-message">${messageHTML}</div>
                     </div>
                     <div class="cmodal-actions">
                         <button class="cmodal-btn cmodal-btn-cancel" id="cmodalCancelBtn">${escapeHTML(cancelText)}</button>

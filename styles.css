@@ -19,18 +19,18 @@
   /* Slate 800 */
   --text-light: #64748b;
   /* Slate 500 */
-  --bg-color: #f8fafc;
-  /* Slate 50 */
-  --card-bg: #ffffff;
+  --bg-color: #f1f5f9;
+  /* Slate 100 (softer than pure white) */
+  --card-bg: #f8fafc;
 
   /* UI Elements */
-  --input-border: #e2e8f0;
-  --table-header-bg: #f1f5f9;
-  --table-border: #f1f5f9;
+  --input-border: #cbd5e1;
+  --table-header-bg: #e2e8f0;
+  --table-border: #e2e8f0;
 
   /* Effects (No Gradients) */
   --header-bg: #2563eb;
-  --hover-bg: #f1f5f9;
+  --hover-bg: #e2e8f0;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -38,11 +38,11 @@
   --primary-rgb: 37, 99, 235;
 
   /* Dropdowns */
-  --dropdown-bg: white;
+  --dropdown-bg: #f8fafc;
   --dropdown-text: #333;
-  --dropdown-hover: #f8fafc;
+  --dropdown-hover: #e2e8f0;
   --dropdown-shadow: rgba(0, 0, 0, 0.1);
-  --divider-color: #e2e8f0;
+  --divider-color: #cbd5e1;
 
   --footer-bg: #2563eb;
   --animation-duration: 0.2s;
@@ -218,6 +218,83 @@ main {
   overflow: hidden;
 }
 .sidebar.open { transform: translateX(0); }
+
+/* ═══════════════════════════════════════════
+   DESKTOP: Sidebar + Content in CSS Grid
+   Sidebar is in document flow (sticky, not fixed)
+   ═══════════════════════════════════════════ */
+@media (min-width: 769px) {
+  /* Grid container: sidebar column + content column */
+  body {
+    display: grid;
+    grid-template-columns: 290px 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  /* Sidebar: in-flow, sticky — scrolls with page but sticks to viewport */
+  .sidebar {
+    grid-column: 1;
+    grid-row: 1 / span 50;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 290px;
+    transform: none !important;
+    overflow-y: hidden;
+    align-self: start;
+    z-index: 10;
+  }
+
+  .sidebar-nav {
+    overflow-y: hidden !important;
+  }
+
+  .sidebar-overlay {
+    display: none !important;
+  }
+
+  .sidebar-close {
+    display: none !important;
+  }
+
+  /* Topbar: in-flow in content column, sticks to top on scroll */
+  .topbar {
+    grid-column: 2;
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    width: 100% !important;
+    z-index: 100;
+  }
+
+  .topbar-hamburger {
+    display: none !important;
+  }
+
+  /* All non-sidebar body children flow into content column */
+  body > *:not(.sidebar):not(.sidebar-overlay) {
+    grid-column: 2;
+  }
+
+  /* Remove fixed-topbar padding offset — topbar is now in-flow */
+  main {
+    padding-top: 1rem !important;
+    margin-top: 0 !important;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* ── Page-specific offset resets ── */
+  .dashboard-hero       { margin-top: 0 !important; }
+  .dashboard-container   { margin-top: -3rem; }
+  .pos-wrapper           { margin-top: 0 !important; height: 100vh !important; }
+  .browse-toolbar        { margin-top: 0 !important; }
+  .settings-container    { margin-top: 0 !important; }
+}
 
 .sidebar-header {
   display: flex;

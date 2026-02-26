@@ -103,7 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['token'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reset Password - Calloway Pharmacy</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" href="logo-removebg-preview.png">
+    <link rel="shortcut icon" type="image/png" href="logo-removebg-preview.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {

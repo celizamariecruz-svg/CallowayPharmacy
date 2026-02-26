@@ -22,7 +22,8 @@ if (isset($_SESSION['user_id'])) {
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Login - Calloway Pharmacy</title>
 <!-- Favicon -->
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="logo-removebg-preview.png">
+<link rel="shortcut icon" type="image/png" href="logo-removebg-preview.png">
 <!-- CSRF Token Meta Tag -->
 <?php echo CSRF::getTokenMeta(); ?>
 <style>
@@ -774,7 +775,7 @@ if (isset($_SESSION['user_id'])) {
   <div class="login-side">
     <div class="container" role="form" aria-labelledby="login-title">
       <h2 id="login-title" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 1rem;">
-        <img src="logo.png" alt="Calloway Pharmacy Logo" style="height: 200px;">
+        <img src="logo-removebg-preview.png" alt="Calloway Pharmacy Logo" style="height: 200px; filter: drop-shadow(0 0 6px rgba(255,255,255,0.8));">
       </h2>
 
       <!-- Tab Switcher -->
@@ -805,7 +806,6 @@ if (isset($_SESSION['user_id'])) {
                 Browse Online Shop as Guest
             </button>
         </div>
-        <p class="register-note" style="margin-top: 0.8rem;">Staff member? <a href="admin_login.php">Log in here &rarr;</a></p>
       </div>
 
       <!-- REGISTER TAB -->
@@ -1001,7 +1001,7 @@ if (isset($_SESSION['user_id'])) {
     })();
 
     // ─── Modal functionality ───
-    let loginRedirectUrl = 'index.php'; // default; overridden by role
+    let loginRedirectUrl = 'dashboard.php'; // default; overridden by role
 
     function redirectToIndex() {
       document.getElementById('login-success-modal').style.display = 'none';
@@ -1046,7 +1046,7 @@ if (isset($_SESSION['user_id'])) {
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken
           },
-          body: JSON.stringify({ username, password, login_type: 'customer' })
+          body: JSON.stringify({ username, password })
         });
 
         const data = await response.json();
@@ -1055,7 +1055,7 @@ if (isset($_SESSION['user_id'])) {
           // Check for pending reward QR from POS receipt
           const pendingReward = localStorage.getItem('calloway_pending_reward');
           
-          // Redirect based on role
+          // Redirect based on role — unified login for staff & customers
           if (data.role_name === 'customer') {
             if (pendingReward) {
               localStorage.removeItem('calloway_pending_reward');
@@ -1064,7 +1064,8 @@ if (isset($_SESSION['user_id'])) {
               loginRedirectUrl = 'onlineordering.php';
             }
           } else {
-            loginRedirectUrl = 'index.php';
+            // Staff / admin / cashier → dashboard
+            loginRedirectUrl = 'dashboard.php';
           }
           document.getElementById('login-success-modal').style.display = 'block';
         } else if (data.needs_verification) {
@@ -1073,12 +1074,6 @@ if (isset($_SESSION['user_id'])) {
           document.getElementById('verify-code-hint').style.display = 'none';
           document.getElementById('verify-email-modal').style.display = 'flex';
         } else {
-          // If staff account, suggest admin login
-          if (data.redirect) {
-            showErrorModal(data.message + ' Redirecting...');
-            setTimeout(() => { window.location.href = data.redirect; }, 1500);
-            return;
-          }
           showErrorModal(data.message || 'Invalid username or password');
         }
       } catch (error) {

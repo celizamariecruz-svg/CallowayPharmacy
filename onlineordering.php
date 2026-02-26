@@ -131,7 +131,11 @@ $catImageMap = [];
 $imgQuery = "SELECT c.category_name, p.image_url, p.name
              FROM products p
              JOIN categories c ON p.category_id = c.category_id
-             WHERE p.is_active = 1 AND p.image_url IS NOT NULL AND p.image_url != ''
+                         WHERE p.is_active = 1
+                             AND p.stock_quantity > 0
+                             AND (p.expiry_date IS NULL OR DATE(p.expiry_date) >= CURDATE())
+                             AND p.image_url IS NOT NULL
+                             AND p.image_url != ''
              ORDER BY p.name ASC";
 $imgResult = $conn->query($imgQuery);
 if ($imgResult) {
@@ -142,7 +146,7 @@ if ($imgResult) {
     }
 }
 
-// Fetch products that are active and in stock
+// Fetch products that are active, in stock, and not expired
 $prodQuery = "
     SELECT 
         p.product_id,
@@ -155,7 +159,9 @@ $prodQuery = "
         c.category_name
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.is_active = 1
+        WHERE p.is_active = 1
+            AND p.stock_quantity > 0
+            AND (p.expiry_date IS NULL OR DATE(p.expiry_date) >= CURDATE())
     ORDER BY p.name ASC
 ";
 $prodResult = $conn->query($prodQuery);
@@ -2891,6 +2897,8 @@ if ($prodResult) {
             .mega-footer-grid { grid-template-columns: 1fr; }
             .category-title-banner h1 { font-size: 1.4rem; }
         }
+
+
     </style>
 </head>
 <body>
@@ -3963,10 +3971,48 @@ if ($prodResult) {
         let cart = safeParseCart(storageGet(cartStorageKey));
         let currentCategory = null;
 
+        function sanitizeCartAgainstCatalog() {
+            const previousLength = cart.length;
+            let quantityAdjusted = false;
+
+            cart = cart.filter(item => {
+                const product = productDataMap[item.id];
+                if (!product || product.stock <= 0) {
+                    return false;
+                }
+
+                const currentQty = parseInt(item.quantity || item.qty || 1, 10);
+                const normalizedQty = Math.max(1, Math.min(currentQty, product.stock));
+                if (normalizedQty !== currentQty) {
+                    quantityAdjusted = true;
+                }
+                item.quantity = normalizedQty;
+                item.qty = normalizedQty;
+                return true;
+            });
+
+            if (cart.length !== previousLength || quantityAdjusted) {
+                saveCart();
+            }
+
+            return {
+                removed: previousLength - cart.length,
+                quantityAdjusted
+            };
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             if (!__storageOk) {
                 console.warn('Storage is blocked by the browser. Cart/wishlist will not persist after refresh.');
             }
+
+            const cartFixes = sanitizeCartAgainstCatalog();
+            if (cartFixes.removed > 0) {
+                showToast('Some unavailable or expired items were removed from your cart.', 'info');
+            } else if (cartFixes.quantityAdjusted) {
+                showToast('Cart quantities were adjusted to available stock.', 'info');
+            }
+
             updateCartUI();
             renderCartPanel();
         });
@@ -4627,6 +4673,11 @@ if ($prodResult) {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
 
+            const cartFixes = sanitizeCartAgainstCatalog();
+            if (cartFixes.removed > 0 || cartFixes.quantityAdjusted) {
+                renderCartPanel();
+            }
+
             if (!Array.isArray(cart) || cart.length === 0) {
                 showToast('Your cart is empty!', 'info');
                 btn.disabled = false;
@@ -4698,7 +4749,10 @@ if ($prodResult) {
 
                 if (!res.ok) {
                     const statusMsg = `Server error (${res.status})`;
-                    showToast(data?.message || statusMsg, 'info');
+                    const detailedMessage = (Array.isArray(data?.errors) && data.errors.length)
+                        ? `${data.message || statusMsg}: ${data.errors[0]}`
+                        : (data?.message || statusMsg);
+                    showToast(detailedMessage, 'info');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
                     return;

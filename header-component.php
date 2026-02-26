@@ -9,11 +9,34 @@ $_headerIsAdmin = (isset($_SESSION['role_name']) && in_array($_SESSION['role_nam
 $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
 ?>
 
+<script>
+(function () {
+  const faviconPath = 'logo-removebg-preview.png';
+  let icon = document.querySelector("link[rel='icon']");
+  if (!icon) {
+    icon = document.createElement('link');
+    icon.rel = 'icon';
+    document.head.appendChild(icon);
+  }
+  icon.type = 'image/png';
+  icon.href = faviconPath;
+
+  let shortcutIcon = document.querySelector("link[rel='shortcut icon']");
+  if (!shortcutIcon) {
+    shortcutIcon = document.createElement('link');
+    shortcutIcon.rel = 'shortcut icon';
+    document.head.appendChild(shortcutIcon);
+  }
+  shortcutIcon.type = 'image/png';
+  shortcutIcon.href = faviconPath;
+})();
+</script>
+
 <!-- Sidebar Overlay -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Sidebar -->
-<nav class="sidebar" id="sidebar">
+<nav class="sidebar open" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-brand">
       <i class="fas fa-prescription-bottle-medical"></i>
@@ -49,8 +72,8 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <a href="onlineordering.php" class="sidebar-link <?php echo $current_page === 'onlineordering.php' ? 'active' : ''; ?>">
       <i class="fas fa-cart-shopping"></i><span>Online Ordering</span>
     </a>
-    <a href="medicine-locator.php" class="sidebar-link <?php echo $current_page === 'medicine-locator.php' ? 'active' : ''; ?>">
-      <i class="fas fa-search-location"></i><span>Medicine Locator</span>
+    <a href="medicine-locator.php" class="sidebar-link <?php echo ($current_page === 'medicine-locator.php' || $current_page === 'expiry-monitoring.php') ? 'active' : ''; ?>">
+      <i class="fas fa-search-location"></i><span>Medicine Locator &amp; Expiry Monitoring</span>
     </a>
     <div class="sidebar-section-label">Account</div>
     <a href="login.php" class="sidebar-link">
@@ -60,9 +83,6 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <?php elseif ($_headerIsCustomer): ?>
     <!-- Customer nav -->
     <div class="sidebar-section-label">Your Services</div>
-    <a href="index.php" class="sidebar-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>">
-      <i class="fas fa-home"></i><span>Home</span>
-    </a>
     <a href="onlineordering.php" class="sidebar-link <?php echo $current_page === 'onlineordering.php' ? 'active' : ''; ?>">
       <i class="fas fa-cart-shopping"></i><span>Online Ordering</span>
     </a>
@@ -76,14 +96,14 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <?php elseif ($_headerIsCashier): ?>
     <!-- Cashier: limited operations -->
     <div class="sidebar-section-label">Operations</div>
-    <a href="index.php" class="sidebar-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>">
-      <i class="fas fa-home"></i><span>Home</span>
+    <a href="dashboard.php" class="sidebar-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
+      <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
     </a>
     <a href="pos.php" class="sidebar-link <?php echo $current_page === 'pos.php' ? 'active' : ''; ?>">
       <i class="fas fa-cash-register"></i><span>Point of Sale</span>
     </a>
-    <a href="medicine-locator.php" class="sidebar-link <?php echo $current_page === 'medicine-locator.php' ? 'active' : ''; ?>">
-      <i class="fas fa-search-location"></i><span>Medicine Locator</span>
+    <a href="medicine-locator.php" class="sidebar-link <?php echo ($current_page === 'medicine-locator.php' || $current_page === 'expiry-monitoring.php') ? 'active' : ''; ?>">
+      <i class="fas fa-search-location"></i><span>Medicine Locator &amp; Expiry Monitoring</span>
     </a>
     <div class="sidebar-section-label">Customer Services</div>
     <a href="onlineordering.php" class="sidebar-link <?php echo $current_page === 'onlineordering.php' ? 'active' : ''; ?>">
@@ -96,8 +116,8 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <?php else: ?>
     <!-- Admin / Manager: full nav (no supplier_management) -->
     <div class="sidebar-section-label">Operations</div>
-    <a href="index.php" class="sidebar-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>">
-      <i class="fas fa-home"></i><span>Home</span>
+    <a href="dashboard.php" class="sidebar-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
+      <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
     </a>
     <a href="pos.php" class="sidebar-link <?php echo $current_page === 'pos.php' ? 'active' : ''; ?>">
       <i class="fas fa-cash-register"></i><span>Point of Sale</span>
@@ -105,11 +125,8 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <a href="inventory_management.php" class="sidebar-link <?php echo $current_page === 'inventory_management.php' ? 'active' : ''; ?>">
       <i class="fas fa-boxes-stacked"></i><span>Inventory</span>
     </a>
-    <a href="medicine-locator.php" class="sidebar-link <?php echo $current_page === 'medicine-locator.php' ? 'active' : ''; ?>">
-      <i class="fas fa-search-location"></i><span>Medicine Locator</span>
-    </a>
-    <a href="expiry-monitoring.php" class="sidebar-link <?php echo $current_page === 'expiry-monitoring.php' ? 'active' : ''; ?>">
-      <i class="fas fa-calendar-xmark"></i><span>Expiry Monitoring</span>
+    <a href="medicine-locator.php" class="sidebar-link <?php echo ($current_page === 'medicine-locator.php' || $current_page === 'expiry-monitoring.php') ? 'active' : ''; ?>">
+      <i class="fas fa-search-location"></i><span>Medicine Locator &amp; Expiry Monitoring</span>
     </a>
 
     <div class="sidebar-section-label">Customer Services</div>
@@ -136,9 +153,6 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <a href="settings_enhanced.php" class="sidebar-link <?php echo ($current_page === 'settings.php' || $current_page === 'settings_enhanced.php') ? 'active' : ''; ?>">
       <i class="fas fa-gear"></i><span>System Settings</span>
     </a>
-    <a href="dashboard.php" class="sidebar-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>">
-      <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
-    </a>
     <?php endif; ?>
   </div>
 
@@ -161,7 +175,6 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <button class="topbar-hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open menu">
       <i class="fas fa-bars"></i>
     </button>
-    <a href="index.php" class="topbar-brand">Calloway Pharmacy</a>
   </div>
 
   <div class="topbar-center" id="topbarCenter">
@@ -196,11 +209,7 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     background: var(--header-bg, #1a3c34);
     color: white;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-    z-index: 1001;
+    /* Position handled by styles.css: fixed on mobile, sticky on desktop */
 }
 .topbar-left, .topbar-right {
     display: flex;
@@ -261,6 +270,74 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     .topbar-brand { display: none; }
   .topbar-right { gap: 0.4rem; }
   #topbarRightExtras { gap: 0.35rem; }
+}
+
+/* Universal desktop shell: sidebar + content side-by-side in-flow */
+@media (min-width: 769px) {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body {
+    display: grid !important;
+    grid-template-columns: 290px minmax(0, 1fr) !important;
+    grid-auto-rows: auto !important;
+    min-height: 100vh !important;
+  }
+
+  #sidebar,
+  .sidebar {
+    grid-column: 1 !important;
+    grid-row: 1 / span 100 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 290px !important;
+    height: 100vh !important;
+    transform: none !important;
+    margin: 0 !important;
+    overflow-y: hidden !important;
+    z-index: 20 !important;
+  }
+
+  .sidebar-nav {
+    overflow-y: hidden !important;
+    max-height: none !important;
+  }
+
+  #sidebarOverlay,
+  .sidebar-overlay,
+  .sidebar-close,
+  .topbar-hamburger {
+    display: none !important;
+  }
+
+  #topbar,
+  .topbar {
+    grid-column: 2 !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    z-index: 100 !important;
+  }
+
+  body > *:not(#sidebar):not(.sidebar):not(#sidebarOverlay):not(.sidebar-overlay) {
+    grid-column: 2 !important;
+    min-width: 0 !important;
+  }
+
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-top: 1rem !important;
+  }
 }
 </style>
 
