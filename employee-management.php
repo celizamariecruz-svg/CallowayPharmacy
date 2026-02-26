@@ -327,8 +327,8 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
   main {
     width: 100%;
     max-width: 1400px;
-    margin: 100px auto 50px;
-    padding: 0 2rem;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 2rem;
     animation: fadeIn 0.8s ease-out;
   }
 
@@ -374,7 +374,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     border-radius: 16px;
     box-shadow: 0 4px 15px var(--shadow-color);
     border: 1px solid var(--table-border);
-    overflow: hidden;
+    overflow: visible;
     margin-bottom: 2rem;
   }
 
@@ -428,7 +428,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     font-weight: 700;
   }
 
-  .tab-content { display: none; padding: 1.5rem; }
+  .tab-content { display: none; padding: 1.5rem; overflow-x: auto; }
   .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
 
   /* Card styles */

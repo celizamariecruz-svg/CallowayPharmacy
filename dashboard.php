@@ -252,7 +252,7 @@ $salesTrend = getSalesTrend($conn);
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -305,6 +305,11 @@ $salesTrend = getSalesTrend($conn);
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 2rem;
+            min-width: 0;
+        }
+
+        .dashboard-main-grid > * {
+            min-width: 0;
         }
 
         @media (max-width: 1024px) {

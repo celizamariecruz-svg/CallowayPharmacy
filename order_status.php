@@ -88,6 +88,8 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         background: var(--hover-bg);
         color: var(--primary-color);
         border-color: rgba(var(--primary-rgb), 0.28);
+        transform: none;
+        box-shadow: none;
     }
     .os-filter-btn.active {
         background: var(--primary-color);

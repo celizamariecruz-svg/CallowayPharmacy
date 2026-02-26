@@ -36,7 +36,7 @@ $page_title = 'Loyalty & QR';
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" onerror="console.warn('QRCode CDN failed to load, using fallback');"></script>
     <script src="custom-modal.js?v=2"></script>
     <style>
         .loyalty-container {
@@ -771,15 +771,26 @@ $page_title = 'Loyalty & QR';
             // Render mini QR codes
             qrCodes.forEach(qr => {
                 const container = document.getElementById('qr_' + qr.qr_id);
-                if (container && typeof QRCode !== 'undefined') {
-                    new QRCode(container, {
-                        text: qr.qr_code,
-                        width: 70,
-                        height: 70,
-                        colorDark: '#000000',
-                        colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.L
-                    });
+                if (container) {
+                    if (typeof QRCode !== 'undefined') {
+                        new QRCode(container, {
+                            text: qr.qr_code,
+                            width: 70,
+                            height: 70,
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.L
+                        });
+                    } else {
+                        // Fallback: use QR code image API
+                        const img = document.createElement('img');
+                        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=' + encodeURIComponent(qr.qr_code);
+                        img.alt = 'QR Code';
+                        img.width = 70;
+                        img.height = 70;
+                        img.style.borderRadius = '4px';
+                        container.appendChild(img);
+                    }
                 }
             });
         }

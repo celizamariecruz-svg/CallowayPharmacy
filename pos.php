@@ -37,7 +37,7 @@ $page_title = 'Point of Sale';
     <link rel="stylesheet" href="polish.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" onerror="console.warn('QRCode CDN failed to load, using fallback');"></script>
     <script src="custom-modal.js?v=2"></script>
     <style>
         body {
@@ -3131,19 +3131,30 @@ $page_title = 'Point of Sale';
             if (saleData.reward_qr_code) {
                 setTimeout(() => {
                     const qrContainer = document.getElementById('receiptQrCodeContainer');
-                    if (qrContainer && typeof QRCode !== 'undefined') {
+                    if (qrContainer) {
                         qrContainer.innerHTML = '';
                         // Build a scannable URL so phones open the landing page directly
                         const basePath = window.location.pathname.replace(/[^\/]*$/, '');
                         const qrUrl = window.location.origin + basePath + 'receipt_qr_landing.php?code=' + encodeURIComponent(saleData.reward_qr_code);
-                        new QRCode(qrContainer, {
-                            text: qrUrl,
-                            width: 150,
-                            height: 150,
-                            colorDark: '#000000',
-                            colorLight: '#ffffff',
-                            correctLevel: QRCode.CorrectLevel.M
-                        });
+                        if (typeof QRCode !== 'undefined') {
+                            new QRCode(qrContainer, {
+                                text: qrUrl,
+                                width: 150,
+                                height: 150,
+                                colorDark: '#000000',
+                                colorLight: '#ffffff',
+                                correctLevel: QRCode.CorrectLevel.M
+                            });
+                        } else {
+                            // Fallback: use QR code image API
+                            const img = document.createElement('img');
+                            img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(qrUrl);
+                            img.alt = 'Reward QR Code';
+                            img.width = 150;
+                            img.height = 150;
+                            img.style.borderRadius = '4px';
+                            qrContainer.appendChild(img);
+                        }
                     }
                 }, 100);
             }

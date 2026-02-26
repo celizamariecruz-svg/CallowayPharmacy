@@ -1,6 +1,10 @@
 /* Theme Variables & Typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 :root {
   /* Premium Color Palette */
   --primary-color: #2563eb;
@@ -755,12 +759,18 @@ select:focus {
 }
 
 /* Enhanced table styles */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   background: var(--card-bg);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 2px 8px var(--shadow-color);
   transition: box-shadow 0.3s ease;
 }

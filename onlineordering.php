@@ -182,7 +182,7 @@ if ($prodResult) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="custom-modal.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" onerror="console.warn('QRCode CDN failed to load, using fallback');"></script>
     <script src="custom-modal.js"></script>
     <script src="theme.js"></script>
     <style>
@@ -4794,7 +4794,14 @@ if ($prodResult) {
                             correctLevel: QRCode.CorrectLevel.H
                         });
                     } else {
-                        qrContainer.textContent = orderRef; 
+                        // Fallback: use QR code image API
+                        const img = document.createElement('img');
+                        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=' + encodeURIComponent(orderRef);
+                        img.alt = 'Order QR Code';
+                        img.width = 128;
+                        img.height = 128;
+                        img.style.borderRadius = '4px';
+                        qrContainer.appendChild(img);
                     }
 
                     // Clear cart
@@ -4960,7 +4967,14 @@ if ($prodResult) {
                 correctLevel: QRCode.CorrectLevel.M
             });
         } else {
-            container.innerHTML = '<div style="padding:2rem; font-size:0.9rem; color:#666;">QR: ' + qrCode + '</div>';
+            // Fallback: use QR code image API
+            const img = document.createElement('img');
+            img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrCode);
+            img.alt = 'Reward QR Code';
+            img.width = 200;
+            img.height = 200;
+            img.style.borderRadius = '4px';
+            container.appendChild(img);
         }
         
         overlay.style.display = 'flex';

@@ -279,7 +279,7 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
   }
 
   body {
@@ -293,15 +293,16 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
   .sidebar {
     grid-column: 1 !important;
     grid-row: 1 / span 100 !important;
-    position: fixed !important;
+    position: sticky !important;
     top: 0 !important;
-    left: 0 !important;
+    left: auto !important;
     width: 290px !important;
     height: 100vh !important;
     transform: none !important;
     margin: 0 !important;
     overflow-y: hidden !important;
     z-index: 20 !important;
+    align-self: start !important;
   }
 
   .sidebar-nav {

@@ -38,7 +38,7 @@ $page_title = 'Reports & Analytics';
         .reports-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 8rem 1.5rem 2rem;
+            padding: 1.5rem 1.5rem 2rem;
         }
         
         .reports-header {
@@ -153,7 +153,7 @@ $page_title = 'Reports & Analytics';
         
         .reports-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
             gap: 2rem;
             margin-bottom: 2rem;
         }

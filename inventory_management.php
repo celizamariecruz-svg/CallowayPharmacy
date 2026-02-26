@@ -34,7 +34,7 @@ $page_title = 'Inventory Management';
         .inventory-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 8rem 1.5rem 2rem;
+            padding: 1.5rem 1.5rem 2rem;
         }
 
         .inventory-header {
@@ -176,7 +176,7 @@ $page_title = 'Inventory Management';
             background: var(--card-bg);
             border-radius: 16px;
             box-shadow: var(--shadow-md);
-            overflow: hidden;
+            overflow-x: auto;
             border: 1px solid var(--input-border);
         }
 
