@@ -99,7 +99,7 @@ try {
             'name' => $row['name'],
             'email' => $row['email'],
             'phone' => $row['phone'] ?? '',
-            'points' => intval($row['points']),
+            'points' => round(floatval($row['points']), 2),
             'memberSince' => $row['memberSince']
         ];
     }

@@ -5,6 +5,7 @@
  */
 // Load config FIRST so session security settings apply before session_start()
 require_once 'db_connection.php';
+require_once 'ImageHelper.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -141,7 +142,7 @@ $imgResult = $conn->query($imgQuery);
 if ($imgResult) {
     while ($imgRow = $imgResult->fetch_assoc()) {
         if (!isset($catImageMap[$imgRow['category_name']])) {
-            $catImageMap[$imgRow['category_name']] = normalizeImageUrl($imgRow['image_url']);
+            $catImageMap[$imgRow['category_name']] = resolveProductImageUrl((string)($imgRow['image_url'] ?? ''), (string)($imgRow['name'] ?? ''));
         }
     }
 }
@@ -168,7 +169,7 @@ $prodResult = $conn->query($prodQuery);
 $products = [];
 if ($prodResult) {
     while ($row = $prodResult->fetch_assoc()) {
-        $row['image_url'] = normalizeImageUrl($row['image_url'] ?? '');
+        $row['image_url'] = resolveProductImageUrl((string)($row['image_url'] ?? ''), (string)($row['name'] ?? ''));
         $products[] = $row;
     }
 }
@@ -3273,6 +3274,16 @@ if ($prodResult) {
                             <span class="payment-desc">Pay when you pick up</span>
                         </div>
                     </label>
+                    <?php if ($isLoggedIn): ?>
+                    <label class="payment-option">
+                        <input type="radio" name="paymentMethod" value="Loyalty Points">
+                        <div class="payment-card">
+                            <i class="fas fa-gift" style="color:#7c3aed; font-size:1.5rem;"></i>
+                            <span class="payment-label">Loyalty Points</span>
+                            <span class="payment-desc">Use points for full payment</span>
+                        </div>
+                    </label>
+                    <?php endif; ?>
                     <label class="payment-option" style="opacity:0.4; pointer-events:none; position:relative;">
                         <input type="radio" name="paymentMethod" value="GCash" disabled>
                         <div class="payment-card">
@@ -3304,6 +3315,7 @@ if ($prodResult) {
                     <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.75rem;">1 point = ₱1 discount</div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <input type="number" id="pointsToRedeem" placeholder="Points to use" min="0" max="0" value="0" 
+                            step="0.01"
                             style="flex: 1; padding: 0.6rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; background: rgba(255,255,255,0.15); color: white; font-size: 0.9rem;"
                             oninput="updatePointsDiscount()">
                         <button onclick="useMaxPoints()" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: white; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">
@@ -4612,6 +4624,8 @@ if ($prodResult) {
             document.getElementById('pointsError').style.display = 'none';
             pointsToRedeem = 0;
             fetchLoyaltyPoints(); // Load available points
+            const cashRadio = document.querySelector('input[name="paymentMethod"][value="Cash on Pickup"]');
+            if (cashRadio) cashRadio.checked = true;
             <?php endif; ?>
 
             // Reset to step 1
@@ -4687,6 +4701,17 @@ if ($prodResult) {
 
             const paymentEl = document.querySelector('input[name="paymentMethod"]:checked');
             const paymentMethod = paymentEl ? paymentEl.value : 'Cash on Pickup';
+
+            if (paymentMethod === 'Loyalty Points') {
+                const requiredPoints = roundMoney(orderSubtotal);
+                const usablePoints = roundMoney(Math.min(pointsToRedeem, userLoyaltyPoints));
+                if (usablePoints + 0.0001 < requiredPoints) {
+                    showToast(`Insufficient points for full payment. Need ${formatPoints(requiredPoints)} points.`, 'info');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
+                    return;
+                }
+            }
 
             // Map cart items to ensure 'qty' property exists for the backend
             const orderItems = cart
@@ -4868,21 +4893,51 @@ if ($prodResult) {
         let pointsToRedeem = 0;
         let orderSubtotal = 0;
 
+        function roundMoney(value) {
+            return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+        }
+
+        function formatPoints(value) {
+            const n = roundMoney(value);
+            return n.toFixed(2).replace(/\.00$/, '');
+        }
+
+        function getSelectedPaymentMethod() {
+            const paymentEl = document.querySelector('input[name="paymentMethod"]:checked');
+            return paymentEl ? paymentEl.value : 'Cash on Pickup';
+        }
+
+        function syncPointsWithPaymentMethod() {
+            const selected = getSelectedPaymentMethod();
+            const input = document.getElementById('pointsToRedeem');
+            if (!input) return;
+
+            if (selected === 'Loyalty Points') {
+                const needed = roundMoney(orderSubtotal);
+                const maxUsable = roundMoney(Math.min(userLoyaltyPoints, needed));
+                input.value = maxUsable.toFixed(2);
+            }
+
+            updatePointsDiscount();
+        }
+
         async function fetchLoyaltyPoints() {
             <?php if ($isLoggedIn): ?>
             try {
                 const res = await fetch('get_loyalty_points.php');
                 const data = await res.json();
-                if (data.success && data.points) {
-                    userLoyaltyPoints = data.points;
-                    document.getElementById('availablePoints').textContent = `${data.points} points`;
-                    document.getElementById('pointsToRedeem').max = data.points;
+                if (data.success && typeof data.points !== 'undefined') {
+                    userLoyaltyPoints = roundMoney(parseFloat(data.points) || 0);
+                    document.getElementById('availablePoints').textContent = `${formatPoints(userLoyaltyPoints)} points`;
+                    document.getElementById('pointsToRedeem').max = userLoyaltyPoints.toFixed(2);
                 } else {
                     userLoyaltyPoints = 0;
                     document.getElementById('availablePoints').textContent = '0 points';
                 }
+                syncPointsWithPaymentMethod();
             } catch (err) {
                 console.error('Failed to fetch loyalty points:', err);
+                userLoyaltyPoints = 0;
                 document.getElementById('availablePoints').textContent = '0 points';
             }
             <?php endif; ?>
@@ -4891,28 +4946,42 @@ if ($prodResult) {
         function updatePointsDiscount() {
             const input = document.getElementById('pointsToRedeem');
             const pointsError = document.getElementById('pointsError');
-            let points = parseInt(input.value) || 0;
+            const selectedMethod = getSelectedPaymentMethod();
+            let points = roundMoney(parseFloat(input.value) || 0);
+            const maxOrderPoints = roundMoney(orderSubtotal);
 
             // Validate
             if (points < 0) {
                 points = 0;
-                input.value = 0;
+                input.value = '0.00';
             }
             if (points > userLoyaltyPoints) {
-                pointsError.textContent = `You only have ${userLoyaltyPoints} points available`;
+                pointsError.textContent = `You only have ${formatPoints(userLoyaltyPoints)} points available`;
                 pointsError.style.display = 'block';
                 points = userLoyaltyPoints;
-                input.value = userLoyaltyPoints;
+                input.value = userLoyaltyPoints.toFixed(2);
             } else if (points > orderSubtotal) {
                 pointsError.textContent = `Cannot exceed order total (₱${orderSubtotal.toFixed(2)})`;
                 pointsError.style.display = 'block';
-                points = Math.floor(orderSubtotal);
-                input.value = points;
+                points = maxOrderPoints;
+                input.value = maxOrderPoints.toFixed(2);
             } else {
                 pointsError.style.display = 'none';
             }
 
+            if (selectedMethod === 'Loyalty Points') {
+                const required = maxOrderPoints;
+                if (points < required) {
+                    const lacking = roundMoney(required - points);
+                    pointsError.textContent = `Insufficient points for full loyalty payment. Need ${formatPoints(lacking)} more points.`;
+                    pointsError.style.display = 'block';
+                }
+            }
+
             pointsToRedeem = points;
+            input.value = points.toFixed(2);
+
+            const discount = roundMoney(pointsToRedeem);
 
             // Update totals using shared recalculation
             if (discount > 0) {
@@ -4926,10 +4995,18 @@ if ($prodResult) {
         }
 
         function useMaxPoints() {
-            const maxUsable = Math.min(userLoyaltyPoints, Math.floor(orderSubtotal));
-            document.getElementById('pointsToRedeem').value = maxUsable;
+            const maxUsable = roundMoney(Math.min(userLoyaltyPoints, roundMoney(orderSubtotal)));
+            document.getElementById('pointsToRedeem').value = maxUsable.toFixed(2);
             updatePointsDiscount();
         }
+
+        <?php if ($isLoggedIn): ?>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('input[name="paymentMethod"]').forEach((radio) => {
+                radio.addEventListener('change', syncPointsWithPaymentMethod);
+            });
+        });
+        <?php endif; ?>
     </script>
 
     <!-- Reward QR Code Popup Modal -->

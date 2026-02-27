@@ -57,6 +57,11 @@ switch ($action) {
         // Cashier always comes from session — prevent impersonation
         $cashier         = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'POS';
 
+        // Loyalty points data
+        $loyaltyMemberId   = !empty($input['loyalty_member_id']) ? intval($input['loyalty_member_id']) : null;
+        $loyaltyMemberName = $input['loyalty_member_name'] ?? null;
+        $pointsToRedeem    = floatval($input['points_to_redeem'] ?? 0);
+
         if (empty($items)) {
             echo json_encode(['success' => false, 'message' => 'Cart is empty']);
             exit;
@@ -70,9 +75,61 @@ switch ($action) {
             if (!posColumnExists($conn, 'sales', 'discount_amount')) {
                 $conn->query("ALTER TABLE sales ADD COLUMN discount_amount DECIMAL(10,2) DEFAULT 0");
             }
+            // Add loyalty columns if needed
+            if (!posColumnExists($conn, 'sales', 'loyalty_member_id')) {
+                $conn->query("ALTER TABLE sales ADD COLUMN loyalty_member_id INT NULL");
+            }
+            if (!posColumnExists($conn, 'sales', 'points_redeemed')) {
+                $conn->query("ALTER TABLE sales ADD COLUMN points_redeemed DECIMAL(12,2) DEFAULT 0");
+            }
+            // Ensure loyalty_members has decimal points
+            $conn->query("ALTER TABLE loyalty_members MODIFY COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
+            // Ensure loyalty_points_log exists with decimal amounts
+            $conn->query("CREATE TABLE IF NOT EXISTS loyalty_points_log (
+                log_id INT AUTO_INCREMENT PRIMARY KEY,
+                member_id INT NOT NULL,
+                points DECIMAL(12,2) NOT NULL,
+                transaction_type ENUM('EARN','REDEEM','QR_SCAN','BONUS','ADJUSTMENT') NOT NULL DEFAULT 'EARN',
+                reference_id VARCHAR(100) NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_member (member_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            // Compatibility for older/alternate schemas
+            if (!posColumnExists($conn, 'loyalty_points_log', 'points')) {
+                $conn->query("ALTER TABLE loyalty_points_log ADD COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
+            }
+            if (!posColumnExists($conn, 'loyalty_points_log', 'transaction_type')) {
+                $conn->query("ALTER TABLE loyalty_points_log ADD COLUMN transaction_type ENUM('EARN','REDEEM','QR_SCAN','BONUS','ADJUSTMENT') NOT NULL DEFAULT 'EARN'");
+            }
+            $conn->query("ALTER TABLE loyalty_points_log MODIFY COLUMN points DECIMAL(12,2) NOT NULL");
         } catch (Exception $schemaEx) {
             // Columns may already exist or lack permission — non-fatal
             error_log('POS schema migration note: ' . $schemaEx->getMessage());
+        }
+
+        // Validate loyalty points if being used
+        if ($pointsToRedeem > 0 && !$loyaltyMemberId) {
+            echo json_encode(['success' => false, 'message' => 'Select a loyalty member to redeem points']);
+            exit;
+        }
+
+        if ($pointsToRedeem > 0 && $loyaltyMemberId) {
+            $checkStmt = $conn->prepare("SELECT points FROM loyalty_members WHERE member_id = ?");
+            $checkStmt->bind_param("i", $loyaltyMemberId);
+            $checkStmt->execute();
+            $memberRow = $checkStmt->get_result()->fetch_assoc();
+            $checkStmt->close();
+
+            if (!$memberRow) {
+                echo json_encode(['success' => false, 'message' => 'Loyalty member not found']);
+                exit;
+            }
+
+            $availablePoints = floatval($memberRow['points']);
+            if ($pointsToRedeem > $availablePoints) {
+                echo json_encode(['success' => false, 'message' => 'Insufficient loyalty points. Available: ' . number_format($availablePoints, 2)]);
+                exit;
+            }
         }
 
         try {
@@ -138,16 +195,49 @@ switch ($action) {
                 $discountAmount = round($beforeDiscount * ($discountPercent / 100), 2);
             }
             $total = round($beforeDiscount - $discountAmount, 2);
-            $changeAmount = max(0, $amountTendered - $total);
+            $pointsApplied = ($pointsToRedeem > 0 && $loyaltyMemberId) ? min($pointsToRedeem, $total) : 0;
+            $cashDue = max(0, $total - $pointsApplied);
 
-            // 2. Insert sale header with subtotal, tax, discount
+            if ($paymentMethod === 'loyalty_points' && $amountTendered + 0.005 < $cashDue) {
+                echo json_encode(['success' => false, 'message' => 'Cash is not enough for the remaining amount (₱' . number_format($cashDue, 2) . ')']);
+                ob_end_flush();
+                exit;
+            }
+
+            $changeAmount = max(0, $amountTendered - $cashDue);
+            $paymentMethodStored = ($paymentMethod === 'loyalty_points' && $pointsApplied > 0 && $cashDue > 0)
+                ? 'loyalty_points+cash'
+                : $paymentMethod;
+
+            // 2. Insert sale header with subtotal, tax, discount, loyalty info
             $stmt = $conn->prepare("
-                INSERT INTO sales (sale_reference, subtotal, tax_amount, discount_percent, discount_amount, total, payment_method, paid_amount, change_amount, cashier)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO sales (sale_reference, subtotal, tax_amount, discount_percent, discount_amount, total, payment_method, paid_amount, change_amount, cashier, loyalty_member_id, points_redeemed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->bind_param("sdddddsdds", $receiptNo, $subtotal, $taxAmount, $discountPercent, $discountAmount, $total, $paymentMethod, $amountTendered, $changeAmount, $cashier);
+            $stmt->bind_param("sdddddsddsid", $receiptNo, $subtotal, $taxAmount, $discountPercent, $discountAmount, $total, $paymentMethodStored, $amountTendered, $changeAmount, $cashier, $loyaltyMemberId, $pointsApplied);
             $stmt->execute();
             $saleId = $stmt->insert_id;
+
+            // Deduct loyalty points if used
+            if ($pointsApplied > 0 && $loyaltyMemberId) {
+                // Deduct from member's balance
+                $deductStmt = $conn->prepare("UPDATE loyalty_members SET points = points - ? WHERE member_id = ? AND points >= ?");
+                $deductStmt->bind_param("did", $pointsApplied, $loyaltyMemberId, $pointsApplied);
+                $deductStmt->execute();
+                
+                if ($deductStmt->affected_rows === 0) {
+                    throw new Exception("Failed to deduct loyalty points - insufficient balance");
+                }
+                $deductStmt->close();
+
+                // Log the points transaction
+                $negPoints = -$pointsApplied;
+                $logType = 'REDEEM';
+                $logStmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id) VALUES (?, ?, ?, ?)");
+                $logStmt->bind_param("idss", $loyaltyMemberId, $negPoints, $logType, $receiptNo);
+                $logStmt->execute();
+                $logStmt->close();
+            }
 
             // 2. Insert sale items + deduct stock
             $itemStmt = $conn->prepare("
@@ -240,6 +330,15 @@ switch ($action) {
             if ($rewardQrCode) {
                 $response['reward_qr_code'] = $rewardQrCode;
                 $response['reward_qr_expires'] = $rewardQrExpires;
+            }
+
+            // Include loyalty points info in response
+            if ($pointsApplied > 0 && $loyaltyMemberId) {
+                $response['loyalty'] = [
+                    'member_id' => $loyaltyMemberId,
+                    'member_name' => $loyaltyMemberName,
+                    'points_redeemed' => round($pointsApplied, 2)
+                ];
             }
             
             echo json_encode($response);

@@ -28,7 +28,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS reward_qr_codes (
     generated_for_name VARCHAR(100) NULL,
     redeemed_by_user INT NULL,
     redeemed_by_name VARCHAR(100) NULL,
-    points_value INT NOT NULL DEFAULT 0,
+    points_value DECIMAL(12,2) NOT NULL DEFAULT 0,
     is_redeemed TINYINT(1) NOT NULL DEFAULT 0,
     redeemed_at DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -44,7 +44,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS loyalty_members (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NULL,
     phone VARCHAR(20) NULL,
-    points INT NOT NULL DEFAULT 0,
+    points DECIMAL(12,2) NOT NULL DEFAULT 0,
     member_since DATE DEFAULT (CURRENT_DATE),
     user_id INT NULL,
     INDEX idx_email (email),
@@ -55,7 +55,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS loyalty_members (
 $conn->query("CREATE TABLE IF NOT EXISTS loyalty_points_log (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     member_id INT NOT NULL,
-    points INT NOT NULL,
+    points DECIMAL(12,2) NOT NULL,
     transaction_type ENUM('EARN','REDEEM','QR_SCAN','BONUS','ADJUSTMENT') NOT NULL DEFAULT 'EARN',
     reference_id VARCHAR(100) NULL,
     description TEXT NULL,
@@ -86,7 +86,15 @@ try {
 
 // Fix: Ensure reward_qr_codes does not default to hardcoded 1-point values
 try {
-    $conn->query("ALTER TABLE reward_qr_codes MODIFY COLUMN points_value INT NOT NULL DEFAULT 0");
+    $conn->query("ALTER TABLE reward_qr_codes MODIFY COLUMN points_value DECIMAL(12,2) NOT NULL DEFAULT 0");
+} catch (Exception $e) {}
+
+try {
+    $conn->query("ALTER TABLE loyalty_members MODIFY COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
+} catch (Exception $e) {}
+
+try {
+    $conn->query("ALTER TABLE loyalty_points_log MODIFY COLUMN points DECIMAL(12,2) NOT NULL");
 } catch (Exception $e) {}
 
 // Fix: Make phone column nullable (prevents 'no default value' crash)
@@ -180,7 +188,7 @@ function generateRewardQR($conn) {
             'success' => true,
             'qr_code' => $existingQr['qr_code'],
             'qr_id' => intval($existingQr['qr_id']),
-            'points_value' => intval($existingQr['points_value']),
+            'points_value' => round((float)$existingQr['points_value'], 2),
             'expires_at' => $existingQr['expires_at'],
             'message' => 'Existing reward QR code returned for this sale.'
         ]);
@@ -242,7 +250,7 @@ function generateRewardQR($conn) {
     $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
     
     $stmt = $conn->prepare("INSERT INTO reward_qr_codes (qr_code, source_type, source_order_id, sale_reference, generated_for_user, generated_for_name, points_value, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssisssis", $qrCode, $sourceType, $orderId, $saleReference, $generatedForUser, $customerName, $pointsValue, $expiresAt);
+    $stmt->bind_param("ssisisds", $qrCode, $sourceType, $orderId, $saleReference, $generatedForUser, $customerName, $pointsValue, $expiresAt);
     $stmt->execute();
     $qrId = $conn->insert_id;
     $stmt->close();
@@ -322,7 +330,7 @@ function redeemRewardQR($conn) {
         return;
     }
     
-    $pointsValue = intval($qr['points_value']);
+    $pointsValue = round((float)$qr['points_value'], 2);
     
     $conn->begin_transaction();
     
@@ -344,7 +352,7 @@ function redeemRewardQR($conn) {
         
         // Add points
         $stmt = $conn->prepare("UPDATE loyalty_members SET points = points + ? WHERE member_id = ?");
-        $stmt->bind_param("ii", $pointsValue, $memberId);
+        $stmt->bind_param("di", $pointsValue, $memberId);
         $stmt->execute();
         $stmt->close();
         
@@ -352,7 +360,7 @@ function redeemRewardQR($conn) {
         $refId = 'QR-' . $qr['qr_code'];
         $desc = "Scanned reward QR code from " . ($qr['source_type'] === 'pos' ? 'in-store' : 'online') . " purchase";
         $stmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id, description) VALUES (?, ?, 'QR_SCAN', ?, ?)");
-        $stmt->bind_param("iiss", $memberId, $pointsValue, $refId, $desc);
+        $stmt->bind_param("idss", $memberId, $pointsValue, $refId, $desc);
         $stmt->execute();
         $stmt->close();
         
@@ -368,8 +376,8 @@ function redeemRewardQR($conn) {
         echo json_encode([
             'success' => true,
             'points_earned' => $pointsValue,
-            'total_points' => intval($updated['points']),
-            'message' => "🎉 You earned {$pointsValue} loyalty points! Total: {$updated['points']} points"
+            'total_points' => round((float)$updated['points'], 2),
+            'message' => "🎉 You earned " . number_format($pointsValue, 2) . " loyalty points! Total: " . number_format((float)$updated['points'], 2) . " points"
         ]);
         
     } catch (Exception $e) {
@@ -419,7 +427,7 @@ function getMyPoints($conn) {
     if ($member) {
         echo json_encode([
             'success' => true,
-            'points' => intval($member['points']),
+            'points' => round((float)$member['points'], 2),
             'member_id' => intval($member['member_id']),
             'name' => $member['name'],
             'member_since' => $member['member_since']
@@ -524,7 +532,7 @@ function validateQR($conn) {
         'valid' => !$qr['is_redeemed'] && !$expired,
         'is_redeemed' => (bool)$qr['is_redeemed'],
         'is_expired' => $expired,
-        'points_value' => intval($qr['points_value']),
+        'points_value' => round((float)$qr['points_value'], 2),
         'source' => $qr['source_type'],
         'message' => $qr['is_redeemed'] ? 'Already redeemed' : ($expired ? 'Expired' : 'Valid - Ready to scan!')
     ]);
@@ -628,7 +636,7 @@ function staffRedeemForCustomer($conn) {
         return;
     }
 
-    $pointsValue = intval($qr['points_value']);
+    $pointsValue = round((float)$qr['points_value'], 2);
     $staffName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Staff';
 
     $conn->begin_transaction();
@@ -647,7 +655,7 @@ function staffRedeemForCustomer($conn) {
 
         // Add points to member
         $stmt = $conn->prepare("UPDATE loyalty_members SET points = points + ? WHERE member_id = ?");
-        $stmt->bind_param("ii", $pointsValue, $memberId);
+        $stmt->bind_param("di", $pointsValue, $memberId);
         $stmt->execute();
         $stmt->close();
 
@@ -655,7 +663,7 @@ function staffRedeemForCustomer($conn) {
         $refId = 'QR-' . $qr['qr_code'];
         $desc = "Staff ({$staffName}) scanned receipt QR code for in-store purchase";
         $stmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id, description) VALUES (?, ?, 'QR_SCAN', ?, ?)");
-        $stmt->bind_param("iiss", $memberId, $pointsValue, $refId, $desc);
+        $stmt->bind_param("idss", $memberId, $pointsValue, $refId, $desc);
         $stmt->execute();
         $stmt->close();
 
@@ -671,9 +679,9 @@ function staffRedeemForCustomer($conn) {
         echo json_encode([
             'success' => true,
             'points_earned' => $pointsValue,
-            'total_points' => intval($updated['points']),
+            'total_points' => round((float)$updated['points'], 2),
             'customer_name' => $member['name'],
-            'message' => "🎉 {$pointsValue} points awarded to {$member['name']}! Total: {$updated['points']} points"
+            'message' => "🎉 " . number_format($pointsValue, 2) . " points awarded to {$member['name']}! Total: " . number_format((float)$updated['points'], 2) . " points"
         ]);
     } catch (Exception $e) {
         $conn->rollback();
@@ -729,6 +737,6 @@ function calculateLoyaltyPoints($amount) {
     if ($amount <= 0) {
         return 0;
     }
-    return intval(floor($amount / 500) * 25);
+    return round(($amount / 500) * 25, 2);
 }
 ?>

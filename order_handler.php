@@ -139,12 +139,22 @@ $has_rx_products = $rxCheck['has_rx'];
 $rx_product_names = array_column($rxCheck['rx_products'], 'name');
 
 // ===== LOYALTY POINTS REDEMPTION =====
-$pointsRedeemed = 0;
+$pointsRedeemed = 0.0;
 $loyaltyMemberId = null;
-$pointsDiscount = 0;
+$pointsDiscount = 0.0;
+
+// Ensure decimal points support in loyalty schema
+try {
+    $conn->query("ALTER TABLE loyalty_members MODIFY COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
+} catch (Exception $e) {
+}
+try {
+    $conn->query("ALTER TABLE loyalty_points_log MODIFY COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
+} catch (Exception $e) {
+}
 
 if ($customerId !== null && isset($input['points_to_redeem']) && $input['points_to_redeem'] > 0) {
-    $requestedPoints = intval($input['points_to_redeem']);
+    $requestedPoints = round((float)$input['points_to_redeem'], 2);
     
     // Verify user has a loyalty account and enough points
     $stmt = $conn->prepare("SELECT member_id, points FROM loyalty_members WHERE email = ? LIMIT 1");
@@ -153,17 +163,35 @@ if ($customerId !== null && isset($input['points_to_redeem']) && $input['points_
     $member = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     
-    if ($member && $member['points'] >= $requestedPoints) {
-        $availablePoints = intval($member['points']);
+    if ($member && (float)$member['points'] + 0.0001 >= $requestedPoints) {
+        $availablePoints = round((float)$member['points'], 2);
         
         // Don't let discount exceed order total
-        $maxRedeemable = min($requestedPoints, floor($totalAmount));
+        $maxRedeemable = min($requestedPoints, round($totalAmount, 2));
+        $maxRedeemable = round($maxRedeemable, 2);
         
-        if ($maxRedeemable > 0 && $maxRedeemable <= $availablePoints) {
+        if ($maxRedeemable > 0 && $maxRedeemable <= $availablePoints + 0.0001) {
             $pointsRedeemed = $maxRedeemable;
             $pointsDiscount = $pointsRedeemed; // 1 point = ₱1
             $loyaltyMemberId = $member['member_id'];
         }
+    }
+}
+
+if (!in_array($paymentMethod, ['Cash on Pickup', 'Loyalty Points', 'GCash'], true)) {
+    $paymentMethod = 'Cash on Pickup';
+}
+
+if ($paymentMethod === 'Loyalty Points') {
+    $requiredPoints = round($totalAmount, 2);
+    if ($pointsDiscount + 0.0001 < $requiredPoints) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Insufficient loyalty points for Loyalty Points payment method.'
+        ]);
+        ob_end_flush();
+        exit;
     }
 }
 
@@ -583,7 +611,7 @@ try {
                 if ($pointsRedeemed > 0 && $loyaltyMemberId === $memberId) {
                     // Deduct redeemed points
                     $stmt = $conn->prepare("UPDATE loyalty_members SET points = points - ? WHERE member_id = ?");
-                    $stmt->bind_param("ii", $pointsRedeemed, $memberId);
+                    $stmt->bind_param("di", $pointsRedeemed, $memberId);
                     $stmt->execute();
                     $stmt->close();
                     
@@ -591,11 +619,11 @@ try {
                     $refId = 'ORDER-' . $orderId;
                     $negativePoints = -$pointsRedeemed; // Store as negative for REDEEM
                     $stmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id) VALUES (?, ?, 'REDEEM', ?)");
-                    $stmt->bind_param("iis", $memberId, $negativePoints, $refId);
+                    $stmt->bind_param("ids", $memberId, $negativePoints, $refId);
                     $stmt->execute();
                     $stmt->close();
                     
-                    $responseMessages[] = "You saved ₱{$pointsDiscount} using {$pointsRedeemed} points!";
+                    $responseMessages[] = "You saved ₱" . number_format($pointsDiscount, 2) . " using " . number_format($pointsRedeemed, 2) . " points!";
                 }
                 
                 // IMPORTANT: Do NOT award earned points here.

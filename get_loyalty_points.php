@@ -40,7 +40,7 @@ $stmt->close();
 if ($member) {
     echo json_encode([
         'success' => true,
-        'points' => intval($member['points']),
+        'points' => round((float)$member['points'], 2),
         'member_id' => intval($member['member_id'])
     ]);
 } else {

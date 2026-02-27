@@ -899,6 +899,226 @@ $page_title = 'Point of Sale';
             transition: all 0.12s;
         }
 
+        /* Customer Lookup for Loyalty Points */
+        .customer-lookup-section {
+            margin-bottom: 1.25rem;
+            padding: 1rem;
+            background: var(--bg-color);
+            border-radius: 10px;
+            border: 1px solid var(--divider-color);
+        }
+        .customer-lookup-section .section-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.6rem;
+        }
+        .customer-lookup-section .section-label i {
+            color: var(--primary-color);
+        }
+        .customer-search-box {
+            position: relative;
+        }
+        .customer-search-input {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            padding-right: 2.5rem;
+            border: 1.5px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        .customer-search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .customer-search-box .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+        .customer-results {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .customer-results.show {
+            display: block;
+        }
+        .customer-result-item {
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--divider-color);
+            border-radius: 6px;
+            margin-bottom: 0.3rem;
+            cursor: pointer;
+            background: var(--card-bg);
+            transition: all 0.15s;
+        }
+        .customer-result-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(var(--primary-rgb), 0.04);
+        }
+        .customer-result-item .name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-color);
+        }
+        .customer-result-item .details {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.2rem;
+        }
+        .customer-result-item .points-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.72rem;
+        }
+        .selected-customer-display {
+            display: none;
+            padding: 0.7rem;
+            background: rgba(var(--primary-rgb), 0.08);
+            border: 1.5px solid var(--primary-color);
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+        .selected-customer-display.show {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .selected-customer-display .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .selected-customer-display .customer-info .avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .selected-customer-display .points-available {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #d97706;
+        }
+        .selected-customer-display .clear-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+        }
+        .selected-customer-display .clear-btn:hover {
+            color: var(--danger-color);
+        }
+
+        /* Loyalty Points Input Group */
+        .points-input-group {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.1) 100%);
+            border: 1.5px solid #f59e0b;
+            border-radius: 10px;
+        }
+        .points-input-group.show {
+            display: block;
+        }
+        .points-input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--text-color);
+        }
+        .points-input-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .points-input-row input {
+            flex: 1;
+            padding: 0.65rem 0.85rem;
+            border: 1.5px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        .points-input-row input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .points-input-row .use-all-btn {
+            padding: 0.65rem 1rem;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .points-input-row .use-all-btn:hover {
+            background: #d97706;
+        }
+        .points-value-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        .points-value-display .value {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .points-remaining-display {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: var(--card-bg);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .points-remaining-display .label {
+            color: var(--text-light);
+        }
+        .points-remaining-display .amount {
+            font-weight: 700;
+        }
+        .points-remaining-display .amount.due {
+            color: var(--danger-color);
+        }
+        .points-remaining-display .amount.covered {
+            color: #16a34a;
+        }
+
         .modal-actions .btn-cancel:hover { border-color: var(--text-light); }
 
         /* Receipt modal */
@@ -1713,6 +1933,32 @@ $page_title = 'Point of Sale';
         <div class="modal-content">
             <h2>Process Payment</h2>
 
+            <!-- Customer Lookup Section -->
+            <div class="customer-lookup-section">
+                <div class="section-label">
+                    <i class="fas fa-user-tag"></i> Loyalty Member (Optional)
+                </div>
+                <div class="customer-search-box">
+                    <input type="text" class="customer-search-input" id="customerSearchInput" 
+                           placeholder="Search by name, email, or phone..." 
+                           oninput="searchCustomers(this.value)">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                <div class="customer-results" id="customerResults"></div>
+                <div class="selected-customer-display" id="selectedCustomerDisplay">
+                    <div class="customer-info">
+                        <div class="avatar" id="customerAvatar">?</div>
+                        <div>
+                            <div class="name" id="selectedCustomerName">-</div>
+                            <div class="points-available"><i class="fas fa-coins"></i> <span id="selectedCustomerPoints">0</span> points</div>
+                        </div>
+                    </div>
+                    <button type="button" class="clear-btn" onclick="clearSelectedCustomer()" title="Remove customer">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
             <div class="amount-due-display">
                 <div class="label">Amount Due</div>
                 <div class="amount" id="modalTotalDisplay">₱0.00</div>
@@ -1725,6 +1971,9 @@ $page_title = 'Point of Sale';
                 <button class="method-btn" onclick="setPaymentMethod('card', this)">
                     <i class="fas fa-credit-card"></i> Card
                 </button>
+                <button class="method-btn" onclick="setPaymentMethod('loyalty_points', this)" id="loyaltyPointsBtn" disabled title="Select a loyalty member first">
+                    <i class="fas fa-coins"></i> Points
+                </button>
             </div>
 
             <div id="cashInputGroup" class="cash-input-group">
@@ -1735,6 +1984,24 @@ $page_title = 'Point of Sale';
                 <div class="change-display">
                     <span class="change-label">Change</span>
                     <span class="change-amount" id="changeDisplay">₱0.00</span>
+                </div>
+            </div>
+
+            <!-- Loyalty Points Input Group -->
+            <div class="points-input-group" id="pointsInputGroup">
+                <label>Points to Redeem</label>
+                <div class="points-input-row">
+                    <input type="number" id="pointsToRedeemInput" placeholder="0.00" 
+                           step="0.01" min="0" oninput="updatePointsRedemption()">
+                    <button type="button" class="use-all-btn" onclick="useAllPoints()">Use All</button>
+                </div>
+                <div class="points-value-display">
+                    <span>Points Value (1 pt = ₱1)</span>
+                    <span class="value" id="pointsValueDisplay">₱0.00</span>
+                </div>
+                <div class="points-remaining-display">
+                    <span class="label">Remaining to Pay</span>
+                    <span class="amount due" id="remainingAfterPoints">₱0.00</span>
                 </div>
             </div>
 
@@ -1781,6 +2048,12 @@ $page_title = 'Point of Sale';
         let viewMode = 'grid';
         let lastSaleData = null;
 
+        // Loyalty Points System
+        let selectedLoyaltyCustomer = null;
+        let allLoyaltyMembers = [];
+        let customerSearchTimeout = null;
+        let pointsToRedeem = 0;
+
         // Storage-safe helpers (for browsers with strict tracking prevention)
         const posStorageAvailable = (() => {
             try {
@@ -1813,8 +2086,160 @@ $page_title = 'Point of Sale';
             }
         }
 
+        // === Loyalty Customer Functions ===
+        async function loadLoyaltyMembers() {
+            try {
+                const res = await fetch('api/get_loyalty_members.php');
+                const data = await res.json();
+                if (data.success) {
+                    allLoyaltyMembers = data.members || [];
+                    console.log(`POS: Loaded ${allLoyaltyMembers.length} loyalty members`);
+                }
+            } catch (err) {
+                console.error('Failed to load loyalty members:', err);
+            }
+        }
+
+        function searchCustomers(query) {
+            clearTimeout(customerSearchTimeout);
+            const resultsDiv = document.getElementById('customerResults');
+
+            if (!query || query.length < 2) {
+                resultsDiv.classList.remove('show');
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            customerSearchTimeout = setTimeout(() => {
+                const q = query.toLowerCase();
+                const matches = allLoyaltyMembers.filter(m => 
+                    (m.name && m.name.toLowerCase().includes(q)) ||
+                    (m.email && m.email.toLowerCase().includes(q)) ||
+                    (m.phone && m.phone.includes(query))
+                ).slice(0, 5);
+
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding:0.6rem;color:var(--text-light);font-size:0.8rem;"><i class="fas fa-info-circle"></i> No members found</div>';
+                    resultsDiv.classList.add('show');
+                    return;
+                }
+
+                resultsDiv.innerHTML = matches.map(m => `
+                    <div class="customer-result-item" onclick="selectCustomer(${m.id})">
+                        <div class="name">${escapeHtmlPos(m.name)}</div>
+                        <div class="details">
+                            <span>${escapeHtmlPos(m.email || 'No email')}</span>
+                            <span class="points-badge">${parseFloat(m.points || 0).toFixed(2)} pts</span>
+                        </div>
+                    </div>
+                `).join('');
+                resultsDiv.classList.add('show');
+            }, 150);
+        }
+
+        function selectCustomer(memberId) {
+            const member = allLoyaltyMembers.find(m => m.id === memberId);
+            if (!member) return;
+
+            selectedLoyaltyCustomer = member;
+
+            // Update UI
+            document.getElementById('customerSearchInput').value = '';
+            document.getElementById('customerResults').classList.remove('show');
+            document.getElementById('customerResults').innerHTML = '';
+
+            document.getElementById('selectedCustomerDisplay').classList.add('show');
+            document.getElementById('selectedCustomerName').textContent = member.name;
+            document.getElementById('selectedCustomerPoints').textContent = parseFloat(member.points || 0).toFixed(2);
+            document.getElementById('customerAvatar').textContent = (member.name || '?')[0].toUpperCase();
+
+            // Enable loyalty points button if customer has points
+            const pointsBtn = document.getElementById('loyaltyPointsBtn');
+            if (parseFloat(member.points || 0) > 0) {
+                pointsBtn.disabled = false;
+                pointsBtn.title = `Use ${parseFloat(member.points).toFixed(2)} points`;
+            } else {
+                pointsBtn.disabled = true;
+                pointsBtn.title = 'Customer has no points';
+            }
+
+            // Reset points input
+            document.getElementById('pointsToRedeemInput').value = '';
+            pointsToRedeem = 0;
+            updatePointsRedemption();
+        }
+
+        function clearSelectedCustomer() {
+            selectedLoyaltyCustomer = null;
+            document.getElementById('selectedCustomerDisplay').classList.remove('show');
+            document.getElementById('customerSearchInput').value = '';
+
+            // Disable loyalty points button
+            const pointsBtn = document.getElementById('loyaltyPointsBtn');
+            pointsBtn.disabled = true;
+            pointsBtn.title = 'Select a loyalty member first';
+
+            // If currently on loyalty points payment, switch to cash
+            if (paymentMethod === 'loyalty_points') {
+                const cashBtn = document.querySelector('.method-btn');
+                setPaymentMethod('cash', cashBtn);
+            }
+
+            // Reset points
+            pointsToRedeem = 0;
+            document.getElementById('pointsToRedeemInput').value = '';
+            document.getElementById('pointsInputGroup').classList.remove('show');
+            updateChange();
+        }
+
+        function useAllPoints() {
+            if (!selectedLoyaltyCustomer) return;
+            const total = getTotal();
+            const available = parseFloat(selectedLoyaltyCustomer.points || 0);
+            const maxUsable = Math.min(available, total);
+            document.getElementById('pointsToRedeemInput').value = maxUsable.toFixed(2);
+            updatePointsRedemption();
+        }
+
+        function updatePointsRedemption() {
+            const input = document.getElementById('pointsToRedeemInput');
+            const total = getTotal();
+            let pts = parseFloat(input.value) || 0;
+
+            // Validate
+            if (selectedLoyaltyCustomer) {
+                const available = parseFloat(selectedLoyaltyCustomer.points || 0);
+                if (pts > available) {
+                    pts = available;
+                    input.value = pts.toFixed(2);
+                }
+            }
+            if (pts > total) {
+                pts = total;
+                input.value = pts.toFixed(2);
+            }
+            if (pts < 0) {
+                pts = 0;
+                input.value = '';
+            }
+
+            pointsToRedeem = pts;
+            const pointsValue = pts; // 1 point = ₱1
+            const remaining = Math.max(0, total - pointsValue);
+
+            document.getElementById('pointsValueDisplay').textContent = '₱' + pointsValue.toFixed(2);
+            
+            const remainingEl = document.getElementById('remainingAfterPoints');
+            remainingEl.textContent = '₱' + remaining.toFixed(2);
+            remainingEl.classList.toggle('covered', remaining === 0);
+            remainingEl.classList.toggle('due', remaining > 0);
+
+            updateChange();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
+            loadLoyaltyMembers();
             setupEventListeners();
             updatePrinterUI();
             updateHeldBadge();
@@ -2344,15 +2769,28 @@ $page_title = 'Point of Sale';
         }
 
         function setPaymentMethod(method, btn) {
+            // Don't allow loyalty_points if no customer selected
+            if (method === 'loyalty_points' && !selectedLoyaltyCustomer) {
+                showToast('Please select a loyalty member first', 'error');
+                return;
+            }
+
             paymentMethod = method;
             document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
             const cashGroup = document.getElementById('cashInputGroup');
-            cashGroup.style.display = method === 'cash' ? 'block' : 'none';
+            const pointsGroup = document.getElementById('pointsInputGroup');
+
+            cashGroup.style.display = (method === 'cash' || method === 'loyalty_points') ? 'block' : 'none';
+            pointsGroup.classList.toggle('show', method === 'loyalty_points');
 
             if (method === 'cash') {
                 document.getElementById('amountTendered').focus();
+            } else if (method === 'loyalty_points') {
+                document.getElementById('pointsToRedeemInput').focus();
+                // Auto-fill with max usable points
+                useAllPoints();
             }
             updateChange();
         }
@@ -2360,15 +2798,37 @@ $page_title = 'Point of Sale';
         function updateChange() {
             const total = getTotal();
             const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
-            const change = tendered - total;
+            const remainingDue = paymentMethod === 'loyalty_points'
+                ? Math.max(0, total - pointsToRedeem)
+                : total;
+            const change = tendered - remainingDue;
+
+            if (remainingDue > 0) {
+                generateQuickCash(remainingDue);
+            }
 
             const display = document.getElementById('changeDisplay');
             display.textContent = '₱' + Math.max(0, change).toFixed(2);
             display.style.color = change >= 0 ? '#16a34a' : 'var(--danger-color)';
 
+            const cashGroup = document.getElementById('cashInputGroup');
+            const cashLabel = cashGroup.querySelector('label');
+            if (paymentMethod === 'loyalty_points') {
+                cashGroup.style.display = remainingDue > 0 ? 'block' : 'none';
+                if (cashLabel) {
+                    cashLabel.textContent = remainingDue > 0
+                        ? 'Cash Tendered (Remaining)' 
+                        : 'Cash Tendered';
+                }
+            } else if (cashLabel) {
+                cashLabel.textContent = 'Cash Tendered';
+            }
+
             const btn = document.getElementById('completeSaleBtn');
             if (paymentMethod === 'cash' && tendered < total) {
                 btn.disabled = true;
+            } else if (paymentMethod === 'loyalty_points') {
+                btn.disabled = tendered + 0.005 < remainingDue;
             } else {
                 btn.disabled = false;
             }
@@ -2397,6 +2857,16 @@ $page_title = 'Point of Sale';
             const beforeDiscount = subtotal + tax;
             const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
             const total = beforeDiscount - discountAmount;
+            const tenderedInput = parseFloat(document.getElementById('amountTendered').value) || 0;
+            const pointsApplied = paymentMethod === 'loyalty_points' ? pointsToRedeem : 0;
+            const remainingDue = Math.max(0, total - pointsApplied);
+
+            if (paymentMethod === 'loyalty_points' && tenderedInput + 0.005 < remainingDue) {
+                showToast('Cash is not enough for the remaining ₱' + remainingDue.toFixed(2), 'error');
+                btn.disabled = false;
+                btn.textContent = 'Confirm Payment';
+                return;
+            }
 
             const now = new Date();
             const saleData = {
@@ -2407,10 +2877,14 @@ $page_title = 'Point of Sale';
                 discount_percent: discountEnabled ? 20 : 0,
                 discount_amount: discountAmount,
                 payment_method: paymentMethod,
-                amount_tendered: parseFloat(document.getElementById('amountTendered').value) || total,
+                amount_tendered: paymentMethod === 'card' ? total : tenderedInput,
                 receipt_no: 'TX-' + now.getTime().toString().slice(-8),
                 created_at: now.toISOString(),
-                cashier: document.body.dataset.cashierName || 'Cashier'
+                cashier: document.body.dataset.cashierName || 'Cashier',
+                // Loyalty points data
+                loyalty_member_id: selectedLoyaltyCustomer ? selectedLoyaltyCustomer.id : null,
+                loyalty_member_name: selectedLoyaltyCustomer ? selectedLoyaltyCustomer.name : null,
+                points_to_redeem: pointsApplied
             };
 
             try {
@@ -2556,11 +3030,17 @@ $page_title = 'Point of Sale';
             discountEnabled = false;
             const discToggle = document.getElementById('discountToggle');
             if (discToggle) discToggle.classList.remove('active');
+            
+            // Clear selected loyalty customer
+            clearSelectedCustomer();
+            
             updateCartUI();
             document.getElementById('receiptModal').classList.remove('active');
             document.getElementById('searchInput').focus();
             // Refresh product list to reflect updated stock
             loadProducts();
+            // Reload loyalty members to get updated points balances
+            loadLoyaltyMembers();
         }
 
         // ═══════════════════════════════════════════════
@@ -2796,8 +3276,10 @@ $page_title = 'Point of Sale';
             const discountPct = saleData.discount_percent || 0;
             const discountAmt = saleData.discount_amount || 0;
             const total = beforeDiscount - discountAmt;
-            const tendered = saleData.amount_tendered || total;
-            const change = Math.max(0, tendered - total);
+            const pointsRedeemed = parseFloat(saleData.points_to_redeem ?? saleData.points_redeemed ?? 0) || 0;
+            const cashDue = Math.max(0, total - pointsRedeemed);
+            const tendered = (typeof saleData.amount_tendered === 'number') ? saleData.amount_tendered : total;
+            const change = Math.max(0, tendered - cashDue);
             const payMethod = saleData.payment_method || 'cash';
 
             // Header
@@ -2948,8 +3430,10 @@ $page_title = 'Point of Sale';
             const discountPct = saleData.discount_percent || 0;
             const discountAmt = saleData.discount_amount || 0;
             const total = beforeDiscount - discountAmt;
-            const tendered = saleData.amount_tendered || total;
-            const change = Math.max(0, tendered - total);
+            const pointsRedeemed = parseFloat(saleData.points_to_redeem ?? saleData.points_redeemed ?? 0) || 0;
+            const cashDue = Math.max(0, total - pointsRedeemed);
+            const tendered = (typeof saleData.amount_tendered === 'number') ? saleData.amount_tendered : total;
+            const change = Math.max(0, tendered - cashDue);
             const payMethod = saleData.payment_method || 'cash';
 
             const out = [];
@@ -3063,8 +3547,10 @@ $page_title = 'Point of Sale';
             const discountPct = saleData.discount_percent || 0;
             const discountAmt = saleData.discount_amount || 0;
             const total = beforeDiscount - discountAmt;
-            const tendered = saleData.amount_tendered || total;
-            const change = Math.max(0, tendered - total);
+            const pointsRedeemed = parseFloat(saleData.points_to_redeem ?? saleData.points_redeemed ?? 0) || 0;
+            const cashDue = Math.max(0, total - pointsRedeemed);
+            const tendered = (typeof saleData.amount_tendered === 'number') ? saleData.amount_tendered : total;
+            const change = Math.max(0, tendered - cashDue);
 
             const rows = saleData.items.map(item => {
                 const lineTotal = item.price * item.qty;

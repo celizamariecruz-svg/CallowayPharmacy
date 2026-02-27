@@ -465,7 +465,7 @@ function markPickedUp($conn) {
  * Rule: ₱500 spent = 25 points earned (1 point = ₱1 discount when redeemed).
  */
 function awardLoyaltyForPickup($conn, $orderId) {
-    $result = ['awarded' => false, 'points' => 0, 'reason' => ''];
+    $result = ['awarded' => false, 'points' => 0.0, 'reason' => ''];
 
     try {
         // Get order details including customer info
@@ -506,6 +506,15 @@ function awardLoyaltyForPickup($conn, $orderId) {
             return $result;
         }
 
+        try {
+            $conn->query("ALTER TABLE loyalty_members MODIFY COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
+        } catch (Exception $e) {
+        }
+        try {
+            $conn->query("ALTER TABLE loyalty_points_log MODIFY COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
+        } catch (Exception $e) {
+        }
+
         // Find or create loyalty member
         $stmt = $conn->prepare("SELECT member_id, points FROM loyalty_members WHERE email = ? LIMIT 1");
         $stmt->bind_param("s", $email);
@@ -526,11 +535,11 @@ function awardLoyaltyForPickup($conn, $orderId) {
             $stmt->close();
         }
 
-        // Calculate points: floor(total / 500) * 25
-        $pointsEarned = floor($totalAmount / 500) * 25;
+        // Calculate points proportionally: ₱500 = 25 points (i.e. 0.05 points per ₱1)
+        $pointsEarned = round(($totalAmount / 500) * 25, 2);
 
         if ($pointsEarned <= 0) {
-            $result['reason'] = 'Order total below ₱500 threshold';
+            $result['reason'] = 'Order total not eligible for points';
             return $result;
         }
 
@@ -552,20 +561,20 @@ function awardLoyaltyForPickup($conn, $orderId) {
 
         // Award points
         $stmt = $conn->prepare("UPDATE loyalty_members SET points = points + ? WHERE member_id = ?");
-        $stmt->bind_param("ii", $pointsEarned, $memberId);
+        $stmt->bind_param("di", $pointsEarned, $memberId);
         $stmt->execute();
         $stmt->close();
 
         // Log the earning
         if ($chk2 && $chk2->num_rows > 0) {
             $stmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id) VALUES (?, ?, 'EARN', ?)");
-            $stmt->bind_param("iis", $memberId, $pointsEarned, $refId);
+            $stmt->bind_param("ids", $memberId, $pointsEarned, $refId);
             $stmt->execute();
             $stmt->close();
         }
 
         $result['awarded'] = true;
-        $result['points'] = $pointsEarned;
+        $result['points'] = round($pointsEarned, 2);
         $result['reason'] = 'Points awarded successfully';
 
     } catch (Exception $e) {
