@@ -20,6 +20,44 @@ if (!$auth->hasPermission('settings.backup')) {
     exit;
 }
 
+$currentUser = $auth->getCurrentUser();
+$isAdminUser = (($currentUser['role_name'] ?? '') === 'admin') || (($currentUser['role'] ?? '') === 'admin');
+
+$directFile = trim((string)($_GET['file'] ?? ''));
+if ($directFile !== '') {
+    if (!$isAdminUser) {
+        http_response_code(403);
+        echo 'Admin access required.';
+        exit;
+    }
+
+    $file = basename($directFile);
+    if ($file === '' || pathinfo($file, PATHINFO_EXTENSION) !== 'sql') {
+        http_response_code(400);
+        echo 'Invalid backup file.';
+        exit;
+    }
+
+    $backupDir = __DIR__ . '/backups';
+    $basePath = realpath($backupDir);
+    $targetPath = realpath($backupDir . '/' . $file);
+    if ($basePath === false || $targetPath === false || strpos($targetPath, $basePath) !== 0 || !is_file($targetPath)) {
+        http_response_code(404);
+        echo 'Backup file not found.';
+        exit;
+    }
+
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/sql');
+    header('Content-Disposition: attachment; filename="' . basename($targetPath) . '"');
+    header('Content-Length: ' . filesize($targetPath));
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: public');
+
+    readfile($targetPath);
+    exit;
+}
+
 $requestToken = trim((string)($_GET['request_token'] ?? ''));
 if ($requestToken === '') {
     http_response_code(400);

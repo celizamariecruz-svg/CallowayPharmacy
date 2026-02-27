@@ -1150,40 +1150,11 @@ while ($row = $settings_result->fetch_assoc()) {
             }
         }
         
-        const backupApprovalStates = {};
-
-        function getBackupButtonView(fileName) {
-            const state = backupApprovalStates[fileName] || {};
-            const status = (state.status || '').toLowerCase();
-
-            if (status === 'approved') {
-                return {
-                    buttonClass: 'btn btn-success',
-                    iconClass: 'fa-solid fa-circle-check',
-                    label: 'Approved • Download'
-                };
-            }
-
-            if (status === 'pending') {
-                return {
-                    buttonClass: 'btn btn-secondary',
-                    iconClass: 'fa-solid fa-hourglass-half',
-                    label: 'Waiting Owner...'
-                };
-            }
-
-            if (status === 'denied') {
-                return {
-                    buttonClass: 'btn btn-danger',
-                    iconClass: 'fa-solid fa-ban',
-                    label: 'Denied • Request Again'
-                };
-            }
-
+        function getBackupButtonView() {
             return {
                 buttonClass: 'btn btn-secondary',
                 iconClass: 'fa-solid fa-download',
-                label: 'Request Download'
+                label: 'Download'
             };
         }
 
@@ -1213,15 +1184,17 @@ while ($row = $settings_result->fetch_assoc()) {
                     return div.innerHTML;
                 };
 
+                const isAdminUser = <?php echo json_encode((($currentUser['role_name'] ?? '') === 'admin') || (($currentUser['role'] ?? '') === 'admin')); ?>;
+
                 listEl.innerHTML = result.backups.slice(0, 10).map((backup) => {
-                    const view = getBackupButtonView(backup.name);
+                    const view = getBackupButtonView();
                     return `
                     <div class="backup-item" style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.7rem 0.8rem;border-bottom:1px solid var(--divider-color);">
                         <div style="min-width:0;">
                             <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(backup.name)}</div>
                             <div style="font-size:0.78rem;opacity:0.75;">${escapeHtml(backup.date)} • ${escapeHtml(backup.size)}</div>
                         </div>
-                        <button type="button" class="${view.buttonClass}" style="padding:0.45rem 0.7rem;font-size:0.78rem;white-space:nowrap;" onclick="downloadBackup('${escapeHtml(backup.name).replace(/'/g, '&#39;')}')">
+                        <button type="button" class="${view.buttonClass}" style="padding:0.45rem 0.7rem;font-size:0.78rem;white-space:nowrap;${isAdminUser ? '' : 'opacity:0.6;cursor:not-allowed;'}" onclick="downloadBackup('${escapeHtml(backup.name).replace(/'/g, '&#39;')}')" ${isAdminUser ? '' : 'disabled'}>
                             <i class="${view.iconClass}"></i> ${view.label}
                         </button>
                     </div>
@@ -1237,8 +1210,7 @@ while ($row = $settings_result->fetch_assoc()) {
             }
         }
 
-        // ── Backup Download with Owner Email Approval ─────────────
-        let activeBackupApprovalPoll = null;
+        // ── Backup Download ─────────────
 
         function notifyBackup(message, type = 'info') {
             if (typeof showToast === 'function') {
@@ -1256,138 +1228,22 @@ while ($row = $settings_result->fetch_assoc()) {
         async function downloadBackup(fileName) {
             if (!fileName) return;
 
-            const state = backupApprovalStates[fileName] || {};
-            const status = (state.status || '').toLowerCase();
-
-            if (status === 'approved' && state.downloadUrl) {
-                const url = state.downloadUrl;
-                delete backupApprovalStates[fileName];
-                loadBackupList();
-                window.location.href = url;
+            const isAdminUser = <?php echo json_encode((($currentUser['role_name'] ?? '') === 'admin') || (($currentUser['role'] ?? '') === 'admin')); ?>;
+            if (!isAdminUser) {
+                notifyBackup('Only admins can download database backups.', 'info');
                 return;
             }
-
-            if (status === 'pending') {
-                notifyBackup('Waiting for owner approval. Check your email workflow status.', 'info');
-                return;
-            }
-
-            const userName = <?php echo json_encode($currentUser['full_name'] ?? $currentUser['username'] ?? 'Unknown User'); ?>;
-            const userRole = <?php echo json_encode($currentUser['role_name'] ?? 'unknown'); ?>;
 
             const ok = await customConfirm(
-                'Request Owner Approval',
-                'Requester: ' + userName + '\nRole: ' + userRole + '\nFile: ' + fileName + '\n\nAn email with Allow/Deny buttons will be sent to the owner. Download will start only after owner clicks Allow.',
-                'warning',
-                { confirmText: 'Send Approval Request', cancelText: 'Cancel' }
+                'Download Backup',
+                'Download this backup file now?\n\nFile: ' + fileName,
+                'backup',
+                { confirmText: 'Download Now', cancelText: 'Cancel' }
             );
             if (!ok) return;
 
-            try {
-                const res = await fetch('request_backup_download.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ file: fileName })
-                });
-                const data = await res.json();
-
-                if (!data.success || !data.request_token) {
-                    customAlert('Request Failed', data.message || 'Could not send approval request.', 'error');
-                    return;
-                }
-
-                backupApprovalStates[fileName] = {
-                    status: 'pending',
-                    requestToken: data.request_token,
-                    downloadUrl: null
-                };
-                loadBackupList();
-
-                notifyBackup('Approval request sent. Waiting for owner action...', 'info');
-                waitForBackupApproval(data.request_token, fileName);
-            } catch (err) {
-                customAlert('Request Error', 'Could not send approval request: ' + err.message, 'error');
-            }
-        }
-
-        function waitForBackupApproval(requestToken, fileName) {
-            if (!requestToken) return;
-
-            if (activeBackupApprovalPoll) {
-                clearInterval(activeBackupApprovalPoll.intervalId);
-                activeBackupApprovalPoll = null;
-            }
-
-            const startedAt = Date.now();
-            const timeoutMs = 10 * 60 * 1000; // 10 minutes UI wait
-
-            const poll = async () => {
-                if (Date.now() - startedAt > timeoutMs) {
-                    clearInterval(activeBackupApprovalPoll.intervalId);
-                    activeBackupApprovalPoll = null;
-                    notifyBackup('Approval wait timed out. Please request again if needed.', 'info');
-                    return;
-                }
-
-                try {
-                    const res = await fetch('check_backup_download_status.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ request_token: requestToken })
-                    });
-                    const data = await res.json();
-                    if (!data.success) {
-                        return;
-                    }
-
-                    const status = (data.status || '').toLowerCase();
-                    if (status === 'approved' && data.download_url) {
-                        clearInterval(activeBackupApprovalPoll.intervalId);
-                        activeBackupApprovalPoll = null;
-
-                        // Auto-download immediately
-                        delete backupApprovalStates[fileName];
-                        loadBackupList();
-                        window.location.href = data.download_url;
-                        notifyBackup('Owner approved! Download started successfully.', 'success');
-                        return;
-                    }
-
-                    if (status === 'denied') {
-                        clearInterval(activeBackupApprovalPoll.intervalId);
-                        activeBackupApprovalPoll = null;
-                        backupApprovalStates[fileName] = {
-                            status: 'denied',
-                            requestToken,
-                            downloadUrl: null
-                        };
-                        loadBackupList();
-                        notifyBackup('Owner denied this backup download request.', 'info');
-                        return;
-                    }
-
-                    if (status === 'expired') {
-                        clearInterval(activeBackupApprovalPoll.intervalId);
-                        activeBackupApprovalPoll = null;
-                        backupApprovalStates[fileName] = {
-                            status: 'expired',
-                            requestToken,
-                            downloadUrl: null
-                        };
-                        loadBackupList();
-                        notifyBackup('Approval request expired. Please request again.', 'info');
-                    }
-                } catch (_) {
-                    // Keep polling silently for transient network issues
-                }
-            };
-
-            activeBackupApprovalPoll = {
-                requestToken,
-                intervalId: setInterval(poll, 5000)
-            };
-
-            poll();
+            window.location.href = 'download_backup.php?file=' + encodeURIComponent(fileName);
+            notifyBackup('Download started.', 'success');
         }
 
         // Theme handling

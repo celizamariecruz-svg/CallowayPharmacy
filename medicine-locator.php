@@ -2,6 +2,7 @@
 require_once 'Security.php';
 Security::initSession();
 include 'db_connection.php';
+require_once 'ImageHelper.php';
 
 // Initialize variables
 $search = '';
@@ -475,6 +476,7 @@ include 'header-component.php';
       <?php if ($result && $result->num_rows > 0):
         $idx = 0;
         while ($row = $result->fetch_assoc()):
+          $row['image_url'] = resolveProductImageUrl((string)($row['image_url'] ?? ''), (string)($row['name'] ?? ''));
           // Stock
           $stockClass = $row['stock_quantity'] <= 0 ? 'out-of-stock' :
                         ($row['stock_quantity'] < 10 ? 'low-stock' : 'in-stock');

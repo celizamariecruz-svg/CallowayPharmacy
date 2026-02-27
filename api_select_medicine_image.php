@@ -5,6 +5,7 @@
  */
 require_once 'db_connection.php';
 require_once 'Auth.php';
+require_once 'ImageHelper.php';
 
 header('Content-Type: application/json');
 
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $input = json_decode(file_get_contents('php://input'), true);
 $productId = intval($input['product_id'] ?? 0);
-$imageUrl = trim($input['image_url'] ?? '');
+$imageUrl = normalizeProductImageUrl((string)($input['image_url'] ?? ''));
 
 if ($productId <= 0) {
     echo json_encode(['success' => false, 'message' => 'Invalid product ID']);
@@ -35,12 +36,28 @@ if (empty($imageUrl)) {
     exit;
 }
 
-// Validate the image file exists
-$imagePath = __DIR__ . '/' . $imageUrl;
-if (!file_exists($imagePath)) {
+if (preg_match('#^(https?:)?//#i', $imageUrl) || stripos($imageUrl, 'data:') === 0) {
+    echo json_encode(['success' => false, 'message' => 'Only local server image paths are allowed']);
+    exit;
+}
+
+$decodedPath = rawurldecode($imageUrl);
+$basePath = realpath(__DIR__);
+$resolvedPath = realpath(__DIR__ . '/' . ltrim($decodedPath, '/'));
+
+if ($basePath === false || $resolvedPath === false || !is_file($resolvedPath)) {
     echo json_encode(['success' => false, 'message' => 'Image file not found on server']);
     exit;
 }
+
+if (strpos($resolvedPath, $basePath . DIRECTORY_SEPARATOR) !== 0 && $resolvedPath !== $basePath) {
+    echo json_encode(['success' => false, 'message' => 'Invalid image path']);
+    exit;
+}
+
+$relativePath = str_replace('\\', '/', ltrim(substr($resolvedPath, strlen($basePath)), '\\/'));
+$segments = array_filter(explode('/', $relativePath), fn($segment) => $segment !== '');
+$imageUrl = implode('/', array_map(fn($segment) => rawurlencode(rawurldecode($segment)), $segments));
 
 try {
     // Update the product's image_url

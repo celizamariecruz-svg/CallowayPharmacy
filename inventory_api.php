@@ -7,6 +7,7 @@
 
 require_once 'db_connection.php';
 require_once 'Auth.php';
+require_once 'ImageHelper.php';
 
 header('Content-Type: application/json');
 
@@ -223,6 +224,7 @@ function getProducts($conn, $auth)
 
         $products = [];
         while ($row = $result->fetch_assoc()) {
+            $row['image_url'] = resolveProductImageUrl((string)($row['image_url'] ?? ''), (string)($row['name'] ?? ''));
             $products[] = $row;
         }
 
@@ -284,6 +286,7 @@ function getProduct($conn, $auth)
         }
 
         $product = $result->fetch_assoc();
+        $product['image_url'] = resolveProductImageUrl((string)($product['image_url'] ?? ''), (string)($product['name'] ?? ''));
 
         echo json_encode([
             'success' => true,
@@ -700,6 +703,7 @@ function lowStockAlert($conn, $auth)
 
         $products = [];
         while ($row = $result->fetch_assoc()) {
+            $row['image_url'] = resolveProductImageUrl((string)($row['image_url'] ?? ''), (string)($row['name'] ?? ''));
             $products[] = $row;
         }
 
@@ -749,6 +753,7 @@ function expiringProducts($conn, $auth)
 
         $products = [];
         while ($row = $result->fetch_assoc()) {
+            $row['image_url'] = resolveProductImageUrl((string)($row['image_url'] ?? ''), (string)($row['name'] ?? ''));
             $products[] = $row;
         }
 
