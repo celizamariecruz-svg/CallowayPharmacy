@@ -588,16 +588,20 @@ $page_title = 'Reports & Analytics';
         let categoryChart = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Set today as default filter on page load
+            // Default to this month for a useful initial view
             const today = new Date();
             const startInput = document.getElementById('startDate');
             const endInput = document.getElementById('endDate');
             
-            // Set both dates to today
-            startInput.valueAsDate = today;
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            startInput.valueAsDate = monthStart;
             endInput.valueAsDate = today;
             
-            // Load reports with today's filter
+            // Highlight the 'month' quick-range button
+            document.querySelectorAll('.quick-range-btn').forEach(b => {
+                if (b.textContent.trim().toLowerCase().includes('month')) b.classList.add('active');
+            });
+            
             loadReports();
         });
 
@@ -786,10 +790,13 @@ $page_title = 'Reports & Analytics';
                 // -- Expiring table --
                 if (expiringRes.success && expiringRes.data.length > 0) {
                     const rows = expiringRes.data.slice(0, 10).map(p => {
-                        const days = p.days_until_expiry;
+                        const days = parseInt(p.days_until_expiry);
                         let badge;
-                        if (days <= 7) badge = `<span style="color: var(--danger-color, #dc3545); font-weight: 700;">${days} Days</span>`;
-                        else badge = `<span style="color: var(--accent-color, #fd7e14); font-weight: 700;">${days} Days</span>`;
+                        if (days < 0) badge = `<span style="color: var(--danger-color, #dc3545); font-weight: 700;">EXPIRED</span>`;
+                        else if (days === 0) badge = `<span style="color: var(--danger-color, #dc3545); font-weight: 700;">Today!</span>`;
+                        else if (days <= 7) badge = `<span style="color: var(--danger-color, #dc3545); font-weight: 700;">${days} Days</span>`;
+                        else if (days <= 30) badge = `<span style="color: var(--accent-color, #fd7e14); font-weight: 700;">${days} Days</span>`;
+                        else badge = `<span style="color: var(--text-light); font-weight: 600;">${days} Days</span>`;
                         return [p.name, p.expiry_date, badge];
                     });
                     mockTable('expiringTable', rows);

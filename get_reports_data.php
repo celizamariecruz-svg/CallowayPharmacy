@@ -299,20 +299,23 @@ switch($action) {
             exit;
         }
 
-        $query = "SELECT 
-                    p.product_id,
-                    p.name as product_name,
-                    p.stock_quantity,
-                    DATE(MAX(s.created_at)) as last_sale_date
-                  FROM products p
-                  LEFT JOIN sale_items si ON p.product_id = si.product_id
-                  LEFT JOIN sales s ON si.sale_id = s.sale_id
-                  WHERE p.is_active = 1
-                  GROUP BY p.product_id, p.name, p.stock_quantity
-                  HAVING (last_sale_date IS NULL OR last_sale_date < DATE_SUB(CURDATE(), INTERVAL 90 DAY))
-                     AND p.stock_quantity > 0
-                  ORDER BY last_sale_date IS NULL DESC, last_sale_date ASC
-                  LIMIT ?";
+                $query = "SELECT *
+                                    FROM (
+                                        SELECT 
+                                                p.product_id,
+                                                p.name as product_name,
+                                                p.stock_quantity,
+                                                DATE(MAX(s.created_at)) as last_sale_date
+                                        FROM products p
+                                        LEFT JOIN sale_items si ON p.product_id = si.product_id
+                                        LEFT JOIN sales s ON si.sale_id = s.sale_id
+                                        WHERE p.is_active = 1
+                                        GROUP BY p.product_id, p.name, p.stock_quantity
+                                    ) ds
+                                    WHERE (ds.last_sale_date IS NULL OR ds.last_sale_date < DATE_SUB(CURDATE(), INTERVAL 90 DAY))
+                                        AND ds.stock_quantity > 0
+                                    ORDER BY ds.last_sale_date IS NULL DESC, ds.last_sale_date ASC
+                                    LIMIT ?";
 
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $limit);
@@ -438,18 +441,20 @@ switch($action) {
 
         $recentLogs = [];
         if (tableExists($conn, 'rx_approval_log')) {
+            // Include both online-order Rx approvals and POS Rx dispensing
             $logQuery = "SELECT 
                             l.action,
                             l.created_at,
                             p.name as product_name,
-                            u.username as pharmacist_name
+                            COALESCE(u.full_name, u.username, 'POS Cashier') as pharmacist_name
                           FROM rx_approval_log l
                           LEFT JOIN products p ON l.product_id = p.product_id
                           LEFT JOIN users u ON l.pharmacist_id = u.user_id
+                          WHERE l.created_at >= ? AND l.created_at < ?
                           ORDER BY l.created_at DESC
                           LIMIT ?";
             $stmt = $conn->prepare($logQuery);
-            $stmt->bind_param("i", $limit);
+            $stmt->bind_param("ssi", $startTimestamp, $endDateNextDay, $limit);
             $stmt->execute();
             $recentLogs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt->close();

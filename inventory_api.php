@@ -740,14 +740,17 @@ function expiringProducts($conn, $auth)
         $targetDate = date('Y-m-d', strtotime("+$days days"));
         $today = date('Y-m-d');
 
+        // Include already-expired products (critical) + products expiring within threshold
         $stmt = $conn->prepare("
             SELECT *, DATEDIFF(expiry_date, ?) as days_until_expiry 
             FROM products 
-            WHERE expiry_date BETWEEN ? AND ? 
-            AND is_active = 1 
+            WHERE expiry_date IS NOT NULL 
+              AND expiry_date != '0000-00-00'
+              AND expiry_date <= ? 
+              AND is_active = 1 
             ORDER BY expiry_date ASC
         ");
-        $stmt->bind_param("sss", $today, $today, $targetDate);
+        $stmt->bind_param("ss", $today, $targetDate);
         $stmt->execute();
         $result = $stmt->get_result();
 

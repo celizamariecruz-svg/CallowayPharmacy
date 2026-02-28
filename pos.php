@@ -1968,9 +1968,6 @@ $page_title = 'Point of Sale';
                 <button class="method-btn active" onclick="setPaymentMethod('cash', this)">
                     <i class="fas fa-money-bill-wave"></i> Cash
                 </button>
-                <button class="method-btn" onclick="setPaymentMethod('card', this)">
-                    <i class="fas fa-credit-card"></i> Card
-                </button>
                 <button class="method-btn" onclick="setPaymentMethod('loyalty_points', this)" id="loyaltyPointsBtn" disabled title="Select a loyalty member first">
                     <i class="fas fa-coins"></i> Points
                 </button>
@@ -2877,7 +2874,7 @@ $page_title = 'Point of Sale';
                 discount_percent: discountEnabled ? 20 : 0,
                 discount_amount: discountAmount,
                 payment_method: paymentMethod,
-                amount_tendered: paymentMethod === 'card' ? total : tenderedInput,
+                amount_tendered: tenderedInput,
                 receipt_no: 'TX-' + now.getTime().toString().slice(-8),
                 created_at: now.toISOString(),
                 cashier: document.body.dataset.cashierName || 'Cashier',

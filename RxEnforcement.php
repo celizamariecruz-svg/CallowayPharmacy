@@ -22,7 +22,7 @@ class RxEnforcement {
                         FROM information_schema.COLUMNS
                         WHERE TABLE_SCHEMA = DATABASE()
                             AND TABLE_NAME = 'products'
-                            AND COLUMN_NAME = 'is_prescription'
+                            AND COLUMN_NAME IN ('requires_prescription', 'is_prescription')
                         LIMIT 1
                 ");
         $stmt->execute();

@@ -50,7 +50,7 @@ switch ($action) {
 
         $items           = $input['items'] ?? [];
         $total           = floatval($input['total'] ?? 0);
-        $paymentMethod   = $input['payment_method'] ?? 'Cash';
+        $paymentMethod   = strtolower(trim($input['payment_method'] ?? 'cash'));
         $amountTendered  = floatval($input['amount_tendered'] ?? $total);
         // Server-generated receipt number — never trust client-supplied values
         $receiptNo       = 'TX-' . substr(time(), -8) . '-' . mt_rand(100, 999);
@@ -64,6 +64,12 @@ switch ($action) {
 
         if (empty($items)) {
             echo json_encode(['success' => false, 'message' => 'Cart is empty']);
+            exit;
+        }
+
+        $allowedPaymentMethods = ['cash', 'loyalty_points'];
+        if (!in_array($paymentMethod, $allowedPaymentMethods, true)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid payment method']);
             exit;
         }
 
@@ -143,7 +149,7 @@ switch ($action) {
                 $qty = intval($item['qty']);
                 $perPiece = !empty($item['perPiece']);
 
-                $lookupStmt = $conn->prepare("SELECT product_id, name, selling_price, price_per_piece, stock_quantity, pieces_per_box FROM products WHERE product_id = ? AND is_active = 1");
+                $lookupStmt = $conn->prepare("SELECT product_id, name, selling_price, price_per_piece, stock_quantity, pieces_per_box, requires_prescription FROM products WHERE product_id = ? AND is_active = 1");
                 $lookupStmt->bind_param("i", $productId);
                 $lookupStmt->execute();
                 $product = $lookupStmt->get_result()->fetch_assoc();
@@ -173,7 +179,8 @@ switch ($action) {
                     'qty' => $qty,
                     'lineTotal' => $lineTotal,
                     'perPiece' => $perPiece,
-                    'piecesPerBox' => intval($product['pieces_per_box'] ?? $item['piecesPerBox'] ?? 1)
+                    'piecesPerBox' => intval($product['pieces_per_box'] ?? $item['piecesPerBox'] ?? 1),
+                    'requires_prescription' => intval($product['requires_prescription'] ?? 0)
                 ];
             }
 
@@ -277,8 +284,55 @@ switch ($action) {
                 }
             }
 
-            // 3. Log activity
+            // 3. Log Rx product dispensing
             $userId = $_SESSION['user_id'] ?? 0;
+            try {
+                // Ensure rx_approval_log supports POS sales
+                $conn->query("CREATE TABLE IF NOT EXISTS rx_approval_log (
+                    log_id INT AUTO_INCREMENT PRIMARY KEY,
+                    order_id INT NULL,
+                    sale_id INT NULL,
+                    sale_reference VARCHAR(50) NULL,
+                    product_id INT NOT NULL,
+                    pharmacist_id INT NOT NULL,
+                    action VARCHAR(50) NOT NULL DEFAULT 'Approved',
+                    notes TEXT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_order (order_id),
+                    INDEX idx_sale (sale_id),
+                    INDEX idx_pharmacist (pharmacist_id),
+                    INDEX idx_created (created_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                // Add columns for POS if they don't exist yet
+                if (!posColumnExists($conn, 'rx_approval_log', 'sale_id')) {
+                    $conn->query("ALTER TABLE rx_approval_log ADD COLUMN sale_id INT NULL AFTER order_id");
+                    $conn->query("ALTER TABLE rx_approval_log ADD INDEX idx_sale (sale_id)");
+                }
+                if (!posColumnExists($conn, 'rx_approval_log', 'sale_reference')) {
+                    $conn->query("ALTER TABLE rx_approval_log ADD COLUMN sale_reference VARCHAR(50) NULL AFTER sale_id");
+                }
+                // Make order_id nullable if it isn't already
+                $conn->query("ALTER TABLE rx_approval_log MODIFY COLUMN order_id INT NULL");
+                // Expand action enum if needed
+                $conn->query("ALTER TABLE rx_approval_log MODIFY COLUMN action VARCHAR(50) NOT NULL DEFAULT 'Approved'");
+
+                // Log each Rx product in this sale
+                foreach ($verifiedItems as $rxItem) {
+                    if (!empty($rxItem['requires_prescription'])) {
+                        $rxAction = 'POS Dispensed';
+                        $rxNotes = "Prescription verified at POS by $cashier";
+                        $rxProductId = $rxItem['id'];
+                        $rxLogStmt = $conn->prepare("INSERT INTO rx_approval_log (order_id, sale_id, sale_reference, product_id, pharmacist_id, action, notes) VALUES (NULL, ?, ?, ?, ?, ?, ?)");
+                        $rxLogStmt->bind_param("isiiss", $saleId, $receiptNo, $rxProductId, $userId, $rxAction, $rxNotes);
+                        $rxLogStmt->execute();
+                        $rxLogStmt->close();
+                    }
+                }
+            } catch (Exception $rxEx) {
+                error_log('POS Rx logging note: ' . $rxEx->getMessage());
+            }
+
+            // 4. Log activity
             $auth->logActivity($userId, 'sale_completed', 'POS', "Sale $receiptNo — ₱" . number_format($total, 2));
 
             $conn->commit();
