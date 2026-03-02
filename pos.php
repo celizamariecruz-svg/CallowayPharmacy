@@ -32,9 +32,11 @@ $page_title = 'Point of Sale';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" onerror="console.warn('QRCode CDN failed to load, using fallback');"></script>
@@ -49,9 +51,9 @@ $page_title = 'Point of Sale';
         /* === LAYOUT === */
         .pos-wrapper {
             display: grid;
-            grid-template-columns: 1fr 400px;
-            height: calc(100vh - 60px);
-            margin-top: 60px;
+            grid-template-columns: 1fr 380px;
+            height: calc(100vh - 56px);
+            margin-top: 56px;
             padding-top: 0;
             width: 100%;
             min-width: 0;
@@ -228,7 +230,33 @@ $page_title = 'Point of Sale';
         @media (min-width: 769px) {
             .pos-wrapper {
                 margin-top: 0 !important;
-                height: calc(100vh - 60px) !important;
+                height: calc(100vh - 56px) !important;
+            }
+        }
+
+        /* Tablet: narrower cart */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .pos-wrapper {
+                grid-template-columns: 1fr 320px;
+            }
+        }
+
+        /* Mobile: stacked layout */
+        @media (max-width: 768px) {
+            .pos-wrapper {
+                grid-template-columns: 1fr !important;
+                grid-template-rows: 1fr auto !important;
+                height: 100vh !important;
+                margin-top: 56px !important;
+            }
+            .pos-right {
+                border-left: none !important;
+                border-top: 1px solid var(--divider-color);
+                max-height: 45vh;
+                overflow-y: auto;
+            }
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
             }
         }
 
@@ -1343,73 +1371,69 @@ $page_title = 'Point of Sale';
             }
         }
 
-        /* ─── Thermal Printer Connect Button ─── */
+        /* ─── Thermal Printer Connect Button (inside topbar) ─── */
         .printer-connect-btn {
-            position: fixed;
-            top: 12px;
-            right: 130px;
-            z-index: 9999;
-            background: var(--card-bg);
-            border: 1px solid var(--input-border);
-            border-radius: 12px;
-            width: 42px;
-            height: 42px;
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1.1rem;
-            color: var(--text-light);
+            transition: all 0.15s;
+            font-size: 1rem;
+            color: white;
         }
         .printer-connect-btn:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
+            background: rgba(255,255,255,0.18);
+            transform: scale(1.05);
         }
         .printer-connect-btn.connected {
-            border-color: #16a34a;
-            color: #16a34a;
+            border-color: #4ade80;
+            color: #4ade80;
         }
         .printer-status-dot {
             position: absolute;
-            top: 6px;
-            right: 6px;
+            top: -1px;
+            right: -1px;
             width: 8px;
             height: 8px;
             border-radius: 50%;
             background: #dc2626;
+            border: 2px solid var(--header-bg);
         }
         .printer-connect-btn.connected .printer-status-dot {
-            background: #16a34a;
-            box-shadow: 0 0 6px rgba(22,163,74,0.5);
+            background: #4ade80;
+            box-shadow: 0 0 6px rgba(74,222,128,0.5);
         }
 
-        /* ─── Online Order Notifications ─── */
+        /* ─── Online Order Notifications (inside topbar) ─── */
         .online-notif-bell {
-            position: fixed;
-            top: 12px;
-            right: 80px;
-            z-index: 9999;
-            background: var(--card-bg);
-            border: 1px solid var(--input-border);
-            border-radius: 12px;
-            width: 42px;
-            height: 42px;
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.1rem;
-            color: var(--text-color);
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 1rem;
+            color: white;
+            transition: all 0.15s;
         }
-        .online-notif-bell:hover { border-color: var(--primary-color); color: var(--primary-color); transform: scale(1.05); }
+        .online-notif-bell:hover { background: rgba(255,255,255,0.18); transform: scale(1.05); }
 
         .online-notif-badge {
             position: absolute;
-            top: -4px;
-            right: -4px;
+            top: -2px;
+            right: -2px;
             background: #ef4444;
             color: white;
             font-size: 0.65rem;
@@ -1421,7 +1445,7 @@ $page_title = 'Point of Sale';
             align-items: center;
             justify-content: center;
             padding: 0 4px;
-            border: 2px solid var(--card-bg);
+            border: 2px solid var(--header-bg);
             animation: notifPulse 2s ease infinite;
         }
         .online-notif-badge.hidden { display: none; }
@@ -1760,17 +1784,28 @@ $page_title = 'Point of Sale';
 <body data-cashier-name="<?php echo htmlspecialchars($currentUser['full_name'] ?? $currentUser['username'] ?? 'Cashier'); ?>">
     <?php include 'header-component.php'; ?>
 
-    <!-- Thermal Printer Connect Button -->
-    <div class="printer-connect-btn" id="printerConnectBtn" onclick="togglePrinterConnection()" title="Connect Thermal Printer">
-        <i class="fas fa-print"></i>
-        <span class="printer-status-dot" id="printerStatusDot"></span>
-    </div>
+    <script>
+    // Inject POS-specific buttons into the topbar-right extras area and hide general notif bell
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hide the general notification bell on POS — POS has its own online-order bell
+        var generalBell = document.getElementById('notifBellBtn');
+        if (generalBell) generalBell.style.display = 'none';
 
-    <!-- Online Order Notification Bell -->
-    <div class="online-notif-bell" id="onlineNotifBell" onclick="togglePosNotifPanel()" title="Online Orders">
-        <i class="fas fa-bell"></i>
-        <span class="online-notif-badge hidden" id="posNotifBadge">0</span>
-    </div>
+        var extras = document.getElementById('topbarRightExtras');
+        if (extras) {
+            extras.innerHTML = `
+                <div class="printer-connect-btn" id="printerConnectBtn" onclick="togglePrinterConnection()" title="Connect Thermal Printer">
+                    <i class="fas fa-print"></i>
+                    <span class="printer-status-dot" id="printerStatusDot"></span>
+                </div>
+                <div class="online-notif-bell" id="onlineNotifBell" onclick="togglePosNotifPanel()" title="Online Orders">
+                    <i class="fas fa-bell"></i>
+                    <span class="online-notif-badge hidden" id="posNotifBadge">0</span>
+                </div>
+            `;
+        }
+    });
+    </script>
 
     <!-- Notification Panel -->
     <div class="online-notif-panel" id="posNotifPanel">

@@ -26,8 +26,10 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Order Status - Calloway Pharmacy</title>
+<link rel="stylesheet" href="design-system.css">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="home.css">
+<link rel="stylesheet" href="responsive.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     .os-container {

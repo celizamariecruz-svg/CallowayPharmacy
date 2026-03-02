@@ -7,6 +7,30 @@ $_headerIsGuest = !isset($_SESSION['user_id']);
 $_headerIsCashier = (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'cashier');
 $_headerIsAdmin = (isset($_SESSION['role_name']) && in_array($_SESSION['role_name'], ['admin', 'super_admin', 'manager']));
 $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
+
+// ── Demo / Survey Mode ──────────────────────────────────────────────────────
+// A "demo viewer" role can browse but cannot change any data.
+$_headerIsDemo = (isset($_SESSION['role_name']) &&
+                  strtolower(trim($_SESSION['role_name'])) === 'demo viewer');
+
+if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Kill the request immediately – demo users cannot submit changes
+    http_response_code(403);
+    // If it looks like an AJAX / JSON request, return JSON
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) ||
+              str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false,
+                          'message' => 'This is a read-only demo account. No changes can be saved.']);
+        exit;
+    }
+    // Otherwise bounce back to the referring page with a flash
+    $_SESSION['demo_blocked'] = true;
+    $ref = $_SERVER['HTTP_REFERER'] ?? 'dashboard.php';
+    header('Location: ' . $ref);
+    exit;
+}
 ?>
 
 <script>
@@ -38,17 +62,13 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
 <!-- Sidebar -->
 <nav class="sidebar open" id="sidebar">
   <div class="sidebar-header">
-    <div class="sidebar-brand">
-      <i class="fas fa-prescription-bottle-medical"></i>
-      <span>Calloway Pharmacy</span>
-    </div>
     <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close menu">
       <i class="fas fa-times"></i>
     </button>
   </div>
 
   <?php if (!$_headerIsGuest): ?>
-  <div class="sidebar-user">
+  <div class="sidebar-user sidebar-user-top">
     <div class="sidebar-user-avatar"><i class="fas fa-user-circle"></i></div>
     <div class="sidebar-user-info">
       <span class="sidebar-user-name"><?php echo htmlspecialchars($_headerUser); ?></span>
@@ -56,11 +76,11 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     </div>
   </div>
   <?php else: ?>
-  <div class="sidebar-user">
+  <div class="sidebar-user sidebar-user-top">
     <div class="sidebar-user-avatar"><i class="fas fa-user-circle"></i></div>
     <div class="sidebar-user-info">
       <span class="sidebar-user-name">Guest</span>
-      <span class="sidebar-user-role"><a href="login.php" style="color:var(--accent,#4FC3F7);text-decoration:none;">Login / Register</a></span>
+      <span class="sidebar-user-role"><a href="login.php" style="color:rgba(255,255,255,0.8);text-decoration:none;">Login / Register</a></span>
     </div>
   </div>
   <?php endif; ?>
@@ -175,6 +195,13 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     <button class="topbar-hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open menu">
       <i class="fas fa-bars"></i>
     </button>
+    <a href="dashboard.php" class="topbar-brand-link">
+      <img src="logo-removebg-preview.png" alt="Logo" class="topbar-logo-img" width="34" height="34">
+      <div class="topbar-brand-text">
+        <span class="topbar-brand-name">Calloway Pharmacy</span>
+        <span class="topbar-brand-sub">Integrated Management System</span>
+      </div>
+    </a>
   </div>
 
   <div class="topbar-center" id="topbarCenter">
@@ -200,79 +227,155 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
   </div>
 </header>
 <style>
+/* ── Premium Topbar ──────────────────────────────────────── */
 .topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 1rem;
-    height: 60px;
-    background: var(--header-bg, #1a3c34);
+    padding: 0 1.25rem;
+    height: 56px;
+    background: var(--header-bg);
     color: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    /* Position handled by styles.css: fixed on mobile, sticky on desktop */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 .topbar-left, .topbar-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+}
+.topbar-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: white;
+    white-space: nowrap;
+    min-width: 0;
+}
+.topbar-brand-link:hover { opacity: 0.9; }
+.topbar-logo-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.topbar-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    min-width: 0;
+}
+.topbar-brand-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.topbar-brand-sub {
+    font-size: 0.6rem;
+    font-weight: 400;
+    opacity: 0.75;
+    letter-spacing: 0.03em;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 #topbarRightExtras {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   flex-wrap: nowrap;
 }
 .topbar-center {
     flex: 1;
     display: flex;
     justify-content: center;
-    padding: 0 1rem;
+    padding: 0 0.75rem;
+    min-width: 0;
 }
 .topbar-hamburger {
     background: none;
     border: none;
     color: white;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     cursor: pointer;
     padding: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
 }
-.topbar-brand {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1.2rem;
-    white-space: nowrap;
-}
+.topbar-hamburger:hover { background: rgba(255,255,255,0.12); }
+
 .topbar-notification-btn, .topbar-theme-toggle {
-    background: none;
-    border: none;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
     color: white;
     cursor: pointer;
-    font-size: 1.2rem;
-    padding: 0.5rem;
+    font-size: 1rem;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.15s ease;
+}
+.topbar-notification-btn:hover, .topbar-theme-toggle:hover {
+    background: rgba(255,255,255,0.18);
+    transform: scale(1.05);
 }
 .notif-badge {
     position: absolute;
-    top: 0;
-    right: 0;
-    background: red;
+    top: -2px;
+    right: -2px;
+    background: #ef4444;
     color: white;
     border-radius: 50%;
-    padding: 0.1rem 0.4rem;
-    font-size: 0.7rem;
-    font-weight: bold;
-}
-@media (max-width: 768px) {
-    .topbar-brand { display: none; }
-  .topbar-right { gap: 0.4rem; }
-  #topbarRightExtras { gap: 0.35rem; }
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border: 2px solid var(--header-bg);
+    line-height: 1;
 }
 
-/* Universal desktop shell: sidebar + content side-by-side in-flow */
+/* ── Premium Sidebar ─────────────────────────────────────── */
+.sidebar-logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.9);
+  padding: 2px;
+}
+
+/* On mobile: hide brand text (for compactness), show hamburger */
+@media (max-width: 768px) {
+  .topbar-right { gap: 0.3rem; }
+  #topbarRightExtras { gap: 0.25rem; }
+  .topbar-brand-sub { display: none; }
+  .topbar-brand-name { font-size: 0.85rem; }
+}
+
+/* Very small screens: hide text entirely, logo only */
+@media (max-width: 400px) {
+  .topbar-brand-text { display: none; }
+}
+
+/* Desktop shell: sidebar + content in CSS grid */
 @media (min-width: 769px) {
   html, body {
     margin: 0 !important;
@@ -284,7 +387,7 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
 
   body {
     display: grid !important;
-    grid-template-columns: 290px minmax(0, 1fr) !important;
+    grid-template-columns: 260px minmax(0, 1fr) !important;
     grid-auto-rows: auto !important;
     min-height: 100vh !important;
   }
@@ -296,25 +399,48 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     position: sticky !important;
     top: 0 !important;
     left: auto !important;
-    width: 290px !important;
+    width: 260px !important;
     height: 100vh !important;
     transform: none !important;
     margin: 0 !important;
     overflow-y: hidden !important;
     z-index: 20 !important;
     align-self: start !important;
+    border-right: 1px solid var(--c-border, var(--divider-color));
+    box-shadow: none !important;
   }
 
   .sidebar-nav {
-    overflow-y: hidden !important;
+    overflow-y: auto !important;
     max-height: none !important;
   }
+
+  .sidebar-nav::-webkit-scrollbar { width: 0; }
 
   #sidebarOverlay,
   .sidebar-overlay,
   .sidebar-close,
   .topbar-hamburger {
     display: none !important;
+  }
+
+  .sidebar-header {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar-user-top {
+    margin: 0 !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    border-radius: 0 !important;
   }
 
   #topbar,
@@ -337,7 +463,9 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding-top: 1rem !important;
+    padding-top: 1.25rem !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
   }
 }
 </style>
@@ -345,4 +473,161 @@ $_headerRoleName = $_SESSION['role_name'] ?? 'Guest';
 <?php if (!$_headerIsGuest && !$_headerIsCustomer): ?>
 <link rel="stylesheet" href="notification-tray.css">
 <script src="notification-tray.js" defer></script>
+<?php endif; ?>
+
+<?php if ($_headerIsDemo): ?>
+<!-- ═══ DEMO / SURVEY MODE BANNER + JS GUARD ════════════════════════════ -->
+<style>
+  #demo-mode-banner {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999;
+    background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center; gap: 0.65rem;
+    padding: 0.55rem 1rem;
+    font-family: system-ui, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 -2px 16px rgba(79,70,229,.35);
+    user-select: none;
+  }
+  #demo-mode-banner .dmb-icon { font-size: 1rem; }
+  #demo-mode-banner .dmb-text { opacity: .95; }
+  #demo-mode-banner .dmb-badge {
+    background: rgba(255,255,255,.18);
+    border-radius: 999px;
+    padding: .15rem .6rem;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  /* Dim every interactive element in demo mode */
+  .demo-mode-locked button:not(#demo-mode-dismiss):not(.sidebar-close):not(#sidebar-toggle),
+  .demo-mode-locked input[type=submit],
+  .demo-mode-locked input[type=button] {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+    pointer-events: auto !important;  /* we still need click to show toast */
+  }
+
+  /* Nudge bottom so banner doesn't hide content */
+  body.demo-mode-locked { padding-bottom: 46px !important; }
+
+  /* Demo block toast */
+  #demo-toast {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e1b4b;
+    color: #fff;
+    padding: .6rem 1.4rem;
+    border-radius: 8px;
+    font-size: .88rem;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    z-index: 100000;
+    opacity: 0;
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #demo-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+
+<!-- Banner -->
+<div id="demo-mode-banner">
+  <span class="dmb-icon">🔒</span>
+  <span class="dmb-text">You are in <strong>Read-Only Demo Mode</strong> — all changes are disabled.</span>
+  <span class="dmb-badge">Survey / Test Account</span>
+</div>
+<div id="demo-toast">🔒 Read-only demo — changes are not allowed</div>
+
+<script>
+(function () {
+  'use strict';
+
+  document.body.classList.add('demo-mode-locked');
+
+  /* ── Intercept ALL form submissions ─────────────────────── */
+  document.addEventListener('submit', function (e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    showDemoToast();
+  }, true);
+
+  /* ── Intercept fetch / XMLHttpRequest for mutating methods ─ */
+  const _fetch = window.fetch;
+  window.fetch = function (url, opts) {
+    opts = opts || {};
+    const method = (opts.method || 'GET').toUpperCase();
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      showDemoToast();
+      return Promise.resolve(new Response(
+        JSON.stringify({ success: false, message: 'Read-only demo account.' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      ));
+    }
+    return _fetch.apply(this, arguments);
+  };
+
+  const _open = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (method) {
+    this._demoMethod = method.toUpperCase();
+    return _open.apply(this, arguments);
+  };
+  const _send = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.send = function () {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(this._demoMethod)) {
+      showDemoToast();
+      return; // swallow the request
+    }
+    return _send.apply(this, arguments);
+  };
+
+  /* ── Block clicks on write action buttons ────────────────── */
+  document.addEventListener('click', function (e) {
+    const el = e.target.closest('button, [type=submit], [type=button], .btn-action, .btn-save, .btn-delete, .btn-edit');
+    if (!el) return;
+    // Allow navigation/view buttons by checking text
+    const text = (el.textContent || el.value || '').toLowerCase();
+    const safe = ['view', 'close', 'cancel', 'back', 'print', 'search', 'filter', 'refresh',
+                  'logout', 'sign out', 'open', 'details', 'show'];
+    if (safe.some(s => text.includes(s))) return;
+    // Allow sidebar toggle and demo banner
+    if (el.id === 'demo-mode-dismiss' ||
+        el.classList.contains('sidebar-close') ||
+        el.id === 'sidebar-toggle' ||
+        el.closest('#sidebar') ||
+        el.closest('#topbar')) return;
+    // If it looks like a write action, block it
+    const writeHints = ['save', 'add', 'create', 'delete', 'remove', 'update', 'submit',
+                        'confirm', 'approve', 'reject', 'edit', 'reset', 'clear'];
+    if (writeHints.some(h => text.includes(h)) || el.type === 'submit') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      showDemoToast();
+    }
+  }, true);
+
+  /* ── Toast helper ─────────────────────────────────────────── */
+  let _toastTimer;
+  function showDemoToast() {
+    const t = document.getElementById('demo-toast');
+    if (!t) return;
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── Flash if PHP already blocked a POST last cycle ─────── */
+  <?php if (!empty($_SESSION['demo_blocked'])): unset($_SESSION['demo_blocked']); ?>
+  document.addEventListener('DOMContentLoaded', function () { showDemoToast(); });
+  <?php endif; ?>
+
+})();
+</script>
 <?php endif; ?>

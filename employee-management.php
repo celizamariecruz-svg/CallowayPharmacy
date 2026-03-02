@@ -318,8 +318,10 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Employee Management - Calloway Pharmacy</title>
+<link rel="stylesheet" href="design-system.css">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="polish.css">
+<link rel="stylesheet" href="responsive.css">
 <link rel="stylesheet" href="custom-modal.css?v=2">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="custom-modal.js?v=2"></script>
@@ -350,7 +352,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     box-shadow: 0 4px 15px var(--shadow-color);
     border: 1px solid var(--table-border);
     text-align: center;
-    transition: all 0.3s ease;
+    transition: transform 0.15s, box-shadow 0.15s;
     animation: slideUp 0.6s ease-out backwards;
     position: relative;
     overflow: hidden;
@@ -363,7 +365,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
   .stat-card:nth-child(5) { animation-delay: 0.25s; border-left: 4px solid #ec4899; }
   .stat-card:nth-child(6) { animation-delay: 0.3s; border-left: 4px solid #06b6d4; }
 
-  .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px var(--shadow-color); }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--shadow-color); }
   .stat-card .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--primary-color); }
   .stat-card .stat-label { font-size: 0.85rem; color: var(--text-color); opacity: 0.7; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
   .stat-card .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
@@ -492,7 +494,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.15s, box-shadow 0.15s;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -530,7 +532,7 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
   .toggle-leave-button, .remove-button {
     display: inline-flex; align-items: center; gap: 0.3rem;
     padding: 0.4rem 0.8rem; border: none; border-radius: 20px;
-    font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+    font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
   }
   .toggle-leave-button { background: #f59e0b; color: white; }
   .toggle-leave-button:hover { background: #d97706; transform: translateY(-2px); }

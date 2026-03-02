@@ -134,9 +134,16 @@ require_once 'RxEnforcement.php';
 $rxEnforcer = new RxEnforcement($conn);
 
 // Check if cart contains prescription medications
-$rxCheck = $rxEnforcer->checkCartForRxProducts($verifiedItems);
-$has_rx_products = $rxCheck['has_rx'];
-$rx_product_names = array_column($rxCheck['rx_products'], 'name');
+$has_rx_products = false;
+$rx_product_names = [];
+try {
+    $rxCheck = $rxEnforcer->checkCartForRxProducts($verifiedItems);
+    $has_rx_products = $rxCheck['has_rx'];
+    $rx_product_names = array_column($rxCheck['rx_products'], 'name');
+} catch (Exception $e) {
+    // Log but don't block the order if Rx check fails
+    error_log('RxEnforcement check failed: ' . $e->getMessage());
+}
 
 // ===== LOYALTY POINTS REDEMPTION =====
 $pointsRedeemed = 0.0;

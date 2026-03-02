@@ -197,21 +197,23 @@ $salesTrend = getSalesTrend($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .dashboard-hero {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--c-brand-dark, #1d4ed8) 100%);
             color: white;
-            padding: 2.5rem 2rem;
+            padding: 2rem 1.75rem;
             margin-top: 0;
-            border-radius: 0 0 30px 30px;
-            margin-bottom: 2rem;
+            border-radius: 0 0 24px 24px;
+            margin-bottom: 1.75rem;
             position: relative;
             overflow: hidden;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 4px 20px -4px rgba(var(--c-brand-rgb, 37, 99, 235), 0.35);
         }
 
         .hero-bg-icon {
@@ -225,21 +227,20 @@ $salesTrend = getSalesTrend($conn);
         }
 
         .welcome-text h1 {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 800;
-            margin: 0 0 0.5rem;
+            margin: 0 0 0.35rem;
             letter-spacing: -0.02em;
             color: #ffffff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            line-height: 1.3;
         }
 
         .welcome-text p {
-            font-size: 1.05rem;
-            opacity: 1;
+            font-size: 0.95rem;
+            opacity: 0.9;
             margin: 0;
             font-weight: 400;
-            color: rgba(255,255,255,0.92);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            color: rgba(255,255,255,0.88);
         }
 
         .dashboard-container {
@@ -258,31 +259,33 @@ $salesTrend = getSalesTrend($conn);
         }
 
         .stat-card-premium {
-            padding: 1.5rem;
-            border-radius: 16px;
+            padding: 1.25rem;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--c-border, rgba(226, 232, 240, 1));
         }
 
         .stat-card-premium:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
         }
 
         .stat-icon-wrapper {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            background: rgba(var(--primary-rgb), 0.1);
+            font-size: 1.2rem;
+            background: rgba(var(--primary-rgb), 0.08);
             color: var(--primary-color);
+            flex-shrink: 0;
         }
 
         .stat-content h3 {
@@ -295,10 +298,11 @@ $salesTrend = getSalesTrend($conn);
         }
 
         .stat-content .value {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: var(--text-color);
             line-height: 1;
+            letter-spacing: -0.02em;
         }
 
         .dashboard-main-grid {
@@ -326,19 +330,19 @@ $salesTrend = getSalesTrend($conn);
         }
 
         .action-btn-glass {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--input-border);
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
+            background: var(--c-surface, var(--card-bg));
+            border: 1px solid var(--c-border, var(--input-border));
+            padding: 0.6rem 1.25rem;
+            border-radius: 10px;
             font-weight: 600;
-            color: var(--text-color);
-            display: flex;
+            font-size: 0.84rem;
+            color: var(--c-text-secondary, var(--text-color));
+            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
+            gap: 0.45rem;
+            transition: all 0.2s ease;
             text-decoration: none;
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.04));
         }
 
         [data-theme="dark"] .action-btn-glass {

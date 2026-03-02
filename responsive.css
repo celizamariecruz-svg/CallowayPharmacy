@@ -1,0 +1,431 @@
+/* ═══════════════════════════════════════════════════════════════
+   Calloway Pharmacy — Mobile-First Responsive Framework v2.0
+   Comprehensive responsive utilities + layout optimization
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Responsive Container ──────────────────────────────────── */
+.container-responsive {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+@media (min-width: 640px)  { .container-responsive { padding: 0 var(--space-6); } }
+@media (min-width: 1024px) { .container-responsive { padding: 0 var(--space-8); } }
+
+/* ── Responsive Grid System ────────────────────────────────── */
+.grid { display: grid; gap: var(--space-4); }
+
+.grid-cols-1 { grid-template-columns: 1fr; }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Auto-fit responsive grid */
+.grid-auto-sm { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.grid-auto-md { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.grid-auto-lg { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+
+/* ── Responsive Flex ───────────────────────────────────────── */
+.flex-wrap-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* ── Mobile-First Breakpoints ──────────────────────────────── */
+
+/* === MOBILE BASE (< 480px) ===================================*/
+@media (max-width: 479px) {
+  /* Tighter padding on small phones */
+  main {
+    padding-left: var(--space-3) !important;
+    padding-right: var(--space-3) !important;
+  }
+
+  /* Stack everything */
+  .stats-grid,
+  .dashboard-main-grid,
+  .quick-actions-bar {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Smaller stat cards */
+  .stat-card-premium,
+  .stat-card-v2 {
+    padding: var(--space-3) var(--space-4) !important;
+  }
+
+  .stat-card-premium .value,
+  .stat-card-v2 .stat-value-v2 {
+    font-size: 1.5rem !important;
+  }
+
+  .stat-icon-wrapper,
+  .stat-card-v2 .stat-icon-v2 {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 1.1rem !important;
+  }
+
+  /* Action buttons wrap better */
+  .action-btn-glass {
+    padding: 0.6rem 1rem !important;
+    font-size: var(--text-sm) !important;
+    flex: 1 1 auto !important;
+    justify-content: center !important;
+  }
+
+  /* Tables: horizontal scroll */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 calc(-1 * var(--space-3));
+    padding: 0 var(--space-3);
+  }
+
+  .table-responsive table {
+    min-width: 500px;
+  }
+
+  /* Cards: reduce padding */
+  .glass-panel,
+  .card-premium {
+    padding: var(--space-4) !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  /* Hero section */
+  .dashboard-hero {
+    padding: 1.5rem 1rem !important;
+    border-radius: 0 0 20px 20px !important;
+  }
+
+  .dashboard-hero .welcome-text h1 {
+    font-size: 1.25rem !important;
+  }
+
+  .dashboard-hero .welcome-text p {
+    font-size: var(--text-sm) !important;
+  }
+
+  .hero-bg-icon {
+    font-size: 8rem !important;
+  }
+
+  /* Modal full-width on mobile  */
+  .modal-content {
+    width: calc(100% - 2rem) !important;
+    max-width: none !important;
+    border-radius: var(--radius-xl) !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Footer */
+  footer {
+    padding: var(--space-4) var(--space-3) !important;
+  }
+
+  /* Chart container */
+  .chart-container {
+    height: 200px !important;
+  }
+
+  /* Toast notifications */
+  .toast {
+    left: var(--space-3) !important;
+    right: var(--space-3) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+}
+
+/* === SMALL PHONES (480-639px) =================================*/
+@media (min-width: 480px) and (max-width: 639px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* === TABLETS PORTRAIT (640-767px) =============================*/
+@media (min-width: 640px) and (max-width: 767px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* === TABLETS LANDSCAPE / SMALL LAPTOPS (768-1023px) ===========*/
+@media (min-width: 768px) and (max-width: 1023px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* === DESKTOP (1024px+) ========================================*/
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 2fr 1fr !important;
+  }
+}
+
+/* ── Mobile Sidebar ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Hide bottom nav labels if too crowded */
+  .sidebar-section-label {
+    font-size: 0.65rem !important;
+    padding: 0.8rem 1rem 0.3rem !important;
+  }
+
+  .sidebar-link {
+    padding: 0.6rem 1rem !important;
+    font-size: var(--text-sm) !important;
+  }
+
+  .sidebar-link i {
+    font-size: 1rem !important;
+  }
+
+  /* Topbar centers */
+  .topbar {
+    height: 56px !important;
+  }
+
+  /* More touch-friendly hamburger */
+  .topbar-hamburger {
+    width: 44px;
+    height: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Full width main */
+  main {
+    padding-top: 68px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ── Mobile POS Layout ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pos-wrapper {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 1fr !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  .pos-left-panel {
+    order: 1;
+  }
+
+  .pos-right-panel,
+  .pos-cart-panel {
+    order: 2;
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 60vh;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0 !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(calc(100% - 60px));
+    transition: transform 0.35s var(--ease-out);
+    z-index: 50;
+    overflow-y: auto;
+  }
+
+  .pos-right-panel.expanded,
+  .pos-cart-panel.expanded {
+    transform: translateY(0);
+  }
+
+  /* Product grid */
+  .pos-product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-2) !important;
+  }
+}
+
+/* ── Mobile Inventory ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .inventory-header {
+    flex-direction: column !important;
+    gap: var(--space-3) !important;
+    align-items: stretch !important;
+  }
+
+  .inventory-header .search-bar,
+  .inventory-header input[type="search"] {
+    width: 100% !important;
+  }
+
+  .inventory-actions {
+    flex-wrap: wrap !important;
+    gap: var(--space-2) !important;
+  }
+
+  .inventory-actions .btn {
+    flex: 1 1 calc(50% - var(--space-2)) !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── Mobile Online Ordering ────────────────────────────────── */
+@media (max-width: 768px) {
+  .browse-toolbar {
+    flex-direction: column !important;
+    gap: var(--space-3) !important;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-3) !important;
+  }
+}
+
+@media (max-width: 479px) {
+  .product-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Mobile Reports ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Responsive Typography ─────────────────────────────────── */
+@media (max-width: 640px) {
+  h1, .text-4xl { font-size: 1.5rem !important; }
+  h2, .text-3xl { font-size: 1.25rem !important; }
+  h3, .text-2xl { font-size: 1.1rem !important; }
+}
+
+/* ── Touch Optimizations ───────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .btn, button, a.sidebar-link, .action-btn-glass {
+    min-height: 44px;
+  }
+
+  /* Disable hover transforms on touch */
+  .card-premium:hover,
+  .stat-card-premium:hover,
+  .stat-card-v2:hover,
+  .home-card:hover {
+    transform: none;
+  }
+
+  /* Disable hover shadows on touch */
+  .glass-panel:hover {
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Remove ripple on mobile — takes too much paint */
+  button::before,
+  .btn::before {
+    display: none;
+  }
+
+  /* Faster transitions */
+  * {
+    transition-duration: 0.1s !important;
+  }
+}
+
+/* ── Safe Area Insets (Notched phones) ─────────────────────── */
+@supports (padding: max(0px)) {
+  .topbar {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  footer {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .sidebar {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Print ─────────────────────────────────────────────────── */
+@media print {
+  .sidebar, .sidebar-overlay, .topbar, footer,
+  .topbar-hamburger, .topbar-theme-toggle,
+  .quick-actions-bar, .action-btn-glass,
+  .pos-right-panel, .notification-panel {
+    display: none !important;
+  }
+
+  body {
+    display: block !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .glass-panel, .card-premium, .stat-card-premium {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+
+  a { color: inherit !important; text-decoration: underline !important; }
+}
+
+/* ── Reduced Motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Landscape phone fix ───────────────────────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar {
+    overflow-y: auto !important;
+  }
+
+  .sidebar-user {
+    display: none !important;
+  }
+
+  .sidebar-header {
+    padding: 0.5rem 1rem !important;
+  }
+
+  .dashboard-hero {
+    padding: 1rem !important;
+  }
+}

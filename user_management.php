@@ -30,8 +30,10 @@ $page_title = 'User Management';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js?v=2"></script>
@@ -52,8 +54,8 @@ $page_title = 'User Management';
         }
         
         .user-header h1 {
-            color: var(--primary-color);
-            font-size: 2rem;
+            color: var(--text-color);
+            font-size: 1.5rem;
             margin: 0;
         }
         
@@ -63,7 +65,7 @@ $page_title = 'User Management';
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
         
         .btn-primary {
@@ -107,7 +109,7 @@ $page_title = 'User Management';
             font-weight: 600;
             color: var(--text-color);
             border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
         
         .tab.active {

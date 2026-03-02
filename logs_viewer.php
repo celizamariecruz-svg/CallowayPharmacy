@@ -53,7 +53,9 @@ if ($search_term) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Logs - Calloway Pharmacy</title>
     <?php echo CSRF::getTokenMeta(); ?>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js?v=2"></script>

@@ -99,9 +99,11 @@ $page_title = 'Expiry Monitoring';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Expiry Monitoring - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Premium Expiry Monitoring Styles - Matching Medicine Locator */
@@ -165,7 +167,7 @@ $page_title = 'Expiry Monitoring';
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
             box-shadow: 0 8px 25px var(--shadow-color);
         }
 
@@ -394,7 +396,7 @@ $page_title = 'Expiry Monitoring';
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.15s, box-shadow 0.15s;
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
@@ -596,7 +598,7 @@ $page_title = 'Expiry Monitoring';
             text-transform: uppercase;
             letter-spacing: 0.5px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
 
         .status-badge:hover {
@@ -708,7 +710,7 @@ $page_title = 'Expiry Monitoring';
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            transition: all 0.3s ease;
+            transition: transform 0.15s, box-shadow 0.15s;
             z-index: 100;
             animation: fadeInScale 0.5s ease-out;
             opacity: 0;

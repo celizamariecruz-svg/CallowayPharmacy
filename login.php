@@ -77,7 +77,7 @@ if (isset($_SESSION['user_id'])) {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     color: var(--text-color);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -88,7 +88,8 @@ if (isset($_SESSION['user_id'])) {
 
   /* Left side - Login section */
   .login-side {
-    width: 25%;
+    width: 32%;
+    min-width: 380px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -98,6 +99,11 @@ if (isset($_SESSION['user_id'])) {
     position: relative;
     z-index: 10;
     padding: 2rem;
+    padding-bottom: 5rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    transition: var(--transition-smooth);
+  }
     padding-bottom: 5rem; /* Add padding for footer */
     box-sizing: border-box;
     overflow-y: auto;
@@ -106,7 +112,7 @@ if (isset($_SESSION['user_id'])) {
 
   /* Right side - Image section */
   .image-side {
-    width: 75%;
+    flex: 1;
     min-height: 100vh;
     position: relative;
     overflow: hidden;
@@ -300,7 +306,7 @@ if (isset($_SESSION['user_id'])) {
 
   .container {
     width: 100%;
-    max-width: 320px;
+    max-width: 340px;
     padding: 2rem;
     position: relative;
     background: transparent;
@@ -308,7 +314,7 @@ if (isset($_SESSION['user_id'])) {
     box-sizing: border-box;
     overflow: visible;
     z-index: 10;
-    animation: fadeInUp var(--animation-duration) ease-out;
+    animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     transition: var(--transition-smooth);
   }
 
@@ -326,22 +332,23 @@ if (isset($_SESSION['user_id'])) {
   h2 {
     text-align: center;
     color: var(--primary-color);
-    margin-bottom: 2.4rem;
-    font-weight: 700;
-    font-size: 2rem;
+    margin-bottom: 2rem;
+    font-weight: 800;
+    font-size: 1.75rem;
     user-select: none;
     position: relative;
+    letter-spacing: -0.02em;
     transition: var(--transition-smooth);
   }
 
   h2:after {
     content: '';
     position: absolute;
-    bottom: -10px;
+    bottom: -8px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60px;
-    height: 4px;
+    width: 40px;
+    height: 3px;
     background: var(--primary-color);
     border-radius: 2px;
     transition: var(--transition-smooth);
@@ -377,79 +384,82 @@ if (isset($_SESSION['user_id'])) {
 
   input {
     width: 100%;
-    padding: 1.2rem 1.2rem 1.2rem 1.2rem;
-    border-radius: 15px;
-    border: 2.5px solid var(--input-border);
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    border: 1.5px solid var(--input-border);
     background: var(--bg-color);
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     color: var(--primary-dark);
     outline: none;
     transition: var(--transition-smooth);
-    box-shadow: 0 3px 10px rgba(10, 116, 218, 0.1);
+    box-shadow: none;
+    font-family: inherit;
   }
 
   input:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 15px var(--shadow-color);
-    transform: translateY(-2px);
+    box-shadow: 0 0 0 3px rgba(10, 116, 218, 0.12);
+    transform: none;
   }
 
   label {
     position: absolute;
     color: var(--label-color);
-    font-weight: 600;
-    left: 18px;
-    top: 1.2rem;
-    font-size: 1rem;
+    font-weight: 500;
+    left: 14px;
+    top: 0.9rem;
+    font-size: 0.9rem;
     pointer-events: none;
     background: var(--bg-color);
-    padding: 0 8px;
+    padding: 0 6px;
     transition: var(--transition-smooth);
     user-select: none;
-    border-radius: 8px;
+    border-radius: 4px;
   }
 
   input:focus + label,
   input:not(:placeholder-shown) + label {
-    top: -0.7rem;
-    left: 12px;
-    font-size: 0.8rem;
+    top: -0.6rem;
+    left: 10px;
+    font-size: 0.75rem;
     color: var(--primary-color);
-    font-weight: 700;
-    box-shadow: 0 0 10px var(--shadow-color);
+    font-weight: 600;
+    box-shadow: none;
   }
 
   button {
     width: 100%;
     background: var(--primary-color);
     color: white;
-    padding: 1.2rem 0;
-    font-size: 1.2rem;
-    font-weight: 800;
-    border-radius: 40px;
-    box-shadow: 0 8px 20px var(--shadow-color);
+    padding: 0.9rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(10, 116, 218, 0.2);
     overflow: hidden;
     position: relative;
     border: none;
     cursor: pointer;
     user-select: none;
-    transition: var(--transition-smooth);
-    margin-top: 1rem;
-    animation: slideUp var(--animation-duration) ease-out;
-    animation-delay: 0.2s;
+    transition: all 0.2s ease;
+    margin-top: 0.75rem;
+    animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    animation-delay: 0.15s;
     animation-fill-mode: both;
     transform: translateZ(0);
+    font-family: inherit;
+    letter-spacing: 0.01em;
   }
 
   button:hover {
     background: var(--primary-dark);
-    box-shadow: 0 12px 30px var(--shadow-color);
-    transform: translateY(-3px);
+    box-shadow: 0 4px 14px rgba(10, 116, 218, 0.3);
+    transform: translateY(-1px);
   }
 
   button:active {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 15px var(--shadow-color);
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(10, 116, 218, 0.2);
   }
 
   /* Ripple effect */
@@ -557,14 +567,14 @@ if (isset($_SESSION['user_id'])) {
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     text-align: center;
-    font-size: 0.9rem;
-    color: #ffffff;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.7);
     z-index: 10;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    background-color: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     transition: var(--transition-smooth);
   }
 
@@ -576,20 +586,25 @@ if (isset($_SESSION['user_id'])) {
     
     .login-side, .image-side {
       width: 100%;
+      min-width: 0;
     }
     
     .login-side {
-      min-height: calc(100vh - 60px); /* Subtract footer height */
-      padding-bottom: 5rem; /* Add padding for footer */
+      min-height: calc(100vh - 50px);
+      padding: 2rem 1.5rem 5rem;
     }
     
     .image-side {
       display: none;
     }
 
+    .container {
+      max-width: 100%;
+    }
+
     footer {
       position: fixed;
-      height: 60px;
+      height: auto;
     }
   }
 
@@ -604,33 +619,34 @@ if (isset($_SESSION['user_id'])) {
   /* Tab Switcher */
   .tab-switcher {
     display: flex;
-    margin-bottom: 1.8rem;
-    background: rgba(10, 116, 218, 0.08);
-    border-radius: 14px;
-    padding: 4px;
+    margin-bottom: 1.5rem;
+    background: rgba(10, 116, 218, 0.06);
+    border-radius: 10px;
+    padding: 3px;
     position: relative;
     z-index: 10;
   }
 
   .tab-btn {
     flex: 1;
-    padding: 0.7rem 0;
+    padding: 0.6rem 0;
     border: none;
     background: transparent;
     color: var(--label-color);
-    font-weight: 700;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 0.85rem;
     cursor: pointer;
-    border-radius: 11px;
-    transition: var(--transition-smooth);
+    border-radius: 8px;
+    transition: all 0.2s ease;
     position: relative;
     z-index: 2;
+    font-family: inherit;
   }
 
   .tab-btn.active {
     background: var(--primary-color);
     color: white;
-    box-shadow: 0 4px 12px var(--shadow-color);
+    box-shadow: 0 2px 8px rgba(10, 116, 218, 0.25);
   }
 
   .tab-btn:not(.active):hover {

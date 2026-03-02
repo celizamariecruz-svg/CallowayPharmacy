@@ -23,9 +23,11 @@ $page_title = 'Supplier Management';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js?v=2"></script>
@@ -54,7 +56,7 @@ $page_title = 'Supplier Management';
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
         
         .btn-primary {
@@ -101,7 +103,7 @@ $page_title = 'Supplier Management';
             border-radius: 12px;
             padding: 1.5rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
         
         [data-theme="dark"] .supplier-card {
@@ -109,7 +111,7 @@ $page_title = 'Supplier Management';
         }
         
         .supplier-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
         
@@ -245,6 +247,12 @@ $page_title = 'Supplier Management';
         .empty-icon {
             font-size: 4rem;
             margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .supplier-container { padding: 1rem; }
+            .supplier-header { flex-direction: column; align-items: flex-start; }
+            .suppliers-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>

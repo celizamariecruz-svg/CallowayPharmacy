@@ -24,9 +24,11 @@ $page_title = 'Inventory Management';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js?v=2"></script>
@@ -53,9 +55,9 @@ $page_title = 'Inventory Management';
         }
 
         .inventory-header h1 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             margin: 0;
-            color: var(--primary-color);
+            color: var(--text-color);
             font-weight: 800;
         }
 
@@ -66,15 +68,16 @@ $page_title = 'Inventory Management';
         }
 
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.65rem 1.25rem;
             border: none;
-            border-radius: 50px;
+            border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            font-size: 0.88rem;
         }
 
         .btn-primary {
@@ -84,8 +87,8 @@ $page_title = 'Inventory Management';
         }
 
         .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
+            filter: brightness(0.92);
+            transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
 
@@ -97,7 +100,7 @@ $page_title = 'Inventory Management';
 
         .btn-secondary:hover {
             background: var(--hover-bg);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             border-color: var(--primary-color);
         }
 
@@ -251,18 +254,18 @@ $page_title = 'Inventory Management';
 
         .stat-card {
             background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 16px;
+            padding: 1.25rem;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             gap: 1rem;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--input-border);
-            transition: transform 0.3s;
+            transition: transform 0.15s;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
         }
 
         .stat-icon {
@@ -271,7 +274,7 @@ $page_title = 'Inventory Management';
         }
 
         .stat-content h3 {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             margin: 0;
             color: var(--text-color);
             font-weight: 700;
@@ -318,13 +321,13 @@ $page_title = 'Inventory Management';
         .modal-content {
             background: var(--card-bg);
             padding: 2rem;
-            border-radius: 20px;
+            border-radius: 16px;
             width: 100%;
             max-width: 600px;
             position: relative;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-lg);
         }
 
         .modal-header {
@@ -410,6 +413,31 @@ $page_title = 'Inventory Management';
             to {
                 opacity: 1;
             }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .inventory-container { padding: 1rem; }
+            .inventory-header { flex-direction: column; align-items: flex-start; padding: 1rem; }
+            .inventory-header h1 { font-size: 1.25rem; }
+            .inventory-actions { width: 100%; }
+            .inventory-actions .btn { flex: 1; justify-content: center; font-size: 0.82rem; padding: 0.6rem 0.75rem; }
+            .inventory-stats { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .stat-card { padding: 1rem; }
+            .stat-icon { font-size: 1.8rem; }
+            .stat-content h3 { font-size: 1.25rem; }
+            .search-filter-bar { flex-direction: column; gap: 0.5rem; }
+            .search-group { flex: 1 1 100%; }
+            .filter-group { width: 100%; }
+            .filter-group select { width: 100%; }
+            th, td { padding: 0.75rem 0.6rem; font-size: 0.82rem; }
+            .modal-content { margin: 1rem; max-width: calc(100% - 2rem); border-radius: 14px; }
+        }
+
+        @media (max-width: 480px) {
+            .inventory-stats { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+            .stat-card { padding: 0.75rem; gap: 0.5rem; }
+            .stat-icon { font-size: 1.5rem; }
         }
     </style>
 </head>

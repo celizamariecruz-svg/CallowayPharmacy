@@ -30,9 +30,11 @@ $page_title = 'Reports & Analytics';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .reports-container {
@@ -55,9 +57,9 @@ $page_title = 'Reports & Analytics';
         }
         
         .reports-header h1 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             margin: 0;
-            color: var(--primary-color);
+            color: var(--text-color);
             font-weight: 800;
         }
         
@@ -96,21 +98,22 @@ $page_title = 'Reports & Analytics';
         }
         
         .quick-range-btn {
-            padding: 0.6rem 1.2rem;
-            border: 1px solid var(--primary-color);
+            padding: 0.5rem 1rem;
+            border: 1.5px solid var(--divider-color);
             background: transparent;
-            color: var(--primary-color);
-            border-radius: 50px;
+            color: var(--text-color);
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s;
+            font-size: 0.85rem;
+            transition: border-color 0.15s, background 0.15s;
         }
         
         .quick-range-btn:hover,
         .quick-range-btn.active {
             background: var(--primary-color);
             color: white;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            border-color: var(--primary-color);
         }
         
         .metrics-grid {
@@ -122,17 +125,17 @@ $page_title = 'Reports & Analytics';
         
         .metric-card {
             background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 16px;
+            padding: 1.25rem;
+            border-radius: 14px;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--input-border);
             position: relative;
             overflow: hidden;
-            transition: transform 0.3s ease;
+            transition: transform 0.15s ease;
         }
         
         .metric-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-2px);
         }
         
         .metric-card h3 {
@@ -145,10 +148,11 @@ $page_title = 'Reports & Analytics';
         }
         
         .metric-card .value {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 800;
             color: var(--primary-color);
-            margin: 0.5rem 0;
+            margin: 0.4rem 0;
+            font-variant-numeric: tabular-nums;
         }
         
         .reports-grid {
@@ -160,19 +164,19 @@ $page_title = 'Reports & Analytics';
         
         .report-card {
             background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--input-border);
         }
         
         .report-card h2 {
-            margin: 0 0 1.5rem;
+            margin: 0 0 1.25rem;
             color: var(--text-color);
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 700;
         }
         
@@ -242,15 +246,16 @@ $page_title = 'Reports & Analytics';
         }
         
         .btn {
-            padding: 0.8rem 1.5rem;
+            padding: 0.65rem 1.25rem;
             border: none;
-            border-radius: 50px;
+            border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            font-size: 0.88rem;
         }
         
         .btn-primary {
@@ -260,8 +265,8 @@ $page_title = 'Reports & Analytics';
         }
         
         .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
+            filter: brightness(0.92);
+            transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
         
@@ -274,7 +279,7 @@ $page_title = 'Reports & Analytics';
         .btn-secondary:hover {
             background: var(--hover-bg);
             border-color: var(--primary-color);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
         
         .loading {
@@ -299,6 +304,29 @@ $page_title = 'Reports & Analytics';
         
         .toast.success { border-color: var(--secondary-color); }
         .toast.error { border-color: var(--danger-color); }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .reports-container { padding: 1rem; }
+            .reports-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; padding: 1rem; }
+            .reports-header h1 { font-size: 1.25rem; }
+            .date-range-selector { flex-direction: column; gap: 0.5rem; padding: 0.75rem; }
+            .date-range-selector > div { margin-left: 0 !important; flex-wrap: wrap; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .metric-card { padding: 1rem; }
+            .metric-card .value { font-size: 1.35rem; }
+            .reports-grid { grid-template-columns: 1fr !important; gap: 1rem; }
+            .charts-grid { grid-template-columns: 1fr !important; }
+            .chart-wrap { height: 240px; }
+            .report-card { padding: 1rem; }
+            th, td { padding: 0.6rem 0.5rem; font-size: 0.82rem; }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+            .metric-card .value { font-size: 1.15rem; }
+            .quick-range-btn { padding: 0.4rem 0.75rem; font-size: 0.78rem; }
+        }
     </style>
 </head>
 <body>

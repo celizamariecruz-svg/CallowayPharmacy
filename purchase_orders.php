@@ -30,9 +30,11 @@ $page_title = 'Purchase Orders';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Calloway Pharmacy</title>
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js"></script>
@@ -61,7 +63,7 @@ $page_title = 'Purchase Orders';
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
         
         .btn-primary {
@@ -100,7 +102,7 @@ $page_title = 'Purchase Orders';
             padding: 1rem 2rem;
             cursor: pointer;
             border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
             color: var(--text-color);
         }
         
@@ -267,6 +269,13 @@ $page_title = 'Purchase Orders';
             padding: 4rem 2rem;
             color: var(--text-color);
             opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .po-container { padding: 1rem; }
+            .po-header { flex-direction: column; align-items: flex-start; }
+            .item-row { grid-template-columns: 1fr; }
+            table { display: block; overflow-x: auto; }
         }
     </style>
 </head>

@@ -41,13 +41,13 @@ class RxEnforcement {
             return false;
         }
 
-        $stmt = $this->conn->prepare("SELECT is_prescription FROM products WHERE product_id = ?");
+        $stmt = $this->conn->prepare("SELECT requires_prescription FROM products WHERE product_id = ?");
         $stmt->bind_param("i", $product_id);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($row = $result->fetch_assoc()) {
-            return (bool)$row['is_prescription'];
+            return (bool)$row['requires_prescription'];
         }
         
         return false;
@@ -65,7 +65,7 @@ class RxEnforcement {
             SELECT COUNT(*) as rx_count
             FROM online_order_items oi
             INNER JOIN products p ON oi.product_id = p.product_id
-            WHERE oi.order_id = ? AND p.is_prescription = 1
+            WHERE oi.order_id = ? AND p.requires_prescription = 1
         ";
         
         $stmt = $this->conn->prepare($sql);
@@ -98,9 +98,9 @@ class RxEnforcement {
         $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
         
         $sql = "
-            SELECT product_id, name, is_prescription 
+            SELECT product_id, name, requires_prescription 
             FROM products 
-            WHERE product_id IN ($placeholders) AND is_prescription = 1
+            WHERE product_id IN ($placeholders) AND requires_prescription = 1
         ";
         
         $stmt = $this->conn->prepare($sql);
@@ -184,7 +184,7 @@ class RxEnforcement {
                 SELECT oi.product_id 
                 FROM online_order_items oi
                 INNER JOIN products p ON oi.product_id = p.product_id
-                WHERE oi.order_id = ? AND p.is_prescription = 1
+                WHERE oi.order_id = ? AND p.requires_prescription = 1
             ";
             $stmt2 = $this->conn->prepare($sql);
             $stmt2->bind_param("i", $order_id);
@@ -237,7 +237,7 @@ class RxEnforcement {
                 SELECT oi.product_id 
                 FROM online_order_items oi
                 INNER JOIN products p ON oi.product_id = p.product_id
-                WHERE oi.order_id = ? AND p.is_prescription = 1
+                WHERE oi.order_id = ? AND p.requires_prescription = 1
             ";
             $stmt2 = $this->conn->prepare($sql);
             $stmt2->bind_param("i", $order_id);
@@ -288,7 +288,7 @@ class RxEnforcement {
             WHERE o.requires_rx_approval = 1 
               AND o.pharmacist_approved_by IS NULL
               AND o.status NOT IN ('Cancelled', 'Completed')
-              AND p.is_prescription = 1
+              AND p.requires_prescription = 1
             GROUP BY o.order_id
             ORDER BY o.created_at ASC
         ";

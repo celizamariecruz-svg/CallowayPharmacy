@@ -181,7 +181,9 @@ if ($prodResult) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacy Online Ordering - Calloway Pharmacy</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="design-system.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="custom-modal.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" onerror="console.warn('QRCode CDN failed to load, using fallback');"></script>
     <script src="custom-modal.js"></script>
@@ -975,7 +977,7 @@ if ($prodResult) {
             padding: 2rem 1.2rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.15s, box-shadow 0.15s;
             box-shadow: 0 2px 8px var(--shadow);
             border: 2px solid transparent;
         }
@@ -1152,7 +1154,7 @@ if ($prodResult) {
             padding: 1.5rem 0 0.5rem;
         }
         .category-title-banner h1 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: var(--text-color);
             margin: 0;
@@ -1389,7 +1391,7 @@ if ($prodResult) {
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 2px 8px var(--shadow);
-            transition: all 0.3s ease;
+            transition: transform 0.15s, box-shadow 0.15s;
             display: flex;
             flex-direction: column;
             border: 1px solid transparent;
@@ -1500,7 +1502,7 @@ if ($prodResult) {
             color: var(--primary-blue);
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.15s, box-shadow 0.15s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1543,7 +1545,7 @@ if ($prodResult) {
             color: white;
             padding: 0.9rem 1.8rem;
             border: none;
-            border-radius: 50px;
+            border-radius: 10px;
             font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
@@ -2483,7 +2485,7 @@ if ($prodResult) {
             justify-content: center;
             font-size: 1.4rem;
             box-shadow: 0 4px 16px rgba(37,99,235,0.4);
-            transition: all 0.3s;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
 
         .chat-float-btn:hover {
