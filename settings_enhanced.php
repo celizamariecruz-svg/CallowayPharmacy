@@ -53,7 +53,7 @@ while ($row = $settings_result->fetch_assoc()) {
             padding: 0 1.5rem 2rem;
         }
         .settings-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #7c3aed 100%);
+            background: var(--primary-color);
             border-radius: 16px;
             padding: 2rem 2.5rem;
             margin-bottom: 1.75rem;
@@ -177,13 +177,13 @@ while ($row = $settings_result->fetch_assoc()) {
             color: white;
             flex-shrink: 0;
         }
-        .card-icon.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-        .card-icon.green { background: linear-gradient(135deg, #059669, #10b981); }
-        .card-icon.purple { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
-        .card-icon.amber { background: linear-gradient(135deg, #d97706, #f59e0b); }
-        .card-icon.red { background: linear-gradient(135deg, #dc2626, #ef4444); }
-        .card-icon.teal { background: linear-gradient(135deg, #0d9488, #14b8a6); }
-        .card-icon.slate { background: linear-gradient(135deg, #475569, #64748b); }
+        .card-icon.blue { background: #2563eb; }
+        .card-icon.green { background: #059669; }
+        .card-icon.purple { background: #7c3aed; }
+        .card-icon.amber { background: #d97706; }
+        .card-icon.red { background: #dc2626; }
+        .card-icon.teal { background: #0d9488; }
+        .card-icon.slate { background: #475569; }
         
         .form-group {
             margin-bottom: 1.35rem;

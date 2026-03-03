@@ -205,7 +205,7 @@ try {
                         'color' => '#3b82f6',
                         'title' => 'Pending Order',
                         'message' => "Order #{$row['order_id']} awaiting confirmation" . ($time ? " — $time" : ''),
-                        'link' => 'online_order_api.php'
+                        'link' => 'onlineordering.php'
                     ];
                 }
             }

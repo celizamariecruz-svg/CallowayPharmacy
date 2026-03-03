@@ -254,13 +254,17 @@ if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
     white-space: nowrap;
     min-width: 0;
 }
-.topbar-brand-link:hover { opacity: 0.9; }
+.topbar-brand-link:hover { opacity: 0.92; transform: translate3d(0, 0, 0); }
 .topbar-logo-img {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
     object-fit: contain;
     flex-shrink: 0;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.topbar-brand-link:hover .topbar-logo-img {
+    transform: scale(1.06) rotate(-2deg);
 }
 .topbar-brand-text {
     display: flex;
@@ -269,17 +273,18 @@ if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
     min-width: 0;
 }
 .topbar-brand-name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .topbar-brand-sub {
-    font-size: 0.6rem;
-    font-weight: 400;
-    opacity: 0.75;
-    letter-spacing: 0.03em;
+    font-size: 0.65rem;
+    font-weight: 500;
+    opacity: 0.7;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -327,11 +332,15 @@ if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
+    transition: all 0.15s cubic-bezier(0.0, 0.0, 0.2, 1);
 }
 .topbar-notification-btn:hover, .topbar-theme-toggle:hover {
     background: rgba(255,255,255,0.18);
-    transform: scale(1.05);
+    transform: scale(1.08);
+}
+.topbar-notification-btn:active, .topbar-theme-toggle:active {
+    transform: scale(0.95);
+    transition-duration: 80ms;
 }
 .notif-badge {
     position: absolute;
@@ -367,7 +376,7 @@ if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
   .topbar-right { gap: 0.3rem; }
   #topbarRightExtras { gap: 0.25rem; }
   .topbar-brand-sub { display: none; }
-  .topbar-brand-name { font-size: 0.85rem; }
+  .topbar-brand-name { font-size: 0.95rem; }
 }
 
 /* Very small screens: hide text entirely, logo only */
@@ -480,7 +489,7 @@ if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <style>
   #demo-mode-banner {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999;
-    background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%);
+    background: #6d28d9;
     color: #fff;
     display: flex; align-items: center; justify-content: center; gap: 0.65rem;
     padding: 0.55rem 1rem;

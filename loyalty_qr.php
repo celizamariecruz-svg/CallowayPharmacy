@@ -415,7 +415,7 @@ $page_title = 'Loyalty & QR';
         </div>
 
         <!-- Points Display Card -->
-        <div style="max-width:500px; margin:0 auto 2rem; padding:2rem; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:16px; color:white; text-align:center; box-shadow:0 8px 24px rgba(102,126,234,0.3);">
+        <div style="max-width:500px; margin:0 auto 2rem; padding:2rem; background:#667eea; border-radius:16px; color:white; text-align:center; box-shadow:0 8px 24px rgba(102,126,234,0.3);">
             <div style="font-size:0.9rem; opacity:0.9; margin-bottom:0.5rem;">Your Loyalty Points</div>
             <div id="myPointsDisplay" style="font-size:3rem; font-weight:800; margin-bottom:0.3rem;">...</div>
             <div style="font-size:0.85rem; opacity:0.8;">1 point = ₱1 discount on your next order</div>
@@ -565,7 +565,7 @@ $page_title = 'Loyalty & QR';
                 <h2>🎁 Award Points to Customer</h2>
                 <button class="close-modal" onclick="closeStaffRedeemModal()">&times;</button>
             </div>
-            <div id="staffRedeemQrInfo" style="padding:1rem; background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:12px; margin-bottom:1.5rem; text-align:center;">
+            <div id="staffRedeemQrInfo" style="padding:1rem; background:#fef3c7; border-radius:12px; margin-bottom:1.5rem; text-align:center;">
                 <div style="font-weight:700; color:#92400e;">Loading QR details...</div>
             </div>
             <div class="form-group">

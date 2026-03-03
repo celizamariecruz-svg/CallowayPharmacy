@@ -384,7 +384,7 @@ class CodeScanner
     <title>Calloway Pharmacy - Security Scan Report</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 20px; background: #f5f5f5; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .header { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         .stats { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .stat-box { text-align: center; border-left: 4px solid #ddd; padding: 15px; }
         .critical { border-left-color: #dc3545; color: #dc3545; }

@@ -73,11 +73,12 @@ function getDashboardStats($conn, $today, $thisMonth) {
         $salesQuery = "SELECT 
             COALESCE(SUM(CASE WHEN DATE(created_at) = ? THEN total ELSE 0 END), 0) as today_sales,
             COALESCE(SUM(CASE WHEN DATE_FORMAT(created_at, '%Y-%m') = ? THEN total ELSE 0 END), 0) as month_sales,
-            COUNT(*) as total_customers
+            COUNT(*) as total_customers,
+            COALESCE(SUM(CASE WHEN DATE_FORMAT(created_at, '%Y-%m') = ? THEN 1 ELSE 0 END), 0) as month_transactions
             FROM sales";
         
         $stmt = $conn->prepare($salesQuery);
-        $stmt->bind_param('ss', $today, $thisMonth);
+        $stmt->bind_param('sss', $today, $thisMonth, $thisMonth);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
         $stmt->close();
@@ -85,6 +86,7 @@ function getDashboardStats($conn, $today, $thisMonth) {
         $stats['today_sales'] = (float)$result['today_sales'];
         $stats['month_sales'] = (float)$result['month_sales'];
         $stats['total_customers'] = (int)$result['total_customers'];
+        $stats['month_transactions'] = (int)$result['month_transactions'];
         
         return $stats;
     }, 120); // 2 minutes cache
@@ -205,7 +207,7 @@ $salesTrend = getSalesTrend($conn);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .dashboard-hero {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--c-brand-dark, #1d4ed8) 100%);
+            background: var(--primary-color);
             color: white;
             padding: 2rem 1.75rem;
             margin-top: 0;
@@ -569,8 +571,10 @@ $salesTrend = getSalesTrend($conn);
                         ₱<?php echo number_format($stats['month_sales'], 2); ?>
                     </div>
                     <div style="opacity: 0.8; font-size: 0.9rem;">
-                        <i class="fas fa-users"></i> <?php echo number_format($stats['total_customers']); ?> Total
-                        Transactions
+                        <i class="fas fa-receipt"></i> <?php echo number_format($stats['month_transactions']); ?> Transaction<?php echo $stats['month_transactions'] !== 1 ? 's' : ''; ?> This Month
+                    </div>
+                    <div style="opacity: 0.6; font-size: 0.78rem; margin-top: 0.3rem;">
+                        <i class="fas fa-database"></i> <?php echo number_format($stats['total_customers']); ?> All-Time
                     </div>
                 </div>
 

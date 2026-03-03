@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['token'])) {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e0ecff 0%, #f0f4ff 100%);
+            background: #e0ecff;
             min-height: 100vh;
             display: flex;
             align-items: center;

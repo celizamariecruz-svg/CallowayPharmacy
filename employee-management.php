@@ -152,6 +152,41 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             cache()->invalidateByPrefix('employees');
         }
 
+        // Edit employee
+        if (isset($_POST['edit_employee'])) {
+            $id = filter_var($_POST['edit_id'], FILTER_VALIDATE_INT);
+            if ($id === false || $id <= 0) throw new Exception("Invalid employee ID");
+            $name = trim($_POST['edit_name'] ?? '');
+            $role = trim($_POST['edit_role'] ?? '');
+            $shift_start = trim($_POST['edit_shift_start'] ?? '');
+            $shift_end = trim($_POST['edit_shift_end'] ?? '');
+            if (empty($name) || empty($role) || empty($shift_start) || empty($shift_end)) {
+                throw new Exception("All fields are required");
+            }
+            if (!preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $shift_start) ||
+                !preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $shift_end)) {
+                throw new Exception("Invalid time format");
+            }
+            $infoStmt = $conn->prepare("SELECT name, role, shift_start, shift_end FROM employees WHERE id = ?");
+            $infoStmt->bind_param('i', $id);
+            $infoStmt->execute();
+            $oldInfo = $infoStmt->get_result()->fetch_assoc();
+            $infoStmt->close();
+            if (!$oldInfo) throw new Exception("Employee not found");
+            $stmt = $conn->prepare("UPDATE employees SET name=?, role=?, shift_start=?, shift_end=? WHERE id=?");
+            $stmt->bind_param('ssssi', $name, $role, $shift_start, $shift_end, $id);
+            $stmt->execute();
+            $stmt->close();
+            $logger->logChange('update', 'Employee Management', "$currentUser updated employee: $name (ID: $id)", [
+                'target_type' => 'employee', 'target_id' => $id, 'target_name' => $name,
+                'old_values' => $oldInfo,
+                'new_values' => ['name' => $name, 'role' => $role, 'shift_start' => $shift_start, 'shift_end' => $shift_end]
+            ]);
+            $response['success'] = true;
+            $response['message'] = "Employee updated successfully";
+            cache()->invalidateByPrefix('employees');
+        }
+
     } catch (Exception $e) {
         logError($e->getMessage());
         $response['success'] = false;
@@ -219,61 +254,59 @@ function render_employee_table($conn) {
     $stmt = $conn->prepare("SELECT id, name, role, shift_start, shift_end, on_leave, created_at FROM employees ORDER BY id DESC");
     $stmt->execute();
     $result = $stmt->get_result();
-    
+    $roleIcons = ['pharmacist'=>'fa-prescription-bottle-medical','cashier'=>'fa-cash-register','staff'=>'fa-id-badge','manager'=>'fa-user-tie','admin'=>'fa-shield-halved'];
     ob_start();
     ?>
     <table>
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Name</th>
+                <th>Employee</th>
                 <th>Role</th>
-                <th>Shift Schedule</th>
+                <th>Shift</th>
                 <th>Status</th>
-                <th>Date Added</th>
+                <th>Added</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if ($result && $result->num_rows > 0): ?>
-                <?php while($row = $result->fetch_assoc()): 
+                <?php while($row = $result->fetch_assoc()):
                     $rowClass = $row['on_leave'] ? 'on-leave' : '';
                     $roleClass = strtolower(preg_replace('/[^a-z0-9]/', '-', $row['role']));
                     $id = (int)$row['id'];
                     $name = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
                     $role = htmlspecialchars(ucfirst($row['role']), ENT_QUOTES, 'UTF-8');
+                    $initials = strtoupper(substr($row['name'], 0, 1));
+                    $roleIcon = $roleIcons[strtolower($row['role'])] ?? 'fa-user';
                 ?>
-                <tr class="<?= $rowClass ?>">
-                    <td><?= $id ?></td>
-                    <td><strong><?= $name ?></strong></td>
+                <tr class="<?= $rowClass ?>" data-name="<?= $name ?>" data-role="<?= strtolower($row['role']) ?>">
                     <td>
-                        <span class="role-badge <?= $roleClass ?>"><?= $role ?></span>
+                        <div class="emp-cell">
+                            <div class="emp-avatar <?= $roleClass ?>"><?= $initials ?></div>
+                            <div class="emp-info">
+                                <span class="emp-name"><?= $name ?></span>
+                                <span class="emp-id">#<?= $id ?></span>
+                            </div>
+                        </div>
                     </td>
-                    <td>
-                        <span class="shift-time">
-                            <?= date('h:i A', strtotime($row['shift_start'])) ?> - 
-                            <?= date('h:i A', strtotime($row['shift_end'])) ?>
-                        </span>
-                    </td>
+                    <td><span class="role-badge <?= $roleClass ?>"><i class="fas <?= $roleIcon ?>"></i> <?= $role ?></span></td>
+                    <td><span class="shift-time"><i class="far fa-clock"></i> <?= date('h:i A', strtotime($row['shift_start'])) ?> – <?= date('h:i A', strtotime($row['shift_end'])) ?></span></td>
                     <td>
                         <?php if ($row['on_leave']): ?>
-                            <span class="status-badge on-leave">On Leave</span>
+                            <span class="status-badge on-leave"><i class="fas fa-moon"></i> On Leave</span>
                         <?php else: ?>
-                            <span class="status-badge active">Active</span>
+                            <span class="status-badge active"><i class="fas fa-circle-check"></i> Active</span>
                         <?php endif; ?>
                     </td>
                     <td><span class="date-text"><?= date('M d, Y', strtotime($row['created_at'])) ?></span></td>
                     <td>
                         <div class="action-buttons">
-                            <form method="POST" class="toggle-leave-form">
-                                <button type="submit" name="toggle_leave" value="<?= $id ?>" class="toggle-leave-button">
-                                    <?= $row['on_leave'] ? '✅ Mark Active' : '🏖️ Put on Leave' ?>
-                                </button>
+                            <button type="button" class="action-btn-edit" onclick="openEditModal(<?= $id ?>, '<?= addslashes($row['name']) ?>', '<?= addslashes($row['role']) ?>', '<?= $row['shift_start'] ?>', '<?= $row['shift_end'] ?>')" title="Edit"><i class="fas fa-pen"></i></button>
+                            <form method="POST" class="toggle-leave-form" style="display:inline">
+                                <button type="submit" name="toggle_leave" value="<?= $id ?>" class="action-btn-leave" title="<?= $row['on_leave'] ? 'Mark Active' : 'Put on Leave' ?>"><i class="fas <?= $row['on_leave'] ? 'fa-user-check' : 'fa-user-clock' ?>"></i></button>
                             </form>
-                            <form method="POST" class="remove-employee-form">
-                                <button type="submit" name="remove_employee" value="<?= $id ?>" class="remove-button">
-                                    🗑️ Remove
-                                </button>
+                            <form method="POST" class="remove-employee-form" style="display:inline">
+                                <button type="submit" name="remove_employee" value="<?= $id ?>" class="action-btn-delete" title="Remove"><i class="fas fa-trash-can"></i></button>
                             </form>
                         </div>
                     </td>
@@ -281,14 +314,11 @@ function render_employee_table($conn) {
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="7" style="text-align:center; padding: 2rem;">
-                        <div class="empty-state">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                            </svg>
-                            <p>No employees found</p>
-                            <small>Add your first employee using the form above</small>
+                    <td colspan="6" style="text-align:center; padding: 3rem;">
+                        <div class="em-empty">
+                            <i class="fas fa-users"></i>
+                            <p>No employees yet</p>
+                            <p>Add your first employee using the form above</p>
                         </div>
                     </td>
                 </tr>
@@ -326,358 +356,165 @@ $onLeaveCount = $conn->query("SELECT COUNT(*) as cnt FROM employees WHERE on_lea
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="custom-modal.js?v=2"></script>
 <style>
-  main {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 1.5rem 2rem 2rem;
-    animation: fadeIn 0.8s ease-out;
-  }
+/* ── Employee Management Premium ─────────────────────────── */
+main { width:100%; max-width:1400px; margin:0 auto; padding:1.25rem 1.5rem 2rem; }
 
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+/* Page Header */
+.page-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; animation:ds-fade-in 0.3s var(--ease-out) both; }
+.page-header-left h1 { font-size:var(--text-2xl); font-weight:800; letter-spacing:-0.02em; color:var(--c-text); margin:0; line-height:1.2; display:flex; align-items:center; gap:0.4rem; }
+.page-header-left p { margin:0.2rem 0 0; color:var(--c-text-muted); font-size:var(--text-sm); }
+.page-header-right { display:flex; gap:0.5rem; }
+.header-action-btn { display:inline-flex; align-items:center; gap:0.4rem; padding:0.55rem 1rem; font-size:var(--text-sm); font-weight:600; border-radius:var(--radius-md); border:1px solid var(--c-border); background:var(--c-surface); color:var(--c-text); cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-sans); }
+.header-action-btn:hover { border-color:var(--c-brand); color:var(--c-brand); box-shadow:var(--shadow-sm); transform:translate3d(0,-1px,0); }
+.header-action-btn:active { transform:translate3d(0,0,0) scale(0.98); transition-duration:80ms; }
 
-  /* Stats Grid */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.2rem;
-    margin-bottom: 2rem;
-  }
+/* Stats Grid */
+.em-stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(185px,1fr)); gap:0.85rem; margin-bottom:1.5rem; }
+.em-stat-card { background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--radius-lg); padding:1.1rem; display:flex; align-items:center; gap:0.85rem; transition:transform var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out); will-change:transform; position:relative; overflow:hidden; animation:ds-fade-in 0.3s var(--ease-out) both; }
+.em-stat-card:nth-child(1){animation-delay:.02s} .em-stat-card:nth-child(2){animation-delay:.04s} .em-stat-card:nth-child(3){animation-delay:.06s} .em-stat-card:nth-child(4){animation-delay:.08s} .em-stat-card:nth-child(5){animation-delay:.10s} .em-stat-card:nth-child(6){animation-delay:.12s}
+.em-stat-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0 3px 3px 0; opacity:0; transition:opacity var(--duration-fast) var(--ease-out); }
+.em-stat-card:hover { transform:translate3d(0,-2px,0); box-shadow:var(--shadow-md); }
+.em-stat-card:hover::before { opacity:1; }
+.em-stat-card:nth-child(1)::before{background:var(--c-brand)} .em-stat-card:nth-child(2)::before{background:var(--c-success)} .em-stat-card:nth-child(3)::before{background:#f59e0b} .em-stat-card:nth-child(4)::before{background:#8b5cf6} .em-stat-card:nth-child(5)::before{background:#ec4899} .em-stat-card:nth-child(6)::before{background:#06b6d4}
+.em-stat-icon { width:44px; height:44px; border-radius:var(--radius-lg); display:grid; place-items:center; font-size:1.15rem; flex-shrink:0; }
+.em-stat-icon.blue{background:rgba(var(--c-brand-rgb),.1);color:var(--c-brand)} .em-stat-icon.green{background:rgba(16,185,129,.1);color:#10b981} .em-stat-icon.amber{background:rgba(245,158,11,.1);color:#f59e0b} .em-stat-icon.purple{background:rgba(139,92,246,.1);color:#8b5cf6} .em-stat-icon.pink{background:rgba(236,72,153,.1);color:#ec4899} .em-stat-icon.cyan{background:rgba(6,182,212,.1);color:#06b6d4}
+.em-stat-body { min-width:0; }
+.em-stat-value { font-size:var(--text-2xl); font-weight:800; line-height:1.1; color:var(--c-text); letter-spacing:-0.02em; }
+.em-stat-label { font-size:0.68rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--c-text-muted); margin-top:0.15rem; }
 
-  .stat-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 15px var(--shadow-color);
-    border: 1px solid var(--table-border);
-    text-align: center;
-    transition: transform 0.15s, box-shadow 0.15s;
-    animation: slideUp 0.6s ease-out backwards;
-    position: relative;
-    overflow: hidden;
-  }
+/* Tabs */
+.em-tabs { background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--radius-xl); overflow:visible; box-shadow:var(--shadow-sm); animation:ds-fade-in 0.35s .1s var(--ease-out) both; }
+.em-tabs-header { display:flex; border-bottom:1px solid var(--c-border); overflow-x:auto; scrollbar-width:none; }
+.em-tabs-header::-webkit-scrollbar{display:none}
+.em-tab-btn { padding:0.85rem 1.25rem; background:transparent; border:none; color:var(--c-text-muted); font-weight:600; font-size:var(--text-sm); cursor:pointer; transition:color var(--duration-fast) var(--ease-out),background var(--duration-fast) var(--ease-out); white-space:nowrap; display:inline-flex; align-items:center; gap:0.5rem; position:relative; font-family:var(--font-sans); }
+.em-tab-btn:hover{color:var(--c-text);background:var(--c-surface-sunken)} .em-tab-btn.active{color:var(--c-brand)}
+.em-tab-btn.active::after { content:''; position:absolute; bottom:-1px; left:.75rem; right:.75rem; height:2px; background:var(--c-brand); border-radius:2px 2px 0 0; }
+.em-tab-badge { background:var(--c-brand-ghost); color:var(--c-brand); padding:.1rem .45rem; border-radius:var(--radius-full); font-size:0.7rem; font-weight:700; line-height:1.4; }
+.em-tab-btn.active .em-tab-badge{background:rgba(var(--c-brand-rgb),.15)}
+.em-tab-content{display:none;padding:1.25rem} .em-tab-content.active{display:block;animation:ds-fade-in .25s var(--ease-out) both}
 
-  .stat-card:nth-child(1) { animation-delay: 0.05s; border-left: 4px solid #3b82f6; }
-  .stat-card:nth-child(2) { animation-delay: 0.1s; border-left: 4px solid #10b981; }
-  .stat-card:nth-child(3) { animation-delay: 0.15s; border-left: 4px solid #f59e0b; }
-  .stat-card:nth-child(4) { animation-delay: 0.2s; border-left: 4px solid #8b5cf6; }
-  .stat-card:nth-child(5) { animation-delay: 0.25s; border-left: 4px solid #ec4899; }
-  .stat-card:nth-child(6) { animation-delay: 0.3s; border-left: 4px solid #06b6d4; }
+/* Form Card */
+.em-form-card { border:1px solid var(--c-border); border-radius:var(--radius-lg); background:var(--c-surface-sunken); margin-bottom:1.25rem; overflow:hidden; }
+.em-form-header { padding:.85rem 1.15rem; font-weight:700; font-size:var(--text-sm); color:var(--c-text); border-bottom:1px solid var(--c-border); display:flex; align-items:center; gap:.5rem; background:var(--c-surface); }
+.em-form-body{padding:1.15rem}
+.em-form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1rem; }
+.em-form-group{display:flex;flex-direction:column;gap:.3rem}
+.em-form-group label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--c-text-secondary); }
+.em-form-group input,.em-form-group select { padding:.6rem .85rem; border-radius:var(--radius-md); border:1.5px solid var(--c-border); background:var(--c-surface); color:var(--c-text); font-size:var(--text-base); font-family:var(--font-sans); transition:border-color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out); }
+.em-form-group input:focus,.em-form-group select:focus { outline:none; border-color:var(--c-brand); box-shadow:0 0 0 3px rgba(var(--c-brand-rgb),.1); }
+.em-form-submit { display:inline-flex; align-items:center; gap:.4rem; padding:.6rem 1.25rem; font-size:var(--text-sm); font-weight:600; font-family:var(--font-sans); border:none; border-radius:var(--radius-md); background:var(--c-brand); color:white; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); box-shadow:var(--shadow-sm),0 1px 2px rgba(var(--c-brand-rgb),.2); }
+.em-form-submit:hover { background:var(--c-brand-dark); box-shadow:var(--shadow-md); transform:translate3d(0,-1px,0); }
+.em-form-submit:active { transform:translate3d(0,0,0) scale(.98); transition-duration:80ms; }
 
-  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--shadow-color); }
-  .stat-card .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--primary-color); }
-  .stat-card .stat-label { font-size: 0.85rem; color: var(--text-color); opacity: 0.7; margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-  .stat-card .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+/* Search & Toolbar */
+.em-toolbar { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-bottom:1rem; flex-wrap:wrap; }
+.em-search { position:relative; flex:1; max-width:320px; }
+.em-search i { position:absolute; left:.75rem; top:50%; transform:translateY(-50%); color:var(--c-text-muted); font-size:.85rem; pointer-events:none; }
+.em-search input { width:100%; padding:.55rem .85rem .55rem 2.2rem; border:1.5px solid var(--c-border); border-radius:var(--radius-md); background:var(--c-surface); color:var(--c-text); font-size:var(--text-sm); font-family:var(--font-sans); transition:border-color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out); }
+.em-search input:focus { outline:none; border-color:var(--c-brand); box-shadow:0 0 0 3px rgba(var(--c-brand-rgb),.1); }
+.em-toolbar-right { display:flex; gap:.4rem; align-items:center; }
+.em-filter-pill { padding:.4rem .75rem; border:1px solid var(--c-border); border-radius:var(--radius-full); background:var(--c-surface); color:var(--c-text-secondary); font-size:.73rem; font-weight:600; cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-sans); }
+.em-filter-pill:hover,.em-filter-pill.active { border-color:var(--c-brand); color:var(--c-brand); background:var(--c-brand-ghost); }
 
-  /* Tabs */
-  .tabs-container {
-    background: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: 0 4px 15px var(--shadow-color);
-    border: 1px solid var(--table-border);
-    overflow: visible;
-    margin-bottom: 2rem;
-  }
+/* Employee Table */
+.em-table-wrap { border:1px solid var(--c-border); border-radius:var(--radius-lg); overflow:hidden; }
+.em-table-wrap table { width:100%; border-collapse:collapse; border-spacing:0; font-size:var(--text-sm); }
+.em-table-wrap thead th { background:var(--c-surface-sunken); color:var(--c-text-secondary); font-weight:600; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; padding:.7rem 1rem; text-align:left; border-bottom:1px solid var(--c-border); white-space:nowrap; }
+.em-table-wrap tbody td { padding:.7rem 1rem; border-bottom:1px solid var(--c-border-light); color:var(--c-text); vertical-align:middle; }
+.em-table-wrap tbody tr:last-child td{border-bottom:none}
+.em-table-wrap tbody tr { transition:background var(--duration-fast) var(--ease-out); }
+.em-table-wrap tbody tr:hover{background:var(--c-brand-ghost)}
+.em-table-wrap tbody tr.on-leave{background:rgba(245,158,11,.04)} .em-table-wrap tbody tr.on-leave:hover{background:rgba(245,158,11,.08)}
 
-  .tabs-header {
-    display: flex;
-    background: var(--header-bg, var(--primary-color));
-    overflow-x: auto;
-    border-bottom: 2px solid var(--table-border);
-    border-radius: 16px 16px 0 0;
-  }
+/* Employee cell */
+.emp-cell { display:flex; align-items:center; gap:.65rem; }
+.emp-avatar { width:36px; height:36px; border-radius:var(--radius-full); display:grid; place-items:center; font-size:.8rem; font-weight:700; color:white; flex-shrink:0; text-transform:uppercase; }
+.emp-avatar.pharmacist{background:#3b82f6} .emp-avatar.cashier{background:#10b981} .emp-avatar.staff{background:#f59e0b} .emp-avatar.admin{background:#8b5cf6} .emp-avatar.manager{background:#ec4899}
+.emp-info{display:flex;flex-direction:column;min-width:0}
+.emp-name { font-weight:600; color:var(--c-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.emp-id { font-size:.7rem; color:var(--c-text-muted); }
 
-  .tab-btn {
-    padding: 1rem 1.5rem;
-    background: transparent;
-    border: none;
-    color: rgba(255,255,255,0.7);
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 16px 16px 0 0;
-  }
+/* Role & Status Badges */
+.role-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.2rem .6rem; border-radius:var(--radius-full); font-size:.73rem; font-weight:600; text-transform:capitalize; }
+.role-badge i{font-size:.65rem}
+.role-badge.pharmacist{background:rgba(59,130,246,.1);color:#3b82f6} .role-badge.cashier{background:rgba(16,185,129,.1);color:#10b981} .role-badge.staff{background:rgba(245,158,11,.1);color:#d97706} .role-badge.admin{background:rgba(139,92,246,.1);color:#8b5cf6} .role-badge.manager{background:rgba(236,72,153,.1);color:#ec4899}
+[data-theme="dark"] .role-badge.pharmacist{background:rgba(59,130,246,.15);color:#60a5fa} [data-theme="dark"] .role-badge.cashier{background:rgba(16,185,129,.15);color:#34d399} [data-theme="dark"] .role-badge.staff{background:rgba(245,158,11,.15);color:#fbbf24} [data-theme="dark"] .role-badge.admin{background:rgba(139,92,246,.15);color:#a78bfa} [data-theme="dark"] .role-badge.manager{background:rgba(236,72,153,.15);color:#f472b6}
+.status-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.2rem .55rem; border-radius:var(--radius-full); font-size:.73rem; font-weight:600; }
+.status-badge i{font-size:.6rem}
+.status-badge.active{background:rgba(16,185,129,.1);color:#10b981} .status-badge.on-leave{background:rgba(245,158,11,.1);color:#d97706}
+[data-theme="dark"] .status-badge.active{background:rgba(16,185,129,.15);color:#34d399} [data-theme="dark"] .status-badge.on-leave{background:rgba(245,158,11,.15);color:#fbbf24}
+.shift-time { font-size:.8rem; color:var(--c-text-secondary); display:inline-flex; align-items:center; gap:.35rem; }
+.shift-time i{font-size:.7rem;color:var(--c-text-muted)} .date-text{font-size:.8rem;color:var(--c-text-muted)}
 
-  .tab-btn:hover { color: white; background: rgba(255,255,255,0.1); }
-  .tab-btn.active {
-    color: white;
-    background: rgba(255,255,255,0.15);
-    border-radius: 16px 16px 0 0;
-  }
-  .tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: white;
-    border-radius: 3px 3px 0 0;
-  }
+/* Action buttons */
+.action-buttons { display:flex; gap:.35rem; align-items:center; }
+.action-btn-edit,.action-btn-leave,.action-btn-delete { width:32px; height:32px; border-radius:var(--radius-md); display:grid; place-items:center; border:1px solid var(--c-border); background:var(--c-surface); cursor:pointer; font-size:.8rem; transition:all var(--duration-fast) var(--ease-out); }
+.action-btn-edit{color:var(--c-brand)} .action-btn-edit:hover{background:var(--c-brand-ghost);border-color:var(--c-brand);transform:translate3d(0,-1px,0)}
+.action-btn-leave{color:#f59e0b} .action-btn-leave:hover{background:rgba(245,158,11,.08);border-color:#f59e0b;transform:translate3d(0,-1px,0)}
+.action-btn-delete{color:#ef4444} .action-btn-delete:hover{background:rgba(239,68,68,.08);border-color:#ef4444;transform:translate3d(0,-1px,0)}
+.action-btn-edit:active,.action-btn-leave:active,.action-btn-delete:active{transform:scale(.92);transition-duration:80ms}
 
-  .tab-badge {
-    background: rgba(255,255,255,0.25);
-    padding: 0.15rem 0.5rem;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
+/* Edit Modal */
+.em-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(4px); z-index:10000; display:none; align-items:center; justify-content:center; padding:1rem; opacity:0; transition:opacity .2s var(--ease-out); }
+.em-modal-overlay.active{display:flex;opacity:1}
+.em-modal { background:var(--c-surface); border-radius:var(--radius-xl); box-shadow:var(--shadow-2xl); max-width:500px; width:100%; overflow:hidden; transform:scale(.95) translate3d(0,8px,0); transition:transform .2s var(--ease-spring); }
+.em-modal-overlay.active .em-modal{transform:scale(1) translate3d(0,0,0)}
+.em-modal-header { padding:1rem 1.25rem; border-bottom:1px solid var(--c-border); display:flex; align-items:center; justify-content:space-between; }
+.em-modal-header h3 { font-size:var(--text-lg); font-weight:700; margin:0; color:var(--c-text); display:flex; align-items:center; gap:.4rem; }
+.em-modal-close { width:32px; height:32px; border-radius:var(--radius-md); border:none; background:var(--c-surface-sunken); color:var(--c-text-muted); cursor:pointer; display:grid; place-items:center; font-size:.85rem; transition:all var(--duration-fast) var(--ease-out); }
+.em-modal-close:hover{background:rgba(239,68,68,.1);color:#ef4444}
+.em-modal-body{padding:1.25rem}
+.em-modal-footer { padding:1rem 1.25rem; border-top:1px solid var(--c-border); display:flex; justify-content:flex-end; gap:.5rem; }
+.em-btn-cancel { padding:.55rem 1rem; border:1px solid var(--c-border); border-radius:var(--radius-md); background:var(--c-surface); color:var(--c-text-secondary); font-weight:600; font-size:var(--text-sm); cursor:pointer; font-family:var(--font-sans); transition:all var(--duration-fast) var(--ease-out); }
+.em-btn-cancel:hover{border-color:var(--c-text-muted);color:var(--c-text)}
+.em-btn-save { padding:.55rem 1.15rem; border:none; border-radius:var(--radius-md); background:var(--c-brand); color:white; font-weight:600; font-size:var(--text-sm); font-family:var(--font-sans); cursor:pointer; transition:all var(--duration-fast) var(--ease-out); display:inline-flex; align-items:center; gap:.35rem; }
+.em-btn-save:hover{background:var(--c-brand-dark);transform:translate3d(0,-1px,0)} .em-btn-save:active{transform:scale(.98);transition-duration:80ms}
 
-  .tab-content { display: none; padding: 1.5rem; overflow-x: auto; }
-  .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+/* Log Filters */
+.em-log-filters { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem; align-items:flex-end; }
+.em-filter-group { display:flex; flex-direction:column; gap:.25rem; }
+.em-filter-group label { font-size:.68rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--c-text-muted); }
+.em-filter-group input,.em-filter-group select { padding:.45rem .7rem; border:1.5px solid var(--c-border); border-radius:var(--radius-md); background:var(--c-surface); color:var(--c-text); font-size:var(--text-sm); font-family:var(--font-sans); transition:border-color var(--duration-fast) var(--ease-out); }
+.em-filter-group input:focus,.em-filter-group select:focus{outline:none;border-color:var(--c-brand)}
+.em-filter-btn { padding:.45rem .85rem; border:none; border-radius:var(--radius-md); background:var(--c-brand); color:white; font-weight:600; font-size:var(--text-sm); cursor:pointer; font-family:var(--font-sans); transition:all var(--duration-fast) var(--ease-out); display:inline-flex; align-items:center; gap:.35rem; }
+.em-filter-btn:hover{background:var(--c-brand-dark);transform:translate3d(0,-1px,0)}
 
-  /* Card styles */
-  .card {
-    background: var(--card-bg);
-    border-radius: 15px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    width: 100%;
-    margin-bottom: 2rem;
-    overflow: hidden;
-    border: 1px solid var(--table-border);
-    padding: 0;
-  }
+/* Log Entries */
+.em-log-entry { padding:.85rem 1rem; border-bottom:1px solid var(--c-border-light); display:flex; gap:.75rem; align-items:flex-start; transition:background var(--duration-fast) var(--ease-out); }
+.em-log-entry:hover{background:var(--c-brand-ghost)} .em-log-entry:last-child{border-bottom:none}
+.em-log-icon { width:36px; height:36px; border-radius:var(--radius-md); display:grid; place-items:center; font-size:.9rem; flex-shrink:0; }
+.em-log-icon.login{background:rgba(16,185,129,.1);color:#10b981} .em-log-icon.logout{background:rgba(107,114,128,.1);color:#6b7280} .em-log-icon.create{background:rgba(var(--c-brand-rgb),.1);color:var(--c-brand)} .em-log-icon.update,.em-log-icon.toggle{background:rgba(245,158,11,.1);color:#f59e0b} .em-log-icon.delete{background:rgba(239,68,68,.1);color:#ef4444}
+.em-log-body{flex:1;min-width:0} .em-log-title{font-weight:600;font-size:var(--text-sm);color:var(--c-text);margin-bottom:.15rem}
+.em-log-meta { font-size:.73rem; color:var(--c-text-muted); display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; }
+.em-log-changes { margin-top:.4rem; padding:.4rem .7rem; background:var(--c-surface-sunken); border:1px solid var(--c-border-light); border-radius:var(--radius-sm); font-size:.73rem; font-family:var(--font-mono); line-height:1.6; }
+.em-log-time { font-size:.73rem; color:var(--c-text-muted); white-space:nowrap; text-align:right; min-width:110px; flex-shrink:0; }
+.em-session-badge { display:inline-flex; align-items:center; gap:.25rem; padding:.15rem .45rem; border-radius:var(--radius-full); font-size:.68rem; font-weight:700; text-transform:uppercase; }
+.em-session-badge.active{background:rgba(16,185,129,.1);color:#10b981} .em-session-badge.logged_out,.em-session-badge.logged-out{background:rgba(107,114,128,.1);color:#6b7280} .em-session-badge.expired{background:rgba(245,158,11,.1);color:#d97706} .em-session-badge.forced{background:rgba(239,68,68,.1);color:#ef4444}
+.em-duration-badge { display:inline-flex; align-items:center; gap:.2rem; padding:.15rem .45rem; background:rgba(var(--c-brand-rgb),.08); border-radius:var(--radius-full); font-size:.7rem; font-weight:600; color:var(--c-brand); }
 
-  .card-header {
-    background: var(--primary-color);
-    color: white;
-    padding: 1.2rem 1.5rem;
-    font-weight: 700;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 15px 15px 0 0;
-  }
+/* Empty & Toast & Loading */
+.em-empty { text-align:center; padding:3rem 1.5rem; color:var(--c-text-muted); }
+.em-empty i{font-size:2.5rem;margin-bottom:.75rem;opacity:.4;display:block} .em-empty p{font-size:var(--text-sm);margin:.2rem 0} .em-empty p:first-of-type{font-weight:600;color:var(--c-text-secondary);font-size:var(--text-base)}
+.em-toast { position:fixed; top:72px; right:1rem; padding:.75rem 1.15rem; border-radius:var(--radius-lg); color:white; font-weight:600; font-size:var(--text-sm); z-index:10001; box-shadow:var(--shadow-lg); transform:translate3d(120%,0,0); transition:transform .3s var(--ease-spring); max-width:360px; display:flex; align-items:center; gap:.5rem; }
+.em-toast.show{transform:translate3d(0,0,0)} .em-toast.success{background:#10b981} .em-toast.error{background:#ef4444}
+.em-loading { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); backdrop-filter:blur(2px); z-index:10002; justify-content:center; align-items:center; }
+.em-loading.active{display:flex}
+.em-spinner { width:36px; height:36px; border:3px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:ds-spin .7s linear infinite; }
 
-  .card-body { padding: 1.5rem; }
-
-  /* Form grid */
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-group { margin-bottom: 0.5rem; }
-  .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; }
-  .form-group input, .form-group select {
-    width: 100%;
-    padding: 0.7rem 1rem;
-    border-radius: 12px;
-    border: 1px solid var(--input-border);
-    background: var(--card-bg);
-    color: var(--text-color);
-    font-size: 0.95rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  .form-group input:focus, .form-group select:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
-  }
-
-  .btn {
-    padding: 0.7rem 1.5rem;
-    border: none;
-    border-radius: 30px;
-    background: var(--primary-color);
-    color: white;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
-  }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(52, 152, 219, 0.35); }
-
-  /* Table */
-  table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  thead th {
-    background-color: var(--table-header-bg);
-    color: var(--text-color);
-    padding: 0.9rem 1.2rem;
-    font-weight: 700;
-    text-align: left;
-    font-size: 0.9rem;
-    border-bottom: 1px solid var(--table-border);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  thead th:first-child { border-radius: 12px 0 0 0; }
-  thead th:last-child { border-radius: 0 12px 0 0; }
-  tbody td { padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--table-border); transition: background-color 0.2s ease; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:last-child td:first-child { border-radius: 0 0 0 12px; }
-  tbody tr:last-child td:last-child { border-radius: 0 0 12px 0; }
-  tbody tr:hover { background-color: var(--hover-bg); }
-  tr.on-leave { background-color: rgba(255, 152, 0, 0.08); }
-
-  .shift-time { font-family: 'Consolas', monospace; font-size: 0.9rem; }
-  .date-text { font-size: 0.85rem; opacity: 0.8; }
-
-  .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .toggle-leave-button, .remove-button {
-    display: inline-flex; align-items: center; gap: 0.3rem;
-    padding: 0.4rem 0.8rem; border: none; border-radius: 20px;
-    font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .toggle-leave-button { background: #f59e0b; color: white; }
-  .toggle-leave-button:hover { background: #d97706; transform: translateY(-2px); }
-  .remove-button { background: #ef4444; color: white; }
-  .remove-button:hover { background: #dc2626; transform: translateY(-2px); }
-
-  .role-badge { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize; }
-  .role-badge.pharmacist { background-color: #3498db; color: white; }
-  .role-badge.cashier { background-color: #2ecc71; color: white; }
-  .role-badge.staff { background-color: #f39c12; color: white; }
-  .role-badge.admin { background-color: #8b5cf6; color: white; }
-  .role-badge.manager { background-color: #ec4899; color: white; }
-
-  .status-badge { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-  .status-badge.active { background-color: #27ae60; color: white; }
-  .status-badge.on-leave { background-color: #f39c12; color: white; }
-
-  .empty-state { display: flex; flex-direction: column; align-items: center; padding: 2rem; opacity: 0.6; }
-  .empty-state p { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
-
-  /* Logs Section */
-  .log-filters {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-    align-items: flex-end;
-  }
-
-  .log-filters .filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-  }
-
-  .log-filters label { font-size: 0.8rem; font-weight: 600; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
-  .log-filters input, .log-filters select {
-    padding: 0.5rem 0.8rem;
-    border-radius: 8px;
-    border: 1px solid var(--input-border);
-    background: var(--card-bg);
-    color: var(--text-color);
-    font-size: 0.85rem;
-  }
-
-  .filter-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 12px;
-    background: var(--primary-color);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-  }
-  .filter-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
-  .log-entry {
-    padding: 1rem 1.2rem;
-    border-bottom: 1px solid var(--table-border);
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-    transition: background 0.2s ease;
-  }
-  .log-entry:hover { background: var(--hover-bg); }
-  .log-entry:last-child { border-bottom: none; }
-
-  .log-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-  }
-
-  .log-icon.login { background: rgba(16,185,129,0.15); }
-  .log-icon.logout { background: rgba(239,68,68,0.15); }
-  .log-icon.create { background: rgba(59,130,246,0.15); }
-  .log-icon.update, .log-icon.toggle { background: rgba(245,158,11,0.15); }
-  .log-icon.delete { background: rgba(239,68,68,0.15); }
-
-  .log-details { flex: 1; min-width: 0; }
-  .log-details .log-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
-  .log-details .log-meta { font-size: 0.8rem; opacity: 0.6; display: flex; gap: 1rem; flex-wrap: wrap; }
-  .log-details .log-changes { margin-top: 0.5rem; padding: 0.5rem 0.8rem; background: var(--hover-bg); border-radius: 8px; font-size: 0.8rem; font-family: 'Consolas', monospace; }
-
-  .log-time { font-size: 0.8rem; opacity: 0.5; white-space: nowrap; text-align: right; min-width: 130px; }
-
-  .session-status {
-    display: inline-block;
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-  .session-status.active { background: #10b981; color: white; }
-  .session-status.logged_out, .session-status.logged-out { background: #6b7280; color: white; }
-  .session-status.expired { background: #f59e0b; color: white; }
-  .session-status.forced { background: #ef4444; color: white; }
-
-  .duration-badge {
-    display: inline-block;
-    padding: 0.2rem 0.5rem;
-    background: rgba(59,130,246,0.1);
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  /* Notification */
-  .notification {
-    position: fixed; top: 80px; right: 20px;
-    padding: 15px 20px; border-radius: 8px; color: white; font-weight: 500;
-    z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    transform: translateX(150%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    max-width: 350px;
-  }
-  .notification.show { transform: translateX(0); }
-  .notification.success { background: #10b981; }
-  .notification.error { background: #ef4444; }
-
-  .loading-spinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
-  .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-  .no-logs { text-align: center; padding: 3rem; opacity: 0.5; }
-  .no-logs .no-logs-icon { font-size: 3rem; margin-bottom: 1rem; }
-
-  @media (max-width: 768px) {
-    main { padding: 0 1rem; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .form-grid { grid-template-columns: 1fr; }
-    .log-filters { flex-direction: column; }
-    .action-buttons { flex-direction: column; }
-    table { display: block; overflow-x: auto; }
-    .tabs-header { overflow-x: auto; }
-    .tab-btn { padding: 0.8rem 1rem; font-size: 0.85rem; }
-  }
+/* Responsive */
+@media(max-width:768px){
+  main{padding:.75rem 1rem 1.5rem!important}
+  .em-stats-grid{grid-template-columns:repeat(2,1fr);gap:.6rem} .em-stat-card{padding:.85rem} .em-stat-value{font-size:var(--text-xl)}
+  .em-form-grid{grid-template-columns:1fr} .em-log-filters{flex-direction:column}
+  .em-toolbar{flex-direction:column} .em-search{max-width:none}
+  .action-buttons{gap:.25rem} .page-header{flex-direction:column;align-items:flex-start}
+  .em-tabs-header{overflow-x:auto} .em-tab-btn{padding:.75rem 1rem;font-size:.8rem}
+  .em-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch} .em-table-wrap table{min-width:650px}
+  .em-log-time{display:none}
+}
+@media(max-width:480px){
+  .em-stats-grid{grid-template-columns:1fr 1fr;gap:.5rem} .em-stat-icon{width:38px;height:38px;font-size:1rem} .emp-avatar{width:32px;height:32px;font-size:.7rem}
+}
 </style>
 </head>
 <body>
@@ -687,459 +524,462 @@ include 'header-component.php';
 ?>
 
 <main>
-  <!-- Stats Overview -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon">👥</div>
-      <div class="stat-value"><?= $employeeCount ?></div>
-      <div class="stat-label">Total Employees</div>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><i class="fas fa-users" style="color:var(--c-brand);font-size:1.15rem;"></i> Employee Management</h1>
+      <p>Manage your team, track schedules, and monitor activity</p>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon">✅</div>
-      <div class="stat-value"><?= $activeCount ?></div>
-      <div class="stat-label">Active</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">🏖️</div>
-      <div class="stat-value"><?= $onLeaveCount ?></div>
-      <div class="stat-label">On Leave</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">🔑</div>
-      <div class="stat-value"><?= $stats['today_logins'] ?></div>
-      <div class="stat-label">Today's Logins</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">🟢</div>
-      <div class="stat-value"><?= $stats['active_sessions'] ?></div>
-      <div class="stat-label">Active Sessions</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">📝</div>
-      <div class="stat-value"><?= $stats['today_changes'] ?></div>
-      <div class="stat-label">Today's Changes</div>
+    <div class="page-header-right">
+      <button class="header-action-btn" onclick="exportCSV()" title="Export to CSV"><i class="fas fa-download"></i> Export</button>
     </div>
   </div>
 
-  <!-- Tabbed Interface -->
-  <div class="tabs-container">
-    <div class="tabs-header">
-      <button class="tab-btn active" data-tab="employees">
-        👥 Employees <span class="tab-badge"><?= $employeeCount ?></span>
-      </button>
-      <button class="tab-btn" data-tab="login-logs">
-        � Login / Logout Logs
-      </button>
-      <button class="tab-btn" data-tab="change-logs">
-        📋 Change History
-      </button>
+  <!-- Stats -->
+  <div class="em-stats-grid">
+    <div class="em-stat-card"><div class="em-stat-icon blue"><i class="fas fa-users"></i></div><div class="em-stat-body"><div class="em-stat-value" data-count="<?= $employeeCount ?>"><?= $employeeCount ?></div><div class="em-stat-label">Total Employees</div></div></div>
+    <div class="em-stat-card"><div class="em-stat-icon green"><i class="fas fa-user-check"></i></div><div class="em-stat-body"><div class="em-stat-value" data-count="<?= $activeCount ?>"><?= $activeCount ?></div><div class="em-stat-label">Active</div></div></div>
+    <div class="em-stat-card"><div class="em-stat-icon amber"><i class="fas fa-user-clock"></i></div><div class="em-stat-body"><div class="em-stat-value" data-count="<?= $onLeaveCount ?>"><?= $onLeaveCount ?></div><div class="em-stat-label">On Leave</div></div></div>
+    <div class="em-stat-card"><div class="em-stat-icon purple"><i class="fas fa-right-to-bracket"></i></div><div class="em-stat-body"><div class="em-stat-value" data-count="<?= $stats['today_logins'] ?>"><?= $stats['today_logins'] ?></div><div class="em-stat-label">Today's Logins</div></div></div>
+    <div class="em-stat-card"><div class="em-stat-icon pink"><i class="fas fa-signal"></i></div><div class="em-stat-body"><div class="em-stat-value" data-count="<?= $stats['active_sessions'] ?>"><?= $stats['active_sessions'] ?></div><div class="em-stat-label">Active Sessions</div></div></div>
+    <div class="em-stat-card"><div class="em-stat-icon cyan"><i class="fas fa-pen-to-square"></i></div><div class="em-stat-body"><div class="em-stat-value" data-count="<?= $stats['today_changes'] ?>"><?= $stats['today_changes'] ?></div><div class="em-stat-label">Today's Changes</div></div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="em-tabs">
+    <div class="em-tabs-header">
+      <button class="em-tab-btn active" data-tab="employees"><i class="fas fa-users"></i> Employees <span class="em-tab-badge"><?= $employeeCount ?></span></button>
+      <button class="em-tab-btn" data-tab="login-logs"><i class="fas fa-right-to-bracket"></i> Login Sessions</button>
+      <button class="em-tab-btn" data-tab="change-logs"><i class="fas fa-clock-rotate-left"></i> Change History</button>
     </div>
 
-    <!-- Tab 1: Employees -->
-    <div class="tab-content active" id="tab-employees">
-      <!-- Add Employee Form -->
-      <div class="card" style="margin-bottom: 1.5rem;">
-        <div class="card-header">➕ Add New Employee</div>
-        <div class="card-body">
+    <!-- Tab: Employees -->
+    <div class="em-tab-content active" id="tab-employees">
+      <div class="em-form-card">
+        <div class="em-form-header"><i class="fas fa-user-plus"></i> Add New Employee</div>
+        <div class="em-form-body">
           <form id="addEmployeeForm" method="POST">
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="name">Employee Name</label>
-                <input type="text" id="name" name="name" required maxlength="100" placeholder="Enter full name">
-              </div>
-              <div class="form-group">
-                <label for="role">Role</label>
-                <select id="role" name="role" required>
-                  <option value="">Select role</option>
-                  <option value="pharmacist">Pharmacist</option>
-                  <option value="cashier">Cashier</option>
-                  <option value="staff">Staff</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="shift_start">Shift Start</label>
-                <input type="time" id="shift_start" name="shift_start" required>
-              </div>
-              <div class="form-group">
-                <label for="shift_end">Shift End</label>
-                <input type="time" id="shift_end" name="shift_end" required>
-              </div>
+            <div class="em-form-grid">
+              <div class="em-form-group"><label for="name">Full Name</label><input type="text" id="name" name="name" required maxlength="100" placeholder="e.g. Juan Dela Cruz" autocomplete="off"></div>
+              <div class="em-form-group"><label for="role">Role</label><select id="role" name="role" required><option value="">Select role…</option><option value="pharmacist">Pharmacist</option><option value="cashier">Cashier</option><option value="staff">Staff</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+              <div class="em-form-group"><label for="shift_start">Shift Start</label><input type="time" id="shift_start" name="shift_start" required></div>
+              <div class="em-form-group"><label for="shift_end">Shift End</label><input type="time" id="shift_end" name="shift_end" required></div>
             </div>
-            <button type="submit" name="add_employee" class="btn">➕ Add Employee</button>
+            <button type="submit" name="add_employee" class="em-form-submit"><i class="fas fa-plus"></i> Add Employee</button>
           </form>
         </div>
       </div>
 
-      <!-- Employee List -->
-      <div class="card">
-        <div class="card-header">📋 Employee Roster</div>
-        <div class="card-body" id="employeeTableContainer">
-          <?php echo render_employee_table($conn); ?>
+      <div class="em-toolbar">
+        <div class="em-search"><i class="fas fa-magnifying-glass"></i><input type="text" id="empSearchInput" placeholder="Search employees…" autocomplete="off"></div>
+        <div class="em-toolbar-right">
+          <button class="em-filter-pill active" data-filter="all">All</button>
+          <button class="em-filter-pill" data-filter="active">Active</button>
+          <button class="em-filter-pill" data-filter="on-leave">On Leave</button>
         </div>
+      </div>
+
+      <div class="em-table-wrap" id="employeeTableContainer">
+        <?php echo render_employee_table($conn); ?>
       </div>
     </div>
 
-    <!-- Tab 2: Login/Logout Logs -->
-    <div class="tab-content" id="tab-login-logs">
-      <div class="log-filters">
-        <div class="filter-group">
-          <label>User</label>
-          <select id="login-filter-user">
-            <option value="">All Users</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>From</label>
-          <input type="date" id="login-filter-from">
-        </div>
-        <div class="filter-group">
-          <label>To</label>
-          <input type="date" id="login-filter-to">
-        </div>
-        <div class="filter-group">
-          <label>Status</label>
-          <select id="login-filter-status">
-            <option value="">All</option>
-            <option value="active">Active</option>
-            <option value="logged_out">Logged Out</option>
-            <option value="expired">Expired</option>
-          </select>
-        </div>
-        <button class="filter-btn" onclick="loadLoginSessions()">🔍 Filter</button>
+    <!-- Tab: Login Sessions -->
+    <div class="em-tab-content" id="tab-login-logs">
+      <div class="em-log-filters">
+        <div class="em-filter-group"><label>User</label><select id="login-filter-user"><option value="">All Users</option></select></div>
+        <div class="em-filter-group"><label>From</label><input type="date" id="login-filter-from"></div>
+        <div class="em-filter-group"><label>To</label><input type="date" id="login-filter-to"></div>
+        <div class="em-filter-group"><label>Status</label><select id="login-filter-status"><option value="">All</option><option value="active">Active</option><option value="logged_out">Logged Out</option><option value="expired">Expired</option></select></div>
+        <button class="em-filter-btn" onclick="loadLoginSessions()"><i class="fas fa-magnifying-glass"></i> Filter</button>
       </div>
-
       <div id="login-sessions-list">
-        <div class="no-logs">
-          <div class="no-logs-icon">🔑</div>
-          <p>Click "Filter" to load login/logout sessions</p>
-        </div>
+        <div class="em-empty"><i class="fas fa-right-to-bracket"></i><p>No sessions loaded</p><p>Click Filter to load login/logout sessions</p></div>
       </div>
     </div>
 
-    <!-- Tab 3: Change Logs -->
-    <div class="tab-content" id="tab-change-logs">
-      <div class="log-filters">
-        <div class="filter-group">
-          <label>User</label>
-          <select id="change-filter-user">
-            <option value="">All Users</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Module</label>
-          <select id="change-filter-module">
-            <option value="">All Modules</option>
-            <option value="Employee Management">Employee Management</option>
-            <option value="Inventory">Inventory</option>
-            <option value="POS">POS</option>
-            <option value="Authentication">Authentication</option>
-            <option value="User Management">User Management</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Action</label>
-          <select id="change-filter-action">
-            <option value="">All Actions</option>
-            <option value="create">Create</option>
-            <option value="update">Update</option>
-            <option value="delete">Delete</option>
-            <option value="toggle">Toggle</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>From</label>
-          <input type="date" id="change-filter-from">
-        </div>
-        <div class="filter-group">
-          <label>To</label>
-          <input type="date" id="change-filter-to">
-        </div>
-        <button class="filter-btn" onclick="loadChangeLogs()">🔍 Filter</button>
+    <!-- Tab: Change History -->
+    <div class="em-tab-content" id="tab-change-logs">
+      <div class="em-log-filters">
+        <div class="em-filter-group"><label>User</label><select id="change-filter-user"><option value="">All Users</option></select></div>
+        <div class="em-filter-group"><label>Module</label><select id="change-filter-module"><option value="">All Modules</option><option value="Employee Management">Employee Mgmt</option><option value="Inventory">Inventory</option><option value="POS">POS</option><option value="Authentication">Auth</option><option value="User Management">User Mgmt</option></select></div>
+        <div class="em-filter-group"><label>Action</label><select id="change-filter-action"><option value="">All Actions</option><option value="create">Create</option><option value="update">Update</option><option value="delete">Delete</option><option value="toggle">Toggle</option></select></div>
+        <div class="em-filter-group"><label>From</label><input type="date" id="change-filter-from"></div>
+        <div class="em-filter-group"><label>To</label><input type="date" id="change-filter-to"></div>
+        <button class="em-filter-btn" onclick="loadChangeLogs()"><i class="fas fa-magnifying-glass"></i> Filter</button>
       </div>
-
       <div id="change-logs-list">
-        <div class="no-logs">
-          <div class="no-logs-icon">📋</div>
-          <p>Click "Filter" to load change history</p>
-        </div>
+        <div class="em-empty"><i class="fas fa-clock-rotate-left"></i><p>No changes loaded</p><p>Click Filter to view change history</p></div>
       </div>
     </div>
   </div>
 </main>
 
-<div class="loading-spinner"><div class="spinner"></div></div>
+<!-- Edit Employee Modal -->
+<div class="em-modal-overlay" id="editModalOverlay">
+  <div class="em-modal">
+    <div class="em-modal-header">
+      <h3><i class="fas fa-user-pen" style="color:var(--c-brand)"></i> Edit Employee</h3>
+      <button class="em-modal-close" onclick="closeEditModal()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="em-modal-body">
+      <form id="editEmployeeForm">
+        <input type="hidden" id="edit_id" name="edit_id">
+        <div class="em-form-grid" style="grid-template-columns:1fr 1fr">
+          <div class="em-form-group" style="grid-column:1/-1"><label for="edit_name">Full Name</label><input type="text" id="edit_name" name="edit_name" required maxlength="100"></div>
+          <div class="em-form-group"><label for="edit_role">Role</label><select id="edit_role" name="edit_role" required><option value="pharmacist">Pharmacist</option><option value="cashier">Cashier</option><option value="staff">Staff</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+          <div class="em-form-group"><label for="edit_shift_start">Shift Start</label><input type="time" id="edit_shift_start" name="edit_shift_start" required></div>
+          <div class="em-form-group"><label for="edit_shift_end">Shift End</label><input type="time" id="edit_shift_end" name="edit_shift_end" required></div>
+        </div>
+      </form>
+    </div>
+    <div class="em-modal-footer">
+      <button class="em-btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="em-btn-save" onclick="saveEdit()"><i class="fas fa-check"></i> Save Changes</button>
+    </div>
+  </div>
+</div>
 
-<?php include 'footer-component.php'; ?>
+<div class="em-loading" id="emLoading"><div class="em-spinner"></div></div>
+
 <?php include 'pills-background.php'; ?>
 
 <script src="theme.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // -- Tabs --
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  /* ── Tabs ────────────────────────────────────────────── */
+  document.querySelectorAll('.em-tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.em-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.em-tab-content').forEach(c => c.classList.remove('active'));
       this.classList.add('active');
       document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-
-      // Auto-load data when switching tabs
       if (this.dataset.tab === 'login-logs') loadLoginSessions();
       if (this.dataset.tab === 'change-logs') loadChangeLogs();
     });
   });
 
-  // -- Helpers --
-  function showLoading() { document.querySelector('.loading-spinner').style.display = 'flex'; }
-  function hideLoading() { document.querySelector('.loading-spinner').style.display = 'none'; }
+  /* ── Helpers ──────────────────────────────────────────── */
+  function showLoading() { document.getElementById('emLoading').classList.add('active'); }
+  function hideLoading() { document.getElementById('emLoading').classList.remove('active'); }
 
-  function showNotification(message, type = 'success') {
-    const n = document.createElement('div');
-    n.className = `notification ${type}`;
-    n.textContent = message;
-    document.body.appendChild(n);
-    setTimeout(() => n.classList.add('show'), 10);
-    setTimeout(() => { n.classList.remove('show'); setTimeout(() => n.remove(), 400); }, 4000);
+  function showToast(message, type) {
+    type = type || 'success';
+    var t = document.createElement('div');
+    t.className = 'em-toast ' + type;
+    t.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'circle-check' : 'circle-exclamation') + '"></i> ' + message;
+    document.body.appendChild(t);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ t.classList.add('show'); }); });
+    setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 3500);
   }
 
-  function formatDate(dateStr) {
-    if (!dateStr) return '—';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + 
+  function formatDate(s) {
+    if (!s) return '—';
+    var d = new Date(s);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
            ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   }
 
   function formatDuration(min) {
     if (!min && min !== 0) return '—';
-    if (min < 60) return min + ' min';
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return h + 'h ' + m + 'm';
+    if (min < 60) return min + 'm';
+    return Math.floor(min / 60) + 'h ' + (min % 60) + 'm';
   }
 
-  // -- Load users for filter dropdowns --
-  fetch('employee-management.php?action=get_users')
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        const selects = [document.getElementById('login-filter-user'), document.getElementById('change-filter-user')];
-        selects.forEach(sel => {
-          data.data.forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u.user_id;
-            opt.textContent = u.full_name || u.username;
-            sel.appendChild(opt);
-          });
-        });
-      }
-    }).catch(() => {});
+  /* ── Animated Counters ────────────────────────────────── */
+  document.querySelectorAll('.em-stat-value[data-count]').forEach(function(el) {
+    var target = parseInt(el.dataset.count) || 0;
+    if (target === 0) return;
+    var current = 0;
+    var step = Math.max(1, Math.ceil(target / 20));
+    var iv = setInterval(function() {
+      current = Math.min(current + step, target);
+      el.textContent = current;
+      if (current >= target) clearInterval(iv);
+    }, 30);
+  });
 
-  // -- Employee Form (AJAX) --
+  /* ── Load users for filters ───────────────────────────── */
+  fetch('employee-management.php?action=get_users')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (!data.success) return;
+      ['login-filter-user', 'change-filter-user'].forEach(function(id) {
+        var sel = document.getElementById(id);
+        data.data.forEach(function(u) {
+          var opt = document.createElement('option');
+          opt.value = u.user_id;
+          opt.textContent = u.full_name || u.username;
+          sel.appendChild(opt);
+        });
+      });
+    }).catch(function(){});
+
+  /* ── Employee Search & Filter ──────────────────────────── */
+  var searchInput = document.getElementById('empSearchInput');
+  if (searchInput) searchInput.addEventListener('input', filterEmployees);
+
+  document.querySelectorAll('.em-filter-pill').forEach(function(pill) {
+    pill.addEventListener('click', function() {
+      document.querySelectorAll('.em-filter-pill').forEach(function(p){ p.classList.remove('active'); });
+      this.classList.add('active');
+      filterEmployees();
+    });
+  });
+
+  function filterEmployees() {
+    var query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    var activePill = document.querySelector('.em-filter-pill.active');
+    var filter = activePill ? activePill.dataset.filter : 'all';
+    var rows = document.querySelectorAll('#employeeTableContainer tbody tr[data-name]');
+    rows.forEach(function(row) {
+      var name = (row.dataset.name || '').toLowerCase();
+      var role = (row.dataset.role || '').toLowerCase();
+      var isOnLeave = row.classList.contains('on-leave');
+      var matchesSearch = !query || name.indexOf(query) !== -1 || role.indexOf(query) !== -1;
+      var matchesFilter = filter === 'all' || (filter === 'active' && !isOnLeave) || (filter === 'on-leave' && isOnLeave);
+      row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+    });
+  }
+
+  /* ── Add Employee (AJAX) ──────────────────────────────── */
   document.getElementById('addEmployeeForm').addEventListener('submit', function(e) {
     e.preventDefault();
     showLoading();
-    const fd = new FormData(this);
+    var fd = new FormData(this);
     fd.append('add_employee', '1');
-
-    fetch('employee-management.php', {
-      method: 'POST', body: fd,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        document.getElementById('employeeTableContainer').innerHTML = data.html;
-        showNotification(data.message);
-        this.reset();
-      } else {
-        showNotification(data.message || 'Error', 'error');
-      }
-    })
-    .catch(() => showNotification('Error adding employee', 'error'))
-    .finally(() => { hideLoading(); attachEventListeners(); });
+    var form = this;
+    fetch('employee-management.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          document.getElementById('employeeTableContainer').innerHTML = data.html;
+          showToast(data.message);
+          form.reset();
+          attachEventListeners();
+        } else showToast(data.message || 'Error adding employee', 'error');
+      })
+      .catch(function(){ showToast('Network error', 'error'); })
+      .finally(function(){ hideLoading(); });
   });
 
-  async function removeEmployee(btn) {
-    const ok = await customConfirm('Remove Employee', 'Are you sure you want to remove this employee?', 'danger', { confirmText: 'Yes, Remove', cancelText: 'Cancel' });
-    if (!ok) return false;
-    showLoading();
-    const fd = new FormData();
-    fd.append('remove_employee', btn.value);
-    fetch('employee-management.php', {
-      method: 'POST', body: fd,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        document.getElementById('employeeTableContainer').innerHTML = data.html;
-        showNotification(data.message);
-      } else showNotification(data.message || 'Error', 'error');
-    })
-    .catch(() => showNotification('Error', 'error'))
-    .finally(() => { hideLoading(); attachEventListeners(); });
-    return false;
+  /* ── Delete Employee ──────────────────────────────────── */
+  function removeEmployee(btn) {
+    customConfirm('Remove Employee', 'This will permanently remove this employee. Continue?', 'danger', { confirmText: 'Remove', cancelText: 'Cancel' })
+      .then(function(ok) {
+        if (!ok) return;
+        showLoading();
+        var fd = new FormData();
+        fd.append('remove_employee', btn.value);
+        fetch('employee-management.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+          .then(function(r){ return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              document.getElementById('employeeTableContainer').innerHTML = data.html;
+              showToast(data.message);
+              attachEventListeners();
+            } else showToast(data.message || 'Error', 'error');
+          })
+          .catch(function(){ showToast('Network error', 'error'); })
+          .finally(function(){ hideLoading(); });
+      });
   }
 
+  /* ── Toggle Leave ─────────────────────────────────────── */
   function toggleLeave(btn) {
     showLoading();
-    const fd = new FormData();
+    var fd = new FormData();
     fd.append('toggle_leave', btn.value);
-    fetch('employee-management.php', {
-      method: 'POST', body: fd,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        document.getElementById('employeeTableContainer').innerHTML = data.html;
-        showNotification(data.message);
-      } else showNotification(data.message || 'Error', 'error');
-    })
-    .catch(() => showNotification('Error', 'error'))
-    .finally(() => { hideLoading(); attachEventListeners(); });
-    return false;
-  }
-
-  function attachEventListeners() {
-    document.querySelectorAll('.remove-button').forEach(b => {
-      b.onclick = function(e) { e.preventDefault(); return removeEmployee(this); };
-    });
-    document.querySelectorAll('.toggle-leave-button').forEach(b => {
-      b.onclick = function(e) { e.preventDefault(); return toggleLeave(this); };
-    });
-  }
-
-  attachEventListeners();
-
-  // -- Login Sessions --
-  window.loadLoginSessions = function() {
-    const params = new URLSearchParams({ action: 'get_login_sessions' });
-    const userId = document.getElementById('login-filter-user').value;
-    const from = document.getElementById('login-filter-from').value;
-    const to = document.getElementById('login-filter-to').value;
-    const status = document.getElementById('login-filter-status').value;
-    if (userId) params.set('user_id', userId);
-    if (from) params.set('date_from', from);
-    if (to) params.set('date_to', to);
-    if (status) params.set('status', status);
-
-    const container = document.getElementById('login-sessions-list');
-    container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;width:30px;height:30px;border-width:3px;"></div></div>';
-
-    fetch('employee-management.php?' + params.toString())
-      .then(r => r.json())
-      .then(data => {
-        if (!data.success || !data.data.length) {
-          container.innerHTML = '<div class="no-logs"><div class="no-logs-icon">📭</div><p>No login sessions found</p></div>';
-          return;
-        }
-
-        let html = '';
-        data.data.forEach(s => {
-          const icon = s.status === 'active' ? '🟢' : (s.status === 'logged_out' ? '🔴' : '⏰');
-          html += `
-            <div class="log-entry">
-              <div class="log-icon ${s.status === 'active' ? 'login' : 'logout'}">${icon}</div>
-              <div class="log-details">
-                <div class="log-title">${s.full_name || s.username}</div>
-                <div class="log-meta">
-                  <span>🔑 Login: ${formatDate(s.login_time)}</span>
-                  <span>🚪 Logout: ${s.logout_time ? formatDate(s.logout_time) : '—'}</span>
-                  <span class="duration-badge">⏱ ${formatDuration(s.duration_minutes)}</span>
-                  <span class="session-status ${s.status}">${s.status.replace('_', ' ')}</span>
-                </div>
-                <div class="log-meta" style="margin-top:0.3rem;">
-                  <span>🌐 ${s.ip_address || '—'}</span>
-                </div>
-              </div>
-              <div class="log-time">${formatDate(s.login_time)}</div>
-            </div>`;
-        });
-        container.innerHTML = html;
+    fetch('employee-management.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          document.getElementById('employeeTableContainer').innerHTML = data.html;
+          showToast(data.message);
+          attachEventListeners();
+        } else showToast(data.message || 'Error', 'error');
       })
-      .catch(() => {
-        container.innerHTML = '<div class="no-logs"><p>Error loading sessions</p></div>';
-      });
+      .catch(function(){ showToast('Network error', 'error'); })
+      .finally(function(){ hideLoading(); });
+  }
+
+  /* ── Edit Employee Modal ──────────────────────────────── */
+  window.openEditModal = function(id, name, role, shiftStart, shiftEnd) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_role').value = role;
+    document.getElementById('edit_shift_start').value = shiftStart;
+    document.getElementById('edit_shift_end').value = shiftEnd;
+    var overlay = document.getElementById('editModalOverlay');
+    overlay.style.display = 'flex';
+    requestAnimationFrame(function(){ overlay.classList.add('active'); });
+    document.getElementById('edit_name').focus();
   };
 
-  // -- Change Logs --
-  window.loadChangeLogs = function() {
-    const params = new URLSearchParams({ action: 'get_change_logs' });
-    const userId = document.getElementById('change-filter-user').value;
-    const module = document.getElementById('change-filter-module').value;
-    const actionType = document.getElementById('change-filter-action').value;
-    const from = document.getElementById('change-filter-from').value;
-    const to = document.getElementById('change-filter-to').value;
-    if (userId) params.set('user_id', userId);
-    if (module) params.set('module', module);
-    if (actionType) params.set('action_type', actionType);
-    if (from) params.set('date_from', from);
-    if (to) params.set('date_to', to);
+  window.closeEditModal = function() {
+    var overlay = document.getElementById('editModalOverlay');
+    overlay.classList.remove('active');
+    setTimeout(function(){ overlay.style.display = 'none'; }, 200);
+  };
 
-    const container = document.getElementById('change-logs-list');
-    container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;width:30px;height:30px;border-width:3px;"></div></div>';
+  window.saveEdit = function() {
+    var id = document.getElementById('edit_id').value;
+    var name = document.getElementById('edit_name').value.trim();
+    var role = document.getElementById('edit_role').value;
+    var shiftStart = document.getElementById('edit_shift_start').value;
+    var shiftEnd = document.getElementById('edit_shift_end').value;
+    if (!name || !role || !shiftStart || !shiftEnd) { showToast('All fields are required', 'error'); return; }
+    showLoading();
+    closeEditModal();
+    var fd = new FormData();
+    fd.append('edit_employee', '1');
+    fd.append('edit_id', id);
+    fd.append('edit_name', name);
+    fd.append('edit_role', role);
+    fd.append('edit_shift_start', shiftStart);
+    fd.append('edit_shift_end', shiftEnd);
+    fetch('employee-management.php', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          document.getElementById('employeeTableContainer').innerHTML = data.html;
+          showToast(data.message);
+          attachEventListeners();
+        } else showToast(data.message || 'Error updating', 'error');
+      })
+      .catch(function(){ showToast('Network error', 'error'); })
+      .finally(function(){ hideLoading(); });
+  };
 
+  // Close modal on overlay click or Escape
+  document.getElementById('editModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeEditModal(); });
+
+  /* ── Export CSV ─────────────────────────────────────────── */
+  window.exportCSV = function() {
+    var rows = document.querySelectorAll('#employeeTableContainer table tbody tr[data-name]');
+    if (!rows.length) { showToast('No employees to export', 'error'); return; }
+    var csv = 'ID,Name,Role,Shift,Status,Date Added\n';
+    rows.forEach(function(row) {
+      var cells = row.querySelectorAll('td');
+      var id = (cells[0].querySelector('.emp-id') || {}).textContent || '';
+      id = id.replace('#','');
+      var name = (cells[0].querySelector('.emp-name') || {}).textContent || '';
+      var role = (cells[1] || {}).textContent || '';
+      var shift = ((cells[2] || {}).textContent || '').replace(/\s+/g,' ').trim();
+      var status = ((cells[3] || {}).textContent || '').trim();
+      var date = ((cells[4] || {}).textContent || '').trim();
+      csv += '"' + id + '","' + name.trim() + '","' + role.trim() + '","' + shift + '","' + status + '","' + date + '"\n';
+    });
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'employees_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click(); URL.revokeObjectURL(url);
+    showToast('Exported to CSV');
+  };
+
+  /* ── Attach Event Listeners ───────────────────────────── */
+  function attachEventListeners() {
+    document.querySelectorAll('.action-btn-delete').forEach(function(b) {
+      b.onclick = function(e) { e.preventDefault(); removeEmployee(this); };
+    });
+    document.querySelectorAll('.action-btn-leave').forEach(function(b) {
+      b.onclick = function(e) { e.preventDefault(); toggleLeave(this); };
+    });
+  }
+  attachEventListeners();
+
+  /* ── Login Sessions ────────────────────────────────────── */
+  window.loadLoginSessions = function() {
+    var params = new URLSearchParams({ action: 'get_login_sessions' });
+    [['user_id','login-filter-user'],['date_from','login-filter-from'],['date_to','login-filter-to'],['status','login-filter-status']].forEach(function(pair) {
+      var val = document.getElementById(pair[1]).value;
+      if (val) params.set(pair[0], val);
+    });
+    var container = document.getElementById('login-sessions-list');
+    container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="em-spinner" style="margin:0 auto;border-color:rgba(var(--c-brand-rgb),.2);border-top-color:var(--c-brand);"></div></div>';
     fetch('employee-management.php?' + params.toString())
-      .then(r => r.json())
-      .then(data => {
-        if (!data.success || !data.data.length) {
-          container.innerHTML = '<div class="no-logs"><div class="no-logs-icon">📭</div><p>No changes found</p></div>';
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (!data.success || !data.data || !data.data.length) {
+          container.innerHTML = '<div class="em-empty"><i class="fas fa-inbox"></i><p>No sessions found</p><p>Try adjusting your filters</p></div>';
           return;
         }
-
-        const actionIcons = { create: '➕', update: '✏️', delete: '🗑️', toggle: '🔄', import: '📥', export: '📤', other: '📌' };
-        let html = '';
-
-        data.data.forEach(log => {
-          const icon = actionIcons[log.action_type] || '📌';
-          let changesHtml = '';
-          
-          if (log.old_values || log.new_values) {
-            let oldV = log.old_values;
-            let newV = log.new_values;
-            try { if (typeof oldV === 'string') oldV = JSON.parse(oldV); } catch(e) {}
-            try { if (typeof newV === 'string') newV = JSON.parse(newV); } catch(e) {}
-            
-            let changeLines = [];
-            if (oldV && typeof oldV === 'object') {
-              Object.keys(oldV).forEach(k => {
-                const newVal = newV && newV[k] !== undefined ? newV[k] : '—';
-                changeLines.push(`<span style="opacity:0.6">${k}:</span> <span style="color:#ef4444;text-decoration:line-through">${oldV[k]}</span> → <span style="color:#10b981">${newVal}</span>`);
-              });
-            } else if (newV && typeof newV === 'object') {
-              Object.keys(newV).forEach(k => {
-                changeLines.push(`<span style="opacity:0.6">${k}:</span> <span style="color:#10b981">${newV[k]}</span>`);
-              });
-            }
-            if (changeLines.length) {
-              changesHtml = `<div class="log-changes">${changeLines.join('<br>')}</div>`;
-            }
-          }
-
-          html += `
-            <div class="log-entry">
-              <div class="log-icon ${log.action_type}">${icon}</div>
-              <div class="log-details">
-                <div class="log-title">${log.description}</div>
-                <div class="log-meta">
-                  <span>👤 ${log.full_name || log.username || 'System'}</span>
-                  <span>📦 ${log.module}</span>
-                  <span style="text-transform:capitalize;">⚡ ${log.action_type}</span>
-                  ${log.target_name ? `<span>🎯 ${log.target_name}</span>` : ''}
-                </div>
-                ${changesHtml}
-              </div>
-              <div class="log-time">${formatDate(log.created_at)}</div>
-            </div>`;
-        });
-        container.innerHTML = html;
+        container.innerHTML = data.data.map(function(s) {
+          return '<div class="em-log-entry">' +
+            '<div class="em-log-icon ' + (s.status === 'active' ? 'login' : 'logout') + '">' +
+              '<i class="fas ' + (s.status === 'active' ? 'fa-arrow-right-to-bracket' : 'fa-arrow-right-from-bracket') + '"></i>' +
+            '</div>' +
+            '<div class="em-log-body">' +
+              '<div class="em-log-title">' + (s.full_name || s.username || '—') + '</div>' +
+              '<div class="em-log-meta">' +
+                '<span><i class="fas fa-right-to-bracket"></i> ' + formatDate(s.login_time) + '</span>' +
+                '<span><i class="fas fa-right-from-bracket"></i> ' + (s.logout_time ? formatDate(s.logout_time) : '—') + '</span>' +
+                '<span class="em-duration-badge"><i class="far fa-clock"></i> ' + formatDuration(s.duration_minutes) + '</span>' +
+                '<span class="em-session-badge ' + s.status + '">' + (s.status || '').replace('_', ' ') + '</span>' +
+              '</div>' +
+              (s.ip_address ? '<div class="em-log-meta" style="margin-top:.2rem"><span><i class="fas fa-globe"></i> ' + s.ip_address + '</span></div>' : '') +
+            '</div>' +
+            '<div class="em-log-time">' + formatDate(s.login_time) + '</div>' +
+          '</div>';
+        }).join('');
       })
-      .catch(() => {
-        container.innerHTML = '<div class="no-logs"><p>Error loading change logs</p></div>';
-      });
+      .catch(function(){ container.innerHTML = '<div class="em-empty"><p>Error loading sessions</p></div>'; });
+  };
+
+  /* ── Change Logs ───────────────────────────────────────── */
+  window.loadChangeLogs = function() {
+    var params = new URLSearchParams({ action: 'get_change_logs' });
+    [['user_id','change-filter-user'],['module','change-filter-module'],['action_type','change-filter-action'],['date_from','change-filter-from'],['date_to','change-filter-to']].forEach(function(pair) {
+      var val = document.getElementById(pair[1]).value;
+      if (val) params.set(pair[0], val);
+    });
+    var container = document.getElementById('change-logs-list');
+    container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="em-spinner" style="margin:0 auto;border-color:rgba(var(--c-brand-rgb),.2);border-top-color:var(--c-brand);"></div></div>';
+    var icons = { create: 'fa-plus', update: 'fa-pen', delete: 'fa-trash-can', toggle: 'fa-arrows-rotate', import: 'fa-file-import', export: 'fa-file-export' };
+    fetch('employee-management.php?' + params.toString())
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (!data.success || !data.data || !data.data.length) {
+          container.innerHTML = '<div class="em-empty"><i class="fas fa-inbox"></i><p>No changes found</p><p>Try adjusting your filters</p></div>';
+          return;
+        }
+        container.innerHTML = data.data.map(function(log) {
+          var icon = icons[log.action_type] || 'fa-circle-info';
+          var changesHtml = '';
+          var oldV = log.old_values, newV = log.new_values;
+          try { if (typeof oldV === 'string') oldV = JSON.parse(oldV); } catch(e) {}
+          try { if (typeof newV === 'string') newV = JSON.parse(newV); } catch(e) {}
+          var lines = [];
+          if (oldV && typeof oldV === 'object') {
+            Object.keys(oldV).forEach(function(k) {
+              var nv = newV && newV[k] !== undefined ? newV[k] : '—';
+              lines.push('<span style="color:var(--c-text-muted)">' + k + ':</span> <span style="color:#ef4444;text-decoration:line-through">' + oldV[k] + '</span> → <span style="color:#10b981">' + nv + '</span>');
+            });
+          } else if (newV && typeof newV === 'object') {
+            Object.keys(newV).forEach(function(k) {
+              lines.push('<span style="color:var(--c-text-muted)">' + k + ':</span> <span style="color:#10b981">' + newV[k] + '</span>');
+            });
+          }
+          if (lines.length) changesHtml = '<div class="em-log-changes">' + lines.join('<br>') + '</div>';
+          return '<div class="em-log-entry">' +
+            '<div class="em-log-icon ' + log.action_type + '"><i class="fas ' + icon + '"></i></div>' +
+            '<div class="em-log-body">' +
+              '<div class="em-log-title">' + (log.description || '—') + '</div>' +
+              '<div class="em-log-meta">' +
+                '<span><i class="fas fa-user"></i> ' + (log.full_name || log.username || 'System') + '</span>' +
+                '<span><i class="fas fa-cube"></i> ' + log.module + '</span>' +
+                '<span style="text-transform:capitalize"><i class="fas fa-bolt"></i> ' + log.action_type + '</span>' +
+                (log.target_name ? '<span><i class="fas fa-crosshairs"></i> ' + log.target_name + '</span>' : '') +
+              '</div>' +
+              changesHtml +
+            '</div>' +
+            '<div class="em-log-time">' + formatDate(log.created_at) + '</div>' +
+          '</div>';
+        }).join('');
+      })
+      .catch(function(){ container.innerHTML = '<div class="em-empty"><p>Error loading logs</p></div>'; });
   };
 });
 </script>

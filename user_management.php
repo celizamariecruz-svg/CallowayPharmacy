@@ -39,9 +39,10 @@ $page_title = 'User Management';
     <script src="custom-modal.js?v=2"></script>
     <style>
         .user-container {
+            width: 100%;
             max-width: 1400px;
-            margin: 100px auto 2rem;
-            padding: 2rem;
+            margin: 0 auto;
+            padding: 1.25rem 1.5rem 2rem;
         }
         
         .user-header {

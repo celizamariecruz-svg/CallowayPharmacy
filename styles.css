@@ -71,7 +71,7 @@
 }
 
 body {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   background: var(--bg-color);
   color: var(--text-color);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -203,7 +203,7 @@ main {
   color: var(--text-color);
   z-index: 1200;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
   display: flex;
   flex-direction: column;
   box-shadow: 4px 0 24px rgba(0,0,0,0.08);
@@ -454,12 +454,17 @@ main {
   font-size: 0.84rem;
   font-weight: 500;
   border-radius: 8px;
-  transition: all 0.15s ease;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
   border-left: none;
 }
 .sidebar-link:hover {
   background: var(--hover-bg);
   color: var(--primary-color);
+  transform: translate3d(2px, 0, 0);
+}
+.sidebar-link:active {
+  transform: translate3d(0, 0, 0);
+  transition-duration: 60ms;
 }
 .sidebar-link.active {
   background: rgba(var(--primary-rgb), 0.08);
@@ -569,19 +574,20 @@ footer {
 .login-btn:hover {
   background: var(--primary-dark);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  transform: translateY(-2px);
+  transform: translate3d(0, -2px, 0);
 }
 
 .login-btn:active {
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0) scale(0.98);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Card hover effects and animations */
 .card {
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    box-shadow 0.4s ease,
-    background-color 0.3s ease;
+  transition: transform 0.2s cubic-bezier(0.0, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.0, 0, 0.2, 1),
+    background-color 0.15s ease;
+  will-change: transform;
 }
 
 /* Responsive improvements */
@@ -677,8 +683,8 @@ footer {
 
 .pos-product:hover,
 .pos-cart-item:hover {
-  transform: translateX(5px);
-  /* Windows-like slide */
+  transform: translate3d(3px, 0, 0);
+  /* Slide effect on hover */
 }
 
 .pos-cart {
@@ -747,32 +753,31 @@ button,
 input[type="submit"],
 input[type="button"] {
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.15s cubic-bezier(0.0, 0, 0.2, 1),
+              box-shadow 0.15s cubic-bezier(0.0, 0, 0.2, 1),
+              background-color 0.12s ease,
+              border-color 0.12s ease;
   font-weight: 500;
   letter-spacing: 0.02em;
   position: relative;
   overflow: hidden;
+  will-change: transform;
 }
 
 button:hover,
 .btn:hover,
 input[type="submit"]:hover,
 input[type="button"]:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transform: translate3d(0, -1px, 0);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 button:active,
 .btn:active,
 input[type="submit"]:active,
 input[type="button"]:active {
-  transform: translateY(0);
-}
-
-/* Button press feedback */
-button:active,
-.btn:active {
-  transform: translateY(0) scale(0.98);
+  transform: translate3d(0, 0, 0) scale(0.98);
+  transition-duration: 80ms;
 }
 
 /* Enhanced input fields */
@@ -877,7 +882,7 @@ tr:last-child td {
 
 .card:hover {
   box-shadow: 0 8px 24px var(--shadow-color);
-  transform: translateY(-4px);
+  transform: translate3d(0, -3px, 0);
 }
 
 /* Loading spinner animation */
@@ -962,14 +967,14 @@ tr:last-child td {
   animation: fadeIn 0.3s ease-out;
 }
 
-.modal-content {
+  .modal-content {
   background: var(--card-bg);
   border-radius: 16px;
   padding: 2rem;
   max-width: 500px;
   width: 90%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: 1px solid var(--input-border);
 }
 
@@ -1202,14 +1207,16 @@ textarea:focus-visible {
     margin-bottom: 2rem;
   }
 
-  .stat-card {
+ .stat-card {
     background: var(--card-bg);
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s;
+    transition: transform 0.2s cubic-bezier(0.0, 0, 0.2, 1),
+                box-shadow 0.2s cubic-bezier(0.0, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    will-change: transform;
   }
 
   [data-theme="dark"] .stat-card {
@@ -1217,7 +1224,7 @@ textarea:focus-visible {
   }
 
   .stat-card:hover {
-    transform: translateY(-5px);
+    transform: translate3d(0, -3px, 0);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   }
 
@@ -1294,9 +1301,12 @@ textarea:focus-visible {
     text-decoration: none;
     color: var(--text-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s;
+    transition: transform 0.15s cubic-bezier(0.0, 0, 0.2, 1),
+                box-shadow 0.15s cubic-bezier(0.0, 0, 0.2, 1),
+                border-color 0.12s ease;
     cursor: pointer;
     border: 2px solid transparent;
+    will-change: transform;
   }
 
   [data-theme="dark"] .action-btn {
@@ -1304,9 +1314,14 @@ textarea:focus-visible {
   }
 
   .action-btn:hover {
-    transform: translateY(-3px);
+    transform: translate3d(0, -2px, 0);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     border-color: var(--primary-color);
+  }
+
+  .action-btn:active {
+    transform: translate3d(0, 0, 0) scale(0.98);
+    transition-duration: 80ms;
   }
 
   .action-btn-icon {
@@ -1420,7 +1435,7 @@ textarea:focus-visible {
   }
 
   .product-item:hover {
-    transform: translateX(5px);
+    transform: translate3d(3px, 0, 0);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 

@@ -137,249 +137,162 @@ $page_title = "Medicine Locator & Expiry Monitor";
 <link rel="stylesheet" href="responsive.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* ── Reset ── */
+/* ── Medicine Locator & Expiry Monitor Premium ─────────── */
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+main { width:100%; max-width:1440px; margin:0 auto; padding:1.25rem 1.5rem 2rem; }
 
-/* ── Layout ── */
-main{
-  width:100%;max-width:1400px;margin:80px auto 0;padding:0 2rem 2rem;
-  animation:pageFadeIn .6s ease-out;
-}
-@keyframes pageFadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+/* Page Header */
+.page-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; animation:ds-fade-in .3s var(--ease-out) both; }
+.page-header-left h1 { font-size:var(--text-2xl); font-weight:800; letter-spacing:-0.02em; color:var(--c-text); margin:0; line-height:1.2; display:flex; align-items:center; gap:.4rem; }
+.page-header-left p { margin:.2rem 0 0; color:var(--c-text-muted); font-size:var(--text-sm); }
+.page-header-right { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
 
-/* ── Page header ── */
-.page-header{
-  display:flex;justify-content:space-between;align-items:center;
-  flex-wrap:wrap;gap:1rem;margin-bottom:2rem;
-}
-.page-header h1{margin:0;font-size:2rem;font-weight:800;color:var(--text-color)}
-.page-header p{margin:.3rem 0 0;color:var(--text-color);opacity:.7;font-size:.95rem}
+/* View Tabs */
+.view-tabs { display:flex; gap:2px; padding:3px; border-radius:var(--radius-lg); background:var(--c-surface-sunken); border:1px solid var(--c-border); }
+.view-tab { padding:.45rem 1rem; border:none; border-radius:var(--radius-md); cursor:pointer; font-weight:600; font-size:var(--text-sm); background:transparent; color:var(--c-text-muted); transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-sans); display:inline-flex; align-items:center; gap:.3rem; }
+.view-tab:hover { color:var(--c-text); }
+.view-tab.active { background:var(--c-brand); color:white; box-shadow:var(--shadow-sm); }
 
-/* ── Quick-view tabs ── */
-.view-tabs{
-  display:flex;gap:.25rem;padding:4px;border-radius:12px;
-  background:var(--table-border,rgba(0,0,0,.06));width:fit-content;
-}
-.view-tab{
-  padding:.55rem 1.2rem;border:none;border-radius:10px;cursor:pointer;
-  font-weight:700;font-size:.9rem;background:transparent;
-  color:var(--text-color);opacity:.7;transition:all .25s ease;
-}
-.view-tab:hover{opacity:1}
-.view-tab.active{
-  background:var(--primary-color);color:#fff;opacity:1;
-  box-shadow:0 2px 8px var(--shadow-color);
-}
+/* Export Button */
+.ml-export-btn { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1rem; font-size:var(--text-sm); font-weight:600; border-radius:var(--radius-md); border:1px solid var(--c-border); background:var(--c-surface); color:var(--c-text); cursor:pointer; transition:all var(--duration-fast) var(--ease-out); font-family:var(--font-sans); }
+.ml-export-btn:hover { border-color:var(--c-brand); color:var(--c-brand); box-shadow:var(--shadow-sm); transform:translate3d(0,-1px,0); }
+.ml-export-btn:active { transform:translate3d(0,0,0) scale(.97); }
 
-/* ── Statistics grid ── */
-.stats-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));
-  gap:1rem;margin-bottom:2rem;
-}
-.stat-card{
-  background:var(--card-bg);border-radius:14px;padding:1.2rem 1.4rem;
-  border:1px solid var(--table-border);display:flex;flex-direction:column;
-  align-items:center;text-align:center;transition:all .3s ease;
-  position:relative;overflow:hidden;
-}
-.stat-card:hover{transform:translateY(-4px);box-shadow:0 6px 18px var(--shadow-color)}
-.stat-card .stat-label{
-  font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;
-  color:var(--text-color);opacity:.7;margin-bottom:.35rem;
-}
-.stat-card .stat-val{font-size:1.9rem;font-weight:800}
-.stat-card.c-blue  .stat-val{color:var(--primary-color)}
-.stat-card.c-green .stat-val{color:#10b981}
-.stat-card.c-amber .stat-val{color:#f59e0b}
-.stat-card.c-red   .stat-val{color:#ef4444}
-.stat-card.c-blue {border-left:4px solid var(--primary-color);background:rgba(37,99,235,.04)}
-.stat-card.c-green{border-left:4px solid #10b981;background:rgba(16,185,129,.04)}
-.stat-card.c-amber{border-left:4px solid #f59e0b;background:rgba(245,158,11,.04)}
-.stat-card.c-red  {border-left:4px solid #ef4444;background:rgba(239,68,68,.04)}
+/* Stats Grid */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:.75rem; margin-bottom:1.5rem; }
+.stat-card { background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--radius-lg); padding:1rem; display:flex; align-items:center; gap:.75rem; transition:transform var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out); will-change:transform; position:relative; overflow:hidden; animation:ds-fade-in .3s var(--ease-out) both; }
+.stat-card:nth-child(1){animation-delay:.02s} .stat-card:nth-child(2){animation-delay:.04s} .stat-card:nth-child(3){animation-delay:.06s} .stat-card:nth-child(4){animation-delay:.08s} .stat-card:nth-child(5){animation-delay:.1s} .stat-card:nth-child(6){animation-delay:.12s} .stat-card:nth-child(7){animation-delay:.14s}
+.stat-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0 3px 3px 0; opacity:0; transition:opacity var(--duration-fast) var(--ease-out); }
+.stat-card:hover { transform:translate3d(0,-2px,0); box-shadow:var(--shadow-md); }
+.stat-card:hover::before { opacity:1; }
+.stat-card.c-blue::before{background:var(--c-brand)} .stat-card.c-green::before{background:#10b981} .stat-card.c-amber::before{background:#f59e0b} .stat-card.c-red::before{background:#ef4444}
+.stat-icon { width:42px; height:42px; border-radius:var(--radius-lg); display:grid; place-items:center; font-size:1.1rem; flex-shrink:0; }
+.stat-icon.blue{background:rgba(var(--c-brand-rgb),.1);color:var(--c-brand)} .stat-icon.green{background:rgba(16,185,129,.1);color:#10b981} .stat-icon.amber{background:rgba(245,158,11,.1);color:#f59e0b} .stat-icon.red{background:rgba(239,68,68,.1);color:#ef4444} .stat-icon.green-alt{background:rgba(16,185,129,.08);color:#059669} .stat-icon.amber-alt{background:rgba(245,158,11,.08);color:#d97706} .stat-icon.red-alt{background:rgba(239,68,68,.08);color:#dc2626}
+.stat-body { min-width:0; }
+.stat-val { font-size:var(--text-2xl); font-weight:800; line-height:1.1; color:var(--c-text); letter-spacing:-0.02em; }
+.stat-card.c-blue .stat-val{color:var(--c-brand)} .stat-card.c-green .stat-val{color:#10b981} .stat-card.c-amber .stat-val{color:#f59e0b} .stat-card.c-red .stat-val{color:#ef4444}
+.stat-label { font-size:.68rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--c-text-muted); margin-top:.1rem; }
+.stat-sub { font-size:.62rem; color:var(--c-text-muted); font-weight:500; display:block; margin-top:.1rem; text-transform:none; letter-spacing:normal; }
 
-/* ── Section card ── */
-.sec-card{
-  background:var(--card-bg);border-radius:14px;padding:1.5rem 2rem;
-  margin-bottom:1.5rem;border:1px solid var(--table-border);transition:background .3s ease;
-}
-.sec-card h2{
-  color:var(--primary-color);font-weight:700;margin:0 0 1rem;
-  font-size:1.15rem;display:flex;align-items:center;gap:.5rem;
-}
+/* Section Card */
+.sec-card { background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--radius-xl); padding:1.25rem 1.5rem; margin-bottom:1.25rem; box-shadow:var(--shadow-sm); animation:ds-fade-in .35s .08s var(--ease-out) both; }
+.sec-card h2 { color:var(--c-text); font-weight:700; margin:0 0 .85rem; font-size:var(--text-base); display:flex; align-items:center; gap:.45rem; }
+.sec-card h2 i{color:var(--c-brand);font-size:.95rem}
 
-/* ── Search / Filters ── */
-.filter-row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
-.filter-row .search-wrap{flex:1;min-width:260px;position:relative}
-.filter-row .search-wrap input{
-  width:100%;padding:.8rem 1rem .8rem 2.6rem;border:2px solid var(--input-border);
-  border-radius:10px;font-size:1rem;background:var(--card-bg);color:var(--text-color);
-  transition:all .25s ease;
-}
-.filter-row .search-wrap::before{
-  content:"\f002";font-family:"Font Awesome 6 Free";font-weight:900;
-  position:absolute;left:.9rem;top:50%;transform:translateY(-50%);
-  color:var(--text-color);opacity:.4;font-size:.95rem;pointer-events:none;
-}
-.filter-row .search-wrap input:focus{
-  outline:none;border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(37,99,235,.12);
-}
-.filter-row select{
-  padding:.8rem 1rem;border:2px solid var(--input-border);border-radius:10px;
-  font-size:.95rem;background:var(--card-bg);color:var(--text-color);
-  cursor:pointer;transition:all .25s ease;min-width:160px;
-}
-.filter-row select:focus{outline:none;border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
-.clear-btn{
-  display:inline-flex;align-items:center;gap:.4rem;padding:.8rem 1.2rem;
-  background:#ef4444;color:#fff;border:none;border-radius:10px;
-  font-size:.9rem;font-weight:600;cursor:pointer;transition:all .25s ease;
-}
-.clear-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(239,68,68,.35)}
-.badge-pill{
-  display:none;align-items:center;gap:.4rem;padding:.35rem .85rem;
-  background:var(--primary-color);color:#fff;border-radius:20px;
-  font-size:.82rem;font-weight:700;
-}
-.badge-pill.visible{display:inline-flex}
-.badge-pill .cnt{
-  background:rgba(255,255,255,.25);padding:.12rem .45rem;border-radius:12px;font-weight:800;
-}
+/* Search & Filters */
+.filter-row { display:flex; flex-wrap:wrap; gap:.65rem; align-items:center; }
+.filter-row .search-wrap { flex:1; min-width:260px; position:relative; }
+.filter-row .search-wrap input { width:100%; padding:.6rem .85rem .6rem 2.3rem; border:1.5px solid var(--c-border); border-radius:var(--radius-md); font-size:var(--text-sm); background:var(--c-surface); color:var(--c-text); font-family:var(--font-sans); transition:border-color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out); }
+.filter-row .search-wrap::before { content:"\f002"; font-family:"Font Awesome 6 Free"; font-weight:900; position:absolute; left:.85rem; top:50%; transform:translateY(-50%); color:var(--c-text-muted); font-size:.8rem; pointer-events:none; }
+.filter-row .search-wrap input:focus { outline:none; border-color:var(--c-brand); box-shadow:0 0 0 3px rgba(var(--c-brand-rgb),.1); }
+.filter-row select { padding:.6rem .85rem; border:1.5px solid var(--c-border); border-radius:var(--radius-md); font-size:var(--text-sm); background:var(--c-surface); color:var(--c-text); cursor:pointer; font-family:var(--font-sans); transition:border-color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out); min-width:155px; }
+.filter-row select:focus { outline:none; border-color:var(--c-brand); box-shadow:0 0 0 3px rgba(var(--c-brand-rgb),.1); }
+.clear-btn { display:inline-flex; align-items:center; gap:.35rem; padding:.58rem 1rem; background:#ef4444; color:#fff; border:none; border-radius:var(--radius-md); font-size:var(--text-sm); font-weight:600; cursor:pointer; font-family:var(--font-sans); transition:all var(--duration-fast) var(--ease-out); }
+.clear-btn:hover { background:#dc2626; transform:translate3d(0,-1px,0); box-shadow:var(--shadow-sm); }
+.clear-btn:active { transform:scale(.97); }
+.badge-pill { display:none; align-items:center; gap:.3rem; padding:.25rem .7rem; background:rgba(var(--c-brand-rgb),.1); color:var(--c-brand); border-radius:var(--radius-full); font-size:.73rem; font-weight:700; border:1px solid rgba(var(--c-brand-rgb),.2); }
+.badge-pill.visible { display:inline-flex; }
+.badge-pill .cnt { background:var(--c-brand); color:white; padding:.05rem .35rem; border-radius:var(--radius-full); font-size:.65rem; font-weight:800; }
 
-/* ── Product grid ── */
-.product-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-  gap:1.25rem;margin-top:1rem;
-}
+/* Product Grid */
+.product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:1rem; margin-top:.85rem; }
 
-/* ── Product card ── */
-.prod-card{
-  background:var(--card-bg);border-radius:14px;padding:1.4rem;
-  border:2px solid var(--table-border);position:relative;overflow:hidden;
-  transition:all .3s ease;
-}
-.prod-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:var(--primary-color);opacity:0;transition:opacity .25s ease;
-}
-.prod-card:hover{
-  transform:translateY(-5px);box-shadow:0 8px 24px var(--shadow-color);
-  border-color:var(--primary-color);
-}
-.prod-card:hover::before{opacity:1}
-.prod-card.b-red{border-color:#ef4444}
-.prod-card.b-red::before{background:#ef4444}
-.prod-card.b-amber{border-color:#f59e0b}
-.prod-card.b-amber::before{background:#f59e0b}
-.prod-card.b-green{border-color:#10b981}
-.prod-card.b-green::before{background:#10b981}
+/* Product Card */
+.prod-card { background:var(--c-surface); border-radius:var(--radius-xl); padding:0; border:1px solid var(--c-border); position:relative; overflow:hidden; transition:transform var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out),border-color var(--duration-fast) var(--ease-out); will-change:transform; animation:ds-fade-in .3s var(--ease-out) both; }
+.prod-card:hover { transform:translate3d(0,-3px,0); box-shadow:var(--shadow-lg); }
+.prod-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--c-brand); opacity:0; transition:opacity var(--duration-fast) var(--ease-out); }
+.prod-card:hover::before { opacity:1; }
+.prod-card.b-red{border-color:rgba(239,68,68,.3)} .prod-card.b-red::before{background:#ef4444;opacity:1}
+.prod-card.b-amber{border-color:rgba(245,158,11,.3)} .prod-card.b-amber::before{background:#f59e0b;opacity:1}
+.prod-card.b-green{border-color:rgba(16,185,129,.2)} .prod-card.b-green::before{background:#10b981;opacity:.6}
+.prod-top { display:flex; align-items:flex-start; gap:.75rem; padding:1.15rem 1.15rem .5rem; }
+.prod-img { width:54px; height:54px; border-radius:var(--radius-lg); object-fit:cover; border:1px solid var(--c-border); flex-shrink:0; background:var(--c-surface-sunken); }
+.prod-img-placeholder { display:grid; place-items:center; color:var(--c-text-muted); font-size:1.2rem; opacity:.5; }
+.prod-top-info { flex:1; min-width:0; }
+.prod-name { font-size:1rem; font-weight:700; color:var(--c-text); margin:0; line-height:1.3; }
+.prod-variant { font-size:.73rem; color:var(--c-text-muted); margin-top:1px; }
+.rx-tag { display:inline-flex; align-items:center; gap:2px; background:rgba(230,81,0,.1); color:#e65100; font-size:.6rem; padding:1px 5px; border-radius:var(--radius-sm); font-weight:700; vertical-align:middle; margin-left:3px; }
+[data-theme="dark"] .rx-tag{background:rgba(255,152,0,.15);color:#ff9800}
+.cat-badge { display:inline-flex; align-items:center; gap:.25rem; padding:.18rem .55rem; font-size:.72rem; font-weight:600; border-radius:var(--radius-full); margin-top:.3rem; background:rgba(var(--c-brand-rgb),.07); color:var(--c-brand); border:1px solid rgba(var(--c-brand-rgb),.12); }
+.cat-badge i{font-size:.6rem}
+.prod-details { padding:.35rem 1.15rem 1.15rem; display:flex; flex-direction:column; gap:.45rem; }
+.prod-price-row { display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; }
+.price-tag { font-size:1.2rem; font-weight:800; color:var(--c-brand); letter-spacing:-0.01em; }
+.piece-price { font-size:.72rem; color:var(--c-brand); opacity:.75; font-weight:600; display:inline-flex; align-items:center; gap:.2rem; }
+.piece-price i{font-size:.55rem}
+.prod-meta-row { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; }
 
-.prod-top{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:.6rem}
-.prod-img{
-  width:52px;height:52px;border-radius:10px;object-fit:cover;
-  border:1px solid var(--table-border);flex-shrink:0;
-}
-.prod-name{font-size:1.12rem;font-weight:700;color:var(--text-color);margin:0}
-.prod-variant{font-size:.78rem;color:var(--text-color);opacity:.6;margin-top:2px}
-.rx-tag{
-  display:inline-block;background:#e65100;color:#fff;font-size:.6rem;
-  padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:4px;
-}
-.cat-badge{
-  display:inline-block;padding:.2rem .65rem;font-size:.8rem;font-weight:600;
-  border-radius:16px;margin-top:.4rem;
-  background:rgba(37,99,235,.08);color:var(--text-color);border:1px solid rgba(37,99,235,.18);
-}
-.price-tag{font-size:1.3rem;font-weight:800;color:var(--primary-color);margin-top:.5rem}
-.piece-price{font-size:.78rem;color:var(--primary-color);font-weight:600}
+/* Stock Pill */
+.stock-pill { display:inline-flex; align-items:center; gap:.25rem; padding:.2rem .6rem; border-radius:var(--radius-full); font-size:.71rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+.stock-pill i{font-size:.6rem}
+.stock-pill.in-stock{background:rgba(16,185,129,.1);color:#10b981} .stock-pill.low-stock{background:rgba(245,158,11,.1);color:#d97706} .stock-pill.out-of-stock{background:rgba(239,68,68,.1);color:#ef4444}
+[data-theme="dark"] .stock-pill.in-stock{background:rgba(16,185,129,.15);color:#34d399} [data-theme="dark"] .stock-pill.low-stock{background:rgba(245,158,11,.15);color:#fbbf24} [data-theme="dark"] .stock-pill.out-of-stock{background:rgba(239,68,68,.15);color:#f87171}
 
-/* ── Stock pill ── */
-.stock-pill{
-  display:inline-block;padding:.25rem .75rem;border-radius:40px;
-  font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
-  color:#fff;margin-top:.6rem;
-}
-.stock-pill.in-stock{background:#10b981}
-.stock-pill.low-stock{background:#f59e0b}
-.stock-pill.out-of-stock{background:#ef4444}
+/* Expiry Row */
+.expiry-row { display:flex; align-items:center; gap:.4rem; padding:.4rem .65rem; border-radius:var(--radius-md); font-size:.8rem; font-weight:600; border:1px solid var(--c-border-light); background:var(--c-surface-sunken); }
+.expiry-row i{font-size:.75rem;flex-shrink:0}
+.expiry-date{flex:1}
+.expiry-row.e-expired{background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.15);color:#ef4444}
+.expiry-row.e-soon{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.15);color:#d97706}
+.expiry-row.e-valid{background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.15);color:#10b981}
+.expiry-row.e-none{opacity:.5;font-weight:500}
+[data-theme="dark"] .expiry-row.e-expired{background:rgba(239,68,68,.08);color:#f87171} [data-theme="dark"] .expiry-row.e-soon{background:rgba(245,158,11,.08);color:#fbbf24} [data-theme="dark"] .expiry-row.e-valid{background:rgba(16,185,129,.08);color:#34d399}
 
-/* ── Expiry row ── */
-.expiry-row{
-  display:flex;align-items:center;gap:.5rem;margin-top:.55rem;
-  padding:.45rem .7rem;border-radius:10px;font-size:.85rem;font-weight:600;
-  border:1px solid var(--table-border);background:rgba(37,99,235,.03);
-}
-.expiry-row i{font-size:.85rem}
-.expiry-row.e-expired{background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.2);color:#ef4444}
-.expiry-row.e-soon{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2);color:#f59e0b}
-.expiry-row.e-valid{background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.2);color:#10b981}
+/* Status Pill (inline in expiry row) */
+.status-pill { display:inline-flex; align-items:center; gap:.2rem; padding:.15rem .5rem; border-radius:var(--radius-full); font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; margin-left:auto; flex-shrink:0; }
+.status-pill i{font-size:.55rem}
+.status-pill.s-expired{background:rgba(239,68,68,.12);color:#ef4444} .status-pill.s-soon{background:rgba(245,158,11,.12);color:#d97706} .status-pill.s-valid{background:rgba(16,185,129,.12);color:#10b981}
 
-/* ── Status pill ── */
-.status-pill{
-  display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .7rem;
-  border-radius:40px;font-size:.72rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:.4px;color:#fff;margin-top:.4rem;
-}
-.status-pill.s-expired{background:#ef4444}
-.status-pill.s-soon{background:#f59e0b}
-.status-pill.s-valid{background:#10b981}
-.status-pill .days-txt{font-weight:600;opacity:.9}
+/* Location Row */
+.loc-row { display:flex; align-items:center; gap:.45rem; padding:.4rem .65rem; border-radius:var(--radius-md); background:rgba(var(--c-brand-rgb),.04); border:1px solid rgba(var(--c-brand-rgb),.08); transition:all var(--duration-fast) var(--ease-out); }
+.loc-row:hover{background:rgba(var(--c-brand-rgb),.08);border-color:rgba(var(--c-brand-rgb),.15)}
+.loc-icon{color:var(--c-brand);font-size:.8rem;flex-shrink:0}
+.loc-text { flex:1; font-weight:600; color:var(--c-text); font-size:.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.edit-loc { width:28px; height:28px; border-radius:var(--radius-md); display:grid; place-items:center; border:1px solid var(--c-border); background:var(--c-surface); color:var(--c-brand); cursor:pointer; font-size:.7rem; transition:all var(--duration-fast) var(--ease-out); }
+.edit-loc:hover{background:rgba(var(--c-brand-rgb),.08);border-color:var(--c-brand);transform:translate3d(0,-1px,0)}
+.edit-loc:active{transform:scale(.92)}
+.save-loc { width:28px; height:28px; border-radius:var(--radius-md); display:grid; place-items:center; border:none; background:var(--c-brand); color:white; cursor:pointer; font-size:.7rem; transition:all var(--duration-fast) var(--ease-out); }
+.save-loc:hover{background:var(--c-brand-dark);transform:translate3d(0,-1px,0)}
+.loc-input { flex:1; padding:.4rem .65rem; border:1.5px solid var(--c-border); border-radius:var(--radius-md); font-size:.82rem; font-weight:600; color:var(--c-text); background:var(--c-surface); font-family:var(--font-sans); transition:border-color var(--duration-fast) var(--ease-out); }
+.loc-input:focus{outline:none;border-color:var(--c-brand);box-shadow:0 0 0 3px rgba(var(--c-brand-rgb),.1)}
 
-/* ── Location row ── */
-.loc-row{
-  display:flex;align-items:center;gap:.6rem;margin-top:.65rem;
-  padding:.5rem .75rem;border-radius:10px;
-  background:rgba(37,99,235,.05);border:1px solid rgba(37,99,235,.12);
-  transition:all .25s ease;
-}
-.loc-row:hover{background:rgba(37,99,235,.1);border-color:rgba(37,99,235,.25)}
-.loc-text{flex:1;font-weight:600;color:var(--text-color);font-size:.88rem;display:flex;align-items:center;gap:.35rem}
-.loc-text::before{content:"\f3c5";font-family:"Font Awesome 6 Free";font-weight:900;color:var(--primary-color);font-size:.85rem}
-.edit-loc,.save-loc{
-  background:var(--primary-color);border:none;padding:.35rem;cursor:pointer;
-  color:#fff;border-radius:6px;display:flex;align-items:center;
-  justify-content:center;transition:all .2s ease;
-}
-.edit-loc:hover,.save-loc:hover{transform:scale(1.1)}
-.loc-input{
-  flex:1;padding:.45rem .7rem;border:2px solid var(--input-border);border-radius:8px;
-  font-size:.88rem;font-weight:600;color:var(--text-color);background:var(--card-bg);
-  transition:all .25s ease;
-}
-.loc-input:focus{outline:none;border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+/* No Results */
+.no-results { grid-column:1/-1; text-align:center; padding:3rem 2rem; color:var(--c-text-muted); }
+.no-results i{font-size:2.5rem;margin-bottom:.75rem;opacity:.4;display:block}
+.no-results h3{font-size:var(--text-lg);margin:0 0 .3rem;color:var(--c-text-secondary);font-weight:700}
+.no-results p{font-size:var(--text-sm);opacity:.6;margin:0}
 
-/* ── No results ── */
-.no-results{grid-column:1/-1;text-align:center;padding:3rem 2rem;color:var(--text-color)}
-.no-results h3{font-size:1.5rem;margin-bottom:.5rem;opacity:.7}
-.no-results p{opacity:.5}
+/* Toast */
+.ml-toast { position:fixed; top:72px; right:1rem; padding:.75rem 1.15rem; border-radius:var(--radius-lg); color:white; font-weight:600; font-size:var(--text-sm); z-index:10001; box-shadow:var(--shadow-lg); transform:translate3d(120%,0,0); transition:transform .3s var(--ease-spring); max-width:360px; display:flex; align-items:center; gap:.5rem; }
+.ml-toast.show{transform:translate3d(0,0,0)} .ml-toast.success{background:#10b981} .ml-toast.error{background:#ef4444}
 
-/* ── Scroll-to-top FAB ── */
-.fab-top{
-  position:fixed;bottom:2rem;right:2rem;width:46px;height:46px;border-radius:50%;
-  background:var(--primary-color);color:#fff;border:none;
-  box-shadow:0 4px 14px var(--shadow-color);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:1rem;
-  transition:all .3s ease;z-index:100;opacity:0;pointer-events:none;
-}
-.fab-top.visible{opacity:1;pointer-events:auto}
-.fab-top:hover{transform:scale(1.1);box-shadow:0 6px 20px var(--shadow-color)}
+/* FAB */
+.fab-top { position:fixed; bottom:1.5rem; right:1.5rem; width:42px; height:42px; border-radius:var(--radius-full); background:var(--c-brand); color:white; border:none; box-shadow:var(--shadow-lg); cursor:pointer; display:grid; place-items:center; font-size:.85rem; transition:all var(--duration-fast) var(--ease-out); z-index:100; opacity:0; pointer-events:none; transform:translate3d(0,8px,0); }
+.fab-top.visible{opacity:1;pointer-events:auto;transform:translate3d(0,0,0)}
+.fab-top:hover{transform:translate3d(0,-2px,0)!important;box-shadow:var(--shadow-xl)}
+.fab-top:active{transform:scale(.92)!important}
 
-/* ── Responsive ── */
+/* Responsive */
 @media(max-width:768px){
-  main{padding:0 1rem;margin-top:70px}
-  .filter-row{flex-direction:column}
-  .filter-row .search-wrap,.filter-row select{width:100%;min-width:unset}
+  main{padding:.75rem 1rem 1.5rem!important}
+  .filter-row{flex-direction:column} .filter-row .search-wrap,.filter-row select{width:100%;min-width:unset}
   .product-grid{grid-template-columns:1fr}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:.5rem} .stat-card{padding:.85rem}
   .page-header{flex-direction:column;align-items:flex-start}
+  .page-header-right{flex-direction:column;align-items:flex-start;width:100%} .view-tabs{width:100%;overflow-x:auto}
+  .sec-card{padding:1rem;border-radius:var(--radius-lg)}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr} .stat-icon{width:36px;height:36px;font-size:.95rem} .stat-val{font-size:var(--text-xl)}
+  .prod-top{padding:1rem 1rem .4rem} .prod-details{padding:.3rem 1rem 1rem}
 }
 
-/* ── Print ── */
+/* Print */
 @media print{
-  header,.topbar,.sidebar,.sidebar-overlay,.fab-top,.clear-btn,
-  .filter-row,.view-tabs,.edit-loc{display:none!important}
-  main{margin:0!important;padding:0!important}
-  .prod-card{break-inside:avoid;page-break-inside:avoid;border:1px solid #ccc!important}
+  header,.topbar,.sidebar,.sidebar-overlay,.fab-top,.clear-btn,.filter-row,.view-tabs,.edit-loc,.page-header-right{display:none!important}
+  main{margin:0!important;padding:0!important;max-width:100%!important}
+  .prod-card{break-inside:avoid;page-break-inside:avoid;border:1px solid #ccc!important;box-shadow:none!important}
+  .sec-card{box-shadow:none!important;border:1px solid #ddd!important}
 }
 </style>
 </head>
@@ -392,68 +305,47 @@ include 'header-component.php';
 
 <main>
   <?php if (!empty($error_message)): ?>
-    <div style="padding:1rem;background:#ffebee;color:#c62828;border-radius:10px;margin-bottom:1.5rem;border-left:4px solid #c62828;">
-      <?= htmlspecialchars($error_message) ?>
+    <div style="padding:.85rem 1.15rem;background:rgba(239,68,68,.08);color:#ef4444;border-radius:var(--radius-lg);margin-bottom:1.25rem;border:1px solid rgba(239,68,68,.15);font-weight:600;font-size:var(--text-sm);display:flex;align-items:center;gap:.5rem;">
+      <i class="fas fa-circle-exclamation"></i> <?= htmlspecialchars($error_message) ?>
     </div>
   <?php endif; ?>
 
-  <!-- Page header -->
+  <!-- Page Header -->
   <div class="page-header">
-    <div>
-      <h1>Medicine Locator &amp; Expiry Monitor</h1>
-      <p>Search medicines, check stock levels, and track expiry dates — all in one place.</p>
+    <div class="page-header-left">
+      <h1><i class="fas fa-pills" style="color:var(--c-brand);font-size:1.1rem"></i> Medicine Locator &amp; Expiry Monitor</h1>
+      <p>Search medicines, check stock levels, and track expiry dates</p>
     </div>
-    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+    <div class="page-header-right">
       <div class="view-tabs">
-        <button class="view-tab active" data-view="all" onclick="setView('all')">All</button>
-        <button class="view-tab" data-view="expired" onclick="setView('expired')">Expired</button>
-        <button class="view-tab" data-view="expiring" onclick="setView('expiring')">Expiring</button>
+        <button class="view-tab active" data-view="all" onclick="setView('all')"><i class="fas fa-border-all"></i> All</button>
+        <button class="view-tab" data-view="expired" onclick="setView('expired')"><i class="fas fa-circle-xmark"></i> Expired</button>
+        <button class="view-tab" data-view="expiring" onclick="setView('expiring')"><i class="fas fa-triangle-exclamation"></i> Expiring</button>
       </div>
+      <button class="ml-export-btn" onclick="exportMedicineCSV()"><i class="fas fa-download"></i> Export</button>
     </div>
   </div>
 
   <!-- Stats -->
   <div class="stats-grid">
-    <div class="stat-card c-blue">
-      <div class="stat-label">Total Medicines</div>
-      <div class="stat-val stat-num" data-target="<?= $totalMedicines ?>">0</div>
-    </div>
-    <div class="stat-card c-green">
-      <div class="stat-label">Categories</div>
-      <div class="stat-val stat-num" data-target="<?= $uniqueCategories ?>">0</div>
-    </div>
-    <div class="stat-card c-amber">
-      <div class="stat-label">Low Stock</div>
-      <div class="stat-val stat-num" data-target="<?= $lowStockCount ?>">0</div>
-    </div>
-    <div class="stat-card c-red">
-      <div class="stat-label">Out of Stock</div>
-      <div class="stat-val stat-num" data-target="<?= $outOfStockCount ?>">0</div>
-    </div>
-    <div class="stat-card c-red">
-      <div class="stat-label">Expired</div>
-      <div class="stat-val stat-num" data-target="<?= $expiredCount ?>">0</div>
-    </div>
-    <div class="stat-card c-amber">
-      <div class="stat-label">Expiring Soon</div>
-      <div class="stat-val stat-num" data-target="<?= $expiringSoonCount ?>">0</div>
-      <small style="color:#f59e0b;font-weight:600;font-size:.7rem">(Within <?= $expiryThreshold ?> days)</small>
-    </div>
-    <div class="stat-card c-green">
-      <div class="stat-label">Valid Stock</div>
-      <div class="stat-val stat-num" data-target="<?= $validExpiryCount ?>">0</div>
-    </div>
+    <div class="stat-card c-blue"><div class="stat-icon blue"><i class="fas fa-pills"></i></div><div class="stat-body"><div class="stat-val stat-num" data-target="<?= $totalMedicines ?>">0</div><div class="stat-label">Total Medicines</div></div></div>
+    <div class="stat-card c-green"><div class="stat-icon green"><i class="fas fa-layer-group"></i></div><div class="stat-body"><div class="stat-val stat-num" data-target="<?= $uniqueCategories ?>">0</div><div class="stat-label">Categories</div></div></div>
+    <div class="stat-card c-amber"><div class="stat-icon amber"><i class="fas fa-arrow-trend-down"></i></div><div class="stat-body"><div class="stat-val stat-num" data-target="<?= $lowStockCount ?>">0</div><div class="stat-label">Low Stock</div></div></div>
+    <div class="stat-card c-red"><div class="stat-icon red"><i class="fas fa-box-open"></i></div><div class="stat-body"><div class="stat-val stat-num" data-target="<?= $outOfStockCount ?>">0</div><div class="stat-label">Out of Stock</div></div></div>
+    <div class="stat-card c-red"><div class="stat-icon red-alt"><i class="fas fa-skull-crossbones"></i></div><div class="stat-body"><div class="stat-val stat-num" data-target="<?= $expiredCount ?>">0</div><div class="stat-label">Expired</div></div></div>
+    <div class="stat-card c-amber"><div class="stat-icon amber-alt"><i class="fas fa-hourglass-half"></i></div><div class="stat-body"><div class="stat-val stat-num" data-target="<?= $expiringSoonCount ?>">0</div><div class="stat-label">Expiring Soon</div><small class="stat-sub"><?= $expiryThreshold ?>-day window</small></div></div>
+    <div class="stat-card c-green"><div class="stat-icon green-alt"><i class="fas fa-circle-check"></i></div><div class="stat-body"><div class="stat-val stat-num" data-target="<?= $validExpiryCount ?>">0</div><div class="stat-label">Valid Stock</div></div></div>
   </div>
 
   <!-- Search & Filter -->
   <div class="sec-card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
-      <h2><i class="fas fa-filter"></i> Search &amp; Filter</h2>
+      <h2><i class="fas fa-magnifying-glass"></i> Search &amp; Filter</h2>
       <div class="badge-pill" id="filterBadge"><span class="cnt" id="filterCnt">0</span> filters active</div>
     </div>
     <div class="filter-row">
       <div class="search-wrap">
-        <input type="text" id="searchInput" placeholder="Search by name, category, price, or location&hellip;" autocomplete="off">
+        <input type="text" id="searchInput" placeholder="Search by name, category, price, location…" autocomplete="off">
       </div>
       <select id="categoryFilter">
         <option value="">All Categories</option>
@@ -467,116 +359,76 @@ include 'header-component.php';
         <option value="expiring-soon">Expiring Soon</option>
         <option value="valid">Valid</option>
       </select>
-      <button class="clear-btn" onclick="clearFilters()"><i class="fas fa-times"></i> Clear</button>
+      <button class="clear-btn" onclick="clearFilters()"><i class="fas fa-xmark"></i> Clear</button>
     </div>
   </div>
 
   <!-- Products -->
   <div class="sec-card">
-    <h2><i class="fas fa-pills"></i> Medicine Inventory</h2>
+    <h2><i class="fas fa-capsules"></i> Medicine Inventory <span style="font-weight:500;font-size:.8rem;color:var(--c-text-muted);margin-left:.5rem" id="visibleCount">(<?= $totalMedicines ?> items)</span></h2>
     <div class="product-grid" id="productGrid">
       <?php if ($result && $result->num_rows > 0):
         $idx = 0;
         while ($row = $result->fetch_assoc()):
           $row['image_url'] = resolveProductImageUrl((string)($row['image_url'] ?? ''), (string)($row['name'] ?? ''));
-          // Stock
-          $stockClass = $row['stock_quantity'] <= 0 ? 'out-of-stock' :
-                        ($row['stock_quantity'] < 10 ? 'low-stock' : 'in-stock');
-          $stockText  = $row['stock_quantity'] <= 0 ? 'Out of Stock' :
-                        ($row['stock_quantity'] < 10 ? 'Low Stock' : 'In Stock');
-
-          // Expiry
-          $expiryStatus = '';
-          $expiryClass  = '';
-          $borderClass  = '';
-          $daysDiff     = null;
+          $stockClass = $row['stock_quantity'] <= 0 ? 'out-of-stock' : ($row['stock_quantity'] < 10 ? 'low-stock' : 'in-stock');
+          $stockText  = $row['stock_quantity'] <= 0 ? 'Out of Stock' : ($row['stock_quantity'] < 10 ? 'Low Stock' : 'In Stock');
+          $expiryStatus = ''; $expiryClass = ''; $borderClass = ''; $daysDiff = null;
           if (!empty($row['expiry_date'])) {
               $expiryDate = new DateTime($row['expiry_date']);
               $daysDiff = (int) $today->diff($expiryDate)->format("%r%a");
-              if ($daysDiff < 0) {
-                  $expiryStatus = 'expired';
-                  $expiryClass  = 'e-expired';
-                  $borderClass  = 'b-red';
-              } elseif ($daysDiff <= $expiryThreshold) {
-                  $expiryStatus = 'expiring-soon';
-                  $expiryClass  = 'e-soon';
-                  $borderClass  = 'b-amber';
-              } else {
-                  $expiryStatus = 'valid';
-                  $expiryClass  = 'e-valid';
-                  $borderClass  = 'b-green';
-              }
+              if ($daysDiff < 0) { $expiryStatus = 'expired'; $expiryClass = 'e-expired'; $borderClass = 'b-red'; }
+              elseif ($daysDiff <= $expiryThreshold) { $expiryStatus = 'expiring-soon'; $expiryClass = 'e-soon'; $borderClass = 'b-amber'; }
+              else { $expiryStatus = 'valid'; $expiryClass = 'e-valid'; $borderClass = 'b-green'; }
           }
           $variant = trim(($row['strength'] ?? '') . ' ' . ($row['dosage_form'] ?? ''));
+          $stockIcon = $stockClass === 'in-stock' ? 'fa-circle-check' : ($stockClass === 'low-stock' ? 'fa-circle-exclamation' : 'fa-circle-xmark');
           $idx++;
       ?>
-        <div class="prod-card <?= $borderClass ?>"
-             data-category="<?= htmlspecialchars($row['category']) ?>"
-             data-status="<?= $expiryStatus ?>"
-             data-name="<?= htmlspecialchars(strtolower($row['name'])) ?>"
-             data-location="<?= htmlspecialchars(strtolower($row['location'] ?: '')) ?>">
-
+        <div class="prod-card <?= $borderClass ?>" data-category="<?= htmlspecialchars($row['category']) ?>" data-status="<?= $expiryStatus ?>" data-name="<?= htmlspecialchars(strtolower($row['name'])) ?>" data-location="<?= htmlspecialchars(strtolower($row['location'] ?: '')) ?>" data-price="<?= $row['price'] ?>" data-stock="<?= $row['stock_quantity'] ?>" style="animation-delay:<?= min($idx * 0.025, 0.5) ?>s">
           <div class="prod-top">
             <?php if (!empty($row['image_url'])): ?>
-              <img class="prod-img" src="<?= htmlspecialchars($row['image_url']) ?>" alt="<?= htmlspecialchars($row['name']) ?>">
+              <img class="prod-img" src="<?= htmlspecialchars($row['image_url']) ?>" alt="<?= htmlspecialchars($row['name']) ?>" loading="lazy">
             <?php else: ?>
-              <img class="prod-img" src="assets/placeholder-product.svg" alt="No image" style="opacity:.45">
+              <div class="prod-img prod-img-placeholder"><i class="fas fa-capsules"></i></div>
             <?php endif; ?>
-            <div>
-              <h3 class="prod-name">
-                <?= htmlspecialchars($row['name']) ?>
-                <?php if (!empty($row['requires_prescription'])): ?><span class="rx-tag">Rx</span><?php endif; ?>
-              </h3>
-              <?php if ($variant): ?>
-                <div class="prod-variant"><?= htmlspecialchars($variant) ?></div>
-              <?php endif; ?>
+            <div class="prod-top-info">
+              <h3 class="prod-name"><?= htmlspecialchars($row['name']) ?><?php if (!empty($row['requires_prescription'])): ?><span class="rx-tag">Rx</span><?php endif; ?></h3>
+              <?php if ($variant): ?><div class="prod-variant"><?= htmlspecialchars($variant) ?></div><?php endif; ?>
+              <div class="cat-badge"><i class="fas fa-tag"></i> <?= htmlspecialchars($row['category']) ?></div>
             </div>
           </div>
-
-          <div class="cat-badge"><?= htmlspecialchars($row['category']) ?></div>
-
-          <div class="price-tag">&#8369;<?= number_format($row['price'], 2) ?></div>
-          <?php if (!empty($row['sell_by_piece']) && $row['price_per_piece'] > 0): ?>
-            <div class="piece-price">&#8369;<?= number_format($row['price_per_piece'], 2) ?>/piece</div>
-          <?php endif; ?>
-
-          <div><span class="stock-pill <?= $stockClass ?>"><?= $stockText ?> (<?= $row['stock_quantity'] ?>)</span></div>
-
-          <?php if (!empty($row['expiry_date'])): ?>
-            <div class="expiry-row <?= $expiryClass ?>">
-              <i class="fas fa-calendar-alt"></i>
-              <span><?= $expiryDate->format('M d, Y') ?></span>
+          <div class="prod-details">
+            <div class="prod-price-row">
+              <div class="price-tag">&#8369;<?= number_format($row['price'], 2) ?></div>
+              <?php if (!empty($row['sell_by_piece']) && $row['price_per_piece'] > 0): ?>
+                <div class="piece-price"><i class="fas fa-puzzle-piece"></i> &#8369;<?= number_format($row['price_per_piece'], 2) ?>/pc</div>
+              <?php endif; ?>
             </div>
-            <div>
-              <span class="status-pill <?= $expiryStatus === 'expired' ? 's-expired' : ($expiryStatus === 'expiring-soon' ? 's-soon' : 's-valid') ?>">
-                <?php if ($expiryStatus === 'expired'): ?>
-                  <i class="fas fa-times-circle"></i> Expired
-                  <span class="days-txt">(<?= abs($daysDiff) ?> days ago)</span>
-                <?php elseif ($expiryStatus === 'expiring-soon'): ?>
-                  <i class="fas fa-exclamation-triangle"></i> Expiring Soon
-                  <span class="days-txt">(<?= $daysDiff ?> days left)</span>
-                <?php else: ?>
-                  <i class="fas fa-check-circle"></i> Valid
-                  <span class="days-txt">(<?= $daysDiff ?> days left)</span>
-                <?php endif; ?>
-              </span>
+            <div class="prod-meta-row">
+              <span class="stock-pill <?= $stockClass ?>"><i class="fas <?= $stockIcon ?>"></i> <?= $stockText ?> (<?= $row['stock_quantity'] ?>)</span>
             </div>
-          <?php else: ?>
-            <div class="expiry-row" style="opacity:.5"><i class="fas fa-calendar-alt"></i> No expiry date set</div>
-          <?php endif; ?>
-
-          <div class="loc-row" data-product-id="<?= $row['product_id'] ?>">
-            <span class="loc-text"><?= htmlspecialchars($row['location'] ?: 'Location not set') ?></span>
-            <button class="edit-loc" onclick="editLocation(<?= $row['product_id'] ?>)" title="Edit location">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
+            <?php if (!empty($row['expiry_date'])): ?>
+              <div class="expiry-row <?= $expiryClass ?>">
+                <i class="fas fa-calendar-day"></i>
+                <span class="expiry-date"><?= $expiryDate->format('M d, Y') ?></span>
+                <span class="status-pill <?= $expiryStatus === 'expired' ? 's-expired' : ($expiryStatus === 'expiring-soon' ? 's-soon' : 's-valid') ?>">
+                  <?php if ($expiryStatus === 'expired'): ?><i class="fas fa-circle-xmark"></i> <?= abs($daysDiff) ?>d ago<?php elseif ($expiryStatus === 'expiring-soon'): ?><i class="fas fa-triangle-exclamation"></i> <?= $daysDiff ?>d left<?php else: ?><i class="fas fa-circle-check"></i> <?= $daysDiff ?>d left<?php endif; ?>
+                </span>
+              </div>
+            <?php else: ?>
+              <div class="expiry-row e-none"><i class="fas fa-calendar-day"></i> No expiry set</div>
+            <?php endif; ?>
+            <div class="loc-row" data-product-id="<?= $row['product_id'] ?>">
+              <i class="fas fa-location-dot loc-icon"></i>
+              <span class="loc-text"><?= htmlspecialchars($row['location'] ?: 'Not set') ?></span>
+              <button class="edit-loc" onclick="editLocation(<?= $row['product_id'] ?>)" title="Edit location"><i class="fas fa-pen"></i></button>
+            </div>
           </div>
         </div>
       <?php endwhile; else: ?>
         <div class="no-results">
+          <i class="fas fa-capsules"></i>
           <h3>No medicines found</h3>
           <p>Try adjusting your search criteria or check back later.</p>
         </div>
@@ -596,72 +448,63 @@ include 'header-component.php';
 <script src="theme.js"></script>
 <script src="shared-polish.js"></script>
 <script>
-/* ── State ── */
-var currentSearch   = '';
-var currentCategory = '';
-var currentStatus   = '';
-var currentView     = 'all';
+/* ── Medicine Locator Premium JS ────────────────────────── */
+var currentSearch='', currentCategory='', currentStatus='', currentView='all';
 
-/* ── Animate numbers ── */
-function animVal(el, from, to, ms) {
-  var t0 = null;
-  function step(ts) {
-    if (!t0) t0 = ts;
-    var p = Math.min((ts - t0) / ms, 1);
-    el.textContent = Math.floor(p * (to - from) + from);
-    if (p < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-document.addEventListener('DOMContentLoaded', function() {
+/* ── Animated Counters ───────────────────────────────────── */
+(function(){
   var els = document.querySelectorAll('.stat-num');
   els.forEach(function(el, i) {
-    var t = parseInt(el.dataset.target);
-    setTimeout(function(){ animVal(el, 0, t, 1200); }, i * 60);
+    var target = parseInt(el.dataset.target) || 0;
+    if (target === 0) return;
+    var current = 0, step = Math.max(1, Math.ceil(target / 25));
+    setTimeout(function() {
+      var iv = setInterval(function() {
+        current = Math.min(current + step, target);
+        el.textContent = current;
+        if (current >= target) clearInterval(iv);
+      }, 25);
+    }, i * 50);
   });
-});
+})();
 
-/* ── View tabs ── */
+/* ── View Tabs ───────────────────────────────────────────── */
 function setView(v) {
   currentView = v;
   document.querySelectorAll('.view-tab').forEach(function(b){ b.classList.toggle('active', b.dataset.view === v); });
   var s = document.getElementById('statusFilter');
-  if (v === 'expired')       { s.value = 'expired';       currentStatus = 'expired'; }
+  if (v === 'expired') { s.value = 'expired'; currentStatus = 'expired'; }
   else if (v === 'expiring') { s.value = 'expiring-soon'; currentStatus = 'expiring-soon'; }
-  else                       { s.value = '';               currentStatus = ''; }
+  else { s.value = ''; currentStatus = ''; }
   filterCards();
 }
 
-/* ── Filter ── */
+/* ── Filter ──────────────────────────────────────────────── */
 function filterCards() {
   var cards = document.querySelectorAll('.prod-card');
   var vis = 0;
   cards.forEach(function(c) {
     var name = c.dataset.name || '';
-    var cat  = c.dataset.category || '';
-    var st   = c.dataset.status || '';
-    var loc  = c.dataset.location || '';
-
-    var sm = !currentSearch || name.includes(currentSearch) || cat.toLowerCase().includes(currentSearch) || loc.includes(currentSearch);
+    var cat = c.dataset.category || '';
+    var st = c.dataset.status || '';
+    var loc = c.dataset.location || '';
+    var sm = !currentSearch || name.indexOf(currentSearch) !== -1 || cat.toLowerCase().indexOf(currentSearch) !== -1 || loc.indexOf(currentSearch) !== -1;
     var cm = !currentCategory || cat === currentCategory;
     var stm = !currentStatus || st === currentStatus;
-
-    if (sm && cm && stm) {
-      c.style.display = 'block'; c.style.opacity = '1'; c.style.transform = 'none'; vis++;
-    } else {
-      c.style.opacity = '0'; c.style.transform = 'scale(.97)';
-      setTimeout(function(){ if(c.style.opacity==='0') c.style.display='none'; }, 180);
-    }
+    if (sm && cm && stm) { c.style.display = ''; vis++; }
+    else { c.style.display = 'none'; }
   });
   handleEmpty(vis);
   updateBadge();
+  var vc = document.getElementById('visibleCount');
+  if (vc) vc.textContent = '(' + vis + ' item' + (vis !== 1 ? 's' : '') + ')';
 }
 
 function handleEmpty(vis) {
   var grid = document.getElementById('productGrid');
   var nr = grid.querySelector('.no-results-dyn');
   if (vis === 0) {
-    if (!nr) { nr = document.createElement('div'); nr.className = 'no-results no-results-dyn'; nr.innerHTML = '<h3>No matching medicines</h3><p>Try adjusting your filters.</p>'; grid.appendChild(nr); }
+    if (!nr) { nr = document.createElement('div'); nr.className = 'no-results no-results-dyn'; nr.innerHTML = '<i class="fas fa-magnifying-glass"></i><h3>No matching medicines</h3><p>Try adjusting your filters.</p>'; grid.appendChild(nr); }
   } else if (nr) nr.remove();
 }
 
@@ -673,7 +516,7 @@ function updateBadge() {
   var b = document.getElementById('filterBadge');
   var c = document.getElementById('filterCnt');
   if (n) { b.classList.add('visible'); c.textContent = n; }
-  else   { b.classList.remove('visible'); }
+  else { b.classList.remove('visible'); }
 }
 
 function clearFilters() {
@@ -683,15 +526,11 @@ function clearFilters() {
   currentSearch = ''; currentCategory = ''; currentStatus = ''; currentView = 'all';
   document.querySelectorAll('.view-tab').forEach(function(b){ b.classList.toggle('active', b.dataset.view === 'all'); });
   filterCards();
-  document.querySelectorAll('.stat-num').forEach(function(el){
-    var t = parseInt(el.dataset.target), cur = parseInt(el.textContent);
-    if (cur !== t) animVal(el, cur, t, 400);
-  });
-  showToast('Filters cleared', 'success');
+  showToast('Filters cleared');
 }
 
-/* ── Events ── */
-document.addEventListener('DOMContentLoaded', function() {
+/* ── Events ──────────────────────────────────────────────── */
+(function(){
   var si = document.getElementById('searchInput');
   var cf = document.getElementById('categoryFilter');
   var sf = document.getElementById('statusFilter');
@@ -699,25 +538,27 @@ document.addEventListener('DOMContentLoaded', function() {
   if (cf) cf.addEventListener('change', function(e){ currentCategory = e.target.value; filterCards(); });
   if (sf) sf.addEventListener('change', function(e){ currentStatus = e.target.value; filterCards(); });
   var fab = document.getElementById('fabTop');
-  window.addEventListener('scroll', function(){ fab.classList.toggle('visible', window.scrollY > 280); });
-});
+  window.addEventListener('scroll', function(){ if(fab) fab.classList.toggle('visible', window.scrollY > 280); });
+})();
 
-/* ── Location editing ── */
+/* ── Location Editing ────────────────────────────────────── */
 function editLocation(pid) {
   var row = document.querySelector('.loc-row[data-product-id="'+pid+'"]');
   var cur = row.querySelector('.loc-text').textContent;
-  var blank = cur === 'Location not set';
+  var blank = cur === 'Not set';
   var inp = document.createElement('input');
-  inp.type = 'text'; inp.value = blank ? '' : cur;
-  inp.placeholder = 'Enter location'; inp.className = 'loc-input';
+  inp.type = 'text'; inp.value = blank ? '' : cur; inp.placeholder = 'e.g. Shelf A-3'; inp.className = 'loc-input';
   var btn = document.createElement('button');
   btn.className = 'save-loc';
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+  btn.innerHTML = '<i class="fas fa-check"></i>';
   btn.onclick = function(){ saveLocation(pid, inp.value); };
   row.innerHTML = '';
+  var icon = document.createElement('i');
+  icon.className = 'fas fa-location-dot loc-icon';
+  row.appendChild(icon);
   row.appendChild(inp); row.appendChild(btn);
   inp.focus();
-  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') saveLocation(pid, inp.value); });
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') saveLocation(pid, inp.value); if(e.key==='Escape') location.reload(); });
 }
 
 function saveLocation(pid, val) {
@@ -731,32 +572,57 @@ function saveLocation(pid, val) {
     .then(function(d){
       if (d.success) {
         var row = document.querySelector('.loc-row[data-product-id="'+pid+'"]');
-        row.innerHTML = '<span class="loc-text">'+val+'</span>'+
-          '<button class="edit-loc" onclick="editLocation('+pid+')" title="Edit location">'+
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+        row.innerHTML = '<i class="fas fa-location-dot loc-icon"></i>'+
+          '<span class="loc-text">'+val.replace(/</g,'&lt;')+'</span>'+
+          '<button class="edit-loc" onclick="editLocation('+pid+')" title="Edit location"><i class="fas fa-pen"></i></button>';
         row.closest('.prod-card').dataset.location = val.toLowerCase();
-        showToast('Location updated', 'success');
+        showToast('Location updated');
       } else { showToast(d.error || 'Update failed', 'error'); }
     })
     .catch(function(){ showToast('Error updating location', 'error'); });
 }
 
-/* ── Toast (uses shared-polish.js ToastNotification) ── */
-function showToast(msg, type) {
-  if (typeof toast !== 'undefined' && toast.show) { toast.show(msg, type); return; }
-  var t = document.createElement('div');
-  t.textContent = msg;
-  t.style.cssText = 'position:fixed;top:80px;right:20px;padding:.75rem 1.2rem;border-radius:10px;color:#fff;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:10000;transition:opacity .3s ease;background:'+(type==='success'?'#10b981':'#ef4444')+';';
-  document.body.appendChild(t);
-  setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){t.remove();},300); }, 2800);
+/* ── Export CSV ──────────────────────────────────────────── */
+function exportMedicineCSV() {
+  var cards = document.querySelectorAll('.prod-card');
+  if (!cards.length) { showToast('No medicines to export', 'error'); return; }
+  var csv = 'Name,Category,Price,Stock,Expiry Status,Location\n';
+  cards.forEach(function(c) {
+    if (c.style.display === 'none') return;
+    var name = (c.querySelector('.prod-name') || {}).textContent || '';
+    name = name.replace(/Rx$/,'').trim();
+    var cat = c.dataset.category || '';
+    var price = c.dataset.price || '';
+    var stock = c.dataset.stock || '';
+    var status = c.dataset.status || 'N/A';
+    var loc = (c.querySelector('.loc-text') || {}).textContent || '';
+    csv += '"'+name+'","'+cat+'","'+price+'","'+stock+'","'+status+'","'+loc.trim()+'"\n';
+  });
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'medicines_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('Exported to CSV');
 }
 
-/* ── Keyboard shortcuts ── */
+/* ── Toast ───────────────────────────────────────────────── */
+function showToast(msg, type) {
+  type = type || 'success';
+  var t = document.createElement('div');
+  t.className = 'ml-toast ' + type;
+  t.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'circle-check' : 'circle-exclamation') + '"></i> ' + msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ t.classList.add('show'); }); });
+  setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ t.remove(); }, 300); }, 3000);
+}
+
+/* ── Keyboard Shortcuts ──────────────────────────────────── */
 document.addEventListener('keydown', function(e) {
   if ((e.ctrlKey && e.key === 'f') || e.key === 'F3') { e.preventDefault(); document.getElementById('searchInput').focus(); }
   if (e.key === 'Escape') {
     var s = document.getElementById('searchInput');
-    if (s && s === document.activeElement) { s.value = ''; s.blur(); currentSearch = ''; filterCards(); }
+    if (s && s === document.activeElement) { s.value=''; s.blur(); currentSearch=''; filterCards(); }
   }
 });
 </script>

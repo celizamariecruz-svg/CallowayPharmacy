@@ -1008,7 +1008,7 @@ $page_title = 'Point of Sale';
             margin-top: 0.2rem;
         }
         .customer-result-item .points-badge {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: #f59e0b;
             color: white;
             padding: 0.15rem 0.5rem;
             border-radius: 10px;
@@ -1067,7 +1067,7 @@ $page_title = 'Point of Sale';
             display: none;
             margin-top: 1rem;
             padding: 1rem;
-            background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.1) 100%);
+            background: rgba(245,158,11,0.1);
             border: 1.5px solid #f59e0b;
             border-radius: 10px;
         }

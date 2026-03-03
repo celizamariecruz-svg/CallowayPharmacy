@@ -1031,7 +1031,7 @@ if ($prodResult) {
             padding: 0 2rem;
         }
         .qr-promo-inner {
-            background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 50%, #db2777 100%);
+            background: #1d4ed8;
             border-radius: 18px;
             padding: 1.5rem 2rem;
             display: flex;
@@ -1409,11 +1409,11 @@ if ($prodResult) {
             align-items: center;
             justify-content: center;
             font-size: 4rem;
-            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            background: #eff6ff;
         }
 
         [data-theme="dark"] .product-image {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
+            background: #1e293b;
         }
 
         .product-content {
@@ -2407,7 +2407,7 @@ if ($prodResult) {
         .checkout-place-btn {
             width: 100%;
             padding: 1rem;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
+            background: #22c55e;
             color: white;
             border: none;
             border-radius: 14px;
@@ -3228,7 +3228,7 @@ if ($prodResult) {
                 <div class="checkout-items" id="checkoutItemsList"></div>
 
                 <!-- Senior/PWD Discount Claim — verified at pickup, NOT applied now -->
-                <div id="seniorDiscountCard" style="margin:0.75rem 0; padding:0.85rem 1rem; background:linear-gradient(135deg, rgba(34,197,94,0.08), rgba(21,128,61,0.12)); border:2px solid rgba(34,197,94,0.25); border-radius:12px; transition: all 0.2s;">
+                <div id="seniorDiscountCard" style="margin:0.75rem 0; padding:0.85rem 1rem; background:rgba(34,197,94,0.08); border:2px solid rgba(34,197,94,0.25); border-radius:12px; transition: all 0.2s;">
                     <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-weight:700;color:#16a34a;font-size:0.95rem;">
                         <input type="checkbox" id="seniorDiscountCheck" onchange="updateSeniorDiscount()" style="width:20px;height:20px;accent-color:#22c55e;cursor:pointer;flex-shrink:0;">
                         <i class="fas fa-id-card" style="font-size:1.1rem;"></i> I am a Senior Citizen / PWD
@@ -3306,7 +3306,7 @@ if ($prodResult) {
 
                 <?php if ($isLoggedIn): ?>
                 <!-- Loyalty Points Redemption -->
-                <div class="loyalty-section" id="loyaltySection" style="margin: 1rem 0; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+                <div class="loyalty-section" id="loyaltySection" style="margin: 1rem 0; padding: 1rem; background: #667eea; border-radius: 12px; color: white;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.6rem;">
                             <i class="fas fa-gift" style="font-size: 1.3rem;"></i>
@@ -3333,7 +3333,7 @@ if ($prodResult) {
                     <i class="fas fa-check-circle"></i> Place Order
                 </button>
                 <?php else: ?>
-                <button class="checkout-place-btn" onclick="window.location.href='login.php?redirect=onlineordering.php'" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                <button class="checkout-place-btn" onclick="window.location.href='login.php?redirect=onlineordering.php'" style="background: #3b82f6;">
                     <i class="fas fa-sign-in-alt"></i> Login to Place Order
                 </button>
                 <p style="text-align: center; font-size: 0.85rem; color: var(--text-light); margin-top: 0.75rem;">
@@ -3417,7 +3417,7 @@ if ($prodResult) {
                 <button class="pm-add-cart-btn" id="pmAddCartBtn" onclick="pmAddToCart()">
                     <i class="fas fa-cart-plus"></i> Add To Cart
                 </button>
-                <button class="pm-add-cart-btn" id="pmBuyNowBtn" onclick="pmBuyNow()" style="background: linear-gradient(135deg, #22c55e, #16a34a); margin-top: 0.5rem;">
+                <button class="pm-add-cart-btn" id="pmBuyNowBtn" onclick="pmBuyNow()" style="background: #22c55e; margin-top: 0.5rem;">
                     <i class="fas fa-bolt"></i> Buy Now
                 </button>
                 <div class="pm-section-title">About the Product</div>
@@ -4614,7 +4614,7 @@ if ($prodResult) {
             const discCard = document.getElementById('seniorDiscountCard');
             if (discCard) {
                 discCard.style.borderColor = 'rgba(34,197,94,0.25)';
-                discCard.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(21,128,61,0.12))';
+                discCard.style.background = 'rgba(34,197,94,0.08)';
             }
             const claimNotice = document.getElementById('seniorClaimNotice');
             if (claimNotice) { claimNotice.style.display = 'none'; }
@@ -4675,8 +4675,8 @@ if ($prodResult) {
             if (card) {
                 card.style.borderColor = isChecked ? '#f59e0b' : 'rgba(34,197,94,0.25)';
                 card.style.background = isChecked 
-                    ? 'linear-gradient(135deg, rgba(245,158,11,0.10), rgba(217,119,6,0.15))' 
-                    : 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(21,128,61,0.12))';
+                    ? 'rgba(245,158,11,0.10)' 
+                    : 'rgba(34,197,94,0.08)';
             }
             if (notice) {
                 notice.style.display = isChecked ? 'block' : 'none';

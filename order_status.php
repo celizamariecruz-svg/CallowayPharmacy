@@ -33,9 +33,10 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     .os-container {
-        max-width: 900px;
+        width: 100%;
+        max-width: 1400px;
         margin: 0 auto;
-        padding: 1.5rem 1rem 3rem;
+        padding: 1.25rem 1.5rem 2rem;
     }
     .os-page-header {
         display: flex;
@@ -101,8 +102,8 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
     /* Orders list */
     .os-orders-list {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
         gap: 1rem;
     }
 
@@ -243,6 +244,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
     /* Empty state */
     .os-empty {
+        grid-column: 1 / -1;
         text-align: center;
         padding: 4rem 2rem;
         color: var(--text-light, #94a3b8);
@@ -279,6 +281,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
     /* Loading spinner */
     .os-loading {
+        grid-column: 1 / -1;
         text-align: center;
         padding: 4rem 2rem;
         color: var(--text-light, #94a3b8);
@@ -306,6 +309,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
     @media (max-width: 600px) {
         .os-container { padding: 1rem 0.75rem 2rem; }
+        .os-orders-list { grid-template-columns: 1fr; }
         .os-order-card { padding: 1rem; }
         .os-tracker { padding: 0; }
         .os-tracker::before { left: 18px; right: 18px; }

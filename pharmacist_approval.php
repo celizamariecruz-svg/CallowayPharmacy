@@ -61,7 +61,7 @@ $pendingOrders = $rx->getPendingRxApprovals();
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             min-height: 100vh;
             padding: 2rem;
         }
@@ -247,7 +247,7 @@ $pendingOrders = $rx->getPendingRxApprovals();
         }
         
         .btn-approve {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #10b981;
             color: white;
         }
         
@@ -257,7 +257,7 @@ $pendingOrders = $rx->getPendingRxApprovals();
         }
         
         .btn-reject {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            background: #ef4444;
             color: white;
         }
         

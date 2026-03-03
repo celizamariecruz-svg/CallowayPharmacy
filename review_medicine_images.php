@@ -137,9 +137,9 @@ $pageItems = array_slice(array_values($filtered), ($page - 1) * $perPage, $perPa
         .header { background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .header h1 { color: #2c3e50; margin-bottom: 0.5rem; }
         .stats { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
-        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; border-radius: 6px; min-width: 200px; }
-        .stat-card.green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .stat-card.orange { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-card { background: #667eea; color: white; padding: 1rem; border-radius: 6px; min-width: 200px; }
+        .stat-card.green { background: #11998e; }
+        .stat-card.orange { background: #f093fb; }
         .stat-card h3 { font-size: 2rem; margin-bottom: 0.25rem; }
         .stat-card p { opacity: 0.9; font-size: 0.9rem; }
         

@@ -128,7 +128,7 @@ exit;
     content: '';
     position: absolute;
     top: 0; right: -50px; width: 50px; height: 100%;
-    background: linear-gradient(to right, var(--bg-color), transparent);
+    background: var(--bg-color);
     z-index: 5;
     transition: var(--transition-smooth);
   }

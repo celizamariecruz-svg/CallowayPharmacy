@@ -30,7 +30,7 @@ header('Content-Type: application/json');
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // Read-only actions only need login; state-changing actions need pos.access permission
-$stateChangingActions = ['update_order_status', 'mark_read', 'mark_all_read'];
+$stateChangingActions = ['update_order_status', 'mark_read', 'mark_all_read', 'mark_picked_up'];
 if (in_array($action, $stateChangingActions) && !$auth->hasPermission('pos.access')) {
     echo json_encode(['success' => false, 'message' => 'Permission denied: POS access required']);
     ob_end_flush();
@@ -378,8 +378,7 @@ function markPickedUp($conn) {
         return;
     }
 
-    // Get current user from session
-    session_start();
+    // Get current user from session (session already started by Auth)
     $userId = $_SESSION['user_id'] ?? 0;
     $userName = $_SESSION['username'] ?? 'Unknown';
 

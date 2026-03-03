@@ -28,7 +28,7 @@ const loadingHTML = `
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #667eea;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -69,13 +69,13 @@ const loadingHTML = `
 
 .pill-left {
     left: 0;
-    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+    background: #ffffff;
     transform-origin: right center;
 }
 
 .pill-right {
     right: 0;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    background: #ff6b6b;
     border-radius: 0 50px 50px 0;
     transform-origin: left center;
     animation-delay: 1s;
@@ -326,7 +326,7 @@ function addKeyboardShortcuts() {
             }
             
             .shortcut-item kbd {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: #667eea;
                 color: white;
                 padding: 0.5rem 1rem;
                 border-radius: 8px;
@@ -336,7 +336,7 @@ function addKeyboardShortcuts() {
             .shortcuts-content button {
                 width: 100%;
                 padding: 1rem;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: #667eea;
                 color: white;
                 border: none;
                 border-radius: 12px;

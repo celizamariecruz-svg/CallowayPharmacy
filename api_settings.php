@@ -420,21 +420,42 @@ function restoreBackup($conn) {
         throw new Exception('Backup file not found');
     }
     
+    // Security: ensure backup file is inside the backups directory
+    $realPath = realpath($backup_file);
+    $allowedDir = realpath(__DIR__ . '/backups');
+    if ($realPath === false || $allowedDir === false || strpos($realPath, $allowedDir) !== 0) {
+        throw new Exception('Invalid backup file path');
+    }
+    
     // Read SQL file
     $sql = file_get_contents($backup_file);
     
-    // Execute SQL
+    // Execute SQL and track errors
+    $errors = [];
     if ($conn->multi_query($sql)) {
+        $stmtNum = 0;
         do {
+            $stmtNum++;
+            if ($conn->error) {
+                $errors[] = "Statement #$stmtNum: " . $conn->error;
+            }
             if ($result = $conn->store_result()) {
                 $result->free();
             }
         } while ($conn->next_result());
         
-        echo json_encode([
-            'success' => true,
-            'message' => 'Database restored successfully'
-        ]);
+        if (!empty($errors)) {
+            error_log('Backup restore had errors: ' . implode('; ', $errors));
+            echo json_encode([
+                'success' => false,
+                'message' => 'Database restore completed with ' . count($errors) . ' error(s). Check logs for details.'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Database restored successfully'
+            ]);
+        }
     } else {
         throw new Exception('Failed to restore database: ' . $conn->error);
     }

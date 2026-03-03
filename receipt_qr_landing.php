@@ -46,7 +46,7 @@ if (empty($qrCode)) {
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -66,7 +66,7 @@ if (empty($qrCode)) {
             to { opacity: 1; transform: translateY(0); }
         }
         .card-header {
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            background: #2563eb;
             color: #fff;
             padding: 2rem;
             text-align: center;
@@ -98,7 +98,7 @@ if (empty($qrCode)) {
             text-align: center;
             margin-bottom: 1.5rem;
             padding: 1rem;
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            background: #fef3c7;
             border-radius: 16px;
             border: 2px solid #f59e0b;
         }
@@ -156,11 +156,11 @@ if (empty($qrCode)) {
             flex-shrink: 0;
         }
         .choice-btn.customer .icon {
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            background: #dbeafe;
             color: #2563eb;
         }
         .choice-btn.employee .icon {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            background: #d1fae5;
             color: #059669;
         }
         .choice-btn .text h3 {

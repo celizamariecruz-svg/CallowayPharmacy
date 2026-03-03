@@ -159,7 +159,7 @@ if (isset($_SESSION['user_id'])) {
     right: -50px;
     width: 50px;
     height: 100%;
-    background: linear-gradient(to right, var(--bg-color), transparent);
+    background: var(--bg-color);
     z-index: 5;
     transition: var(--transition-smooth);
   }
@@ -895,7 +895,7 @@ if (isset($_SESSION['user_id'])) {
         <input type="text" id="verify-code-input" maxlength="6" pattern="[0-9]{6}" placeholder="000000"
           style="width:100%;text-align:center;font-size:1.8rem;font-weight:800;letter-spacing:10px;padding:0.8rem;border:2px solid #cbd5e1;border-radius:12px;margin-bottom:1rem;box-sizing:border-box;font-family:monospace;" required>
         <button type="submit" id="verify-submit-btn"
-          style="width:100%;padding:0.8rem;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-weight:700;font-size:1rem;border:none;border-radius:12px;cursor:pointer;">Verify & Activate</button>
+          style="width:100%;padding:0.8rem;background:#2563eb;color:#fff;font-weight:700;font-size:1rem;border:none;border-radius:12px;cursor:pointer;">Verify & Activate</button>
       </form>
       <div style="margin-top:1rem;">
         <button onclick="resendVerifyCode()" id="resend-verify-btn" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:0.85rem;font-weight:600;text-decoration:underline;">Resend Code</button>
@@ -1010,7 +1010,7 @@ if (isset($_SESSION['user_id'])) {
         const banner = document.createElement('div');
         banner.id = 'reward-banner';
         banner.innerHTML = '<span style="font-size:1.3rem;">🎁</span> <strong>Reward QR Detected!</strong><br><span style="font-size:0.85rem;">Register or log in to claim your loyalty points.</span>';
-        banner.style.cssText = 'background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;color:#92400e;padding:0.8rem 1rem;border-radius:12px;margin-bottom:1rem;text-align:center;font-size:0.95rem;animation:slideUp 0.3s ease-out;';
+        banner.style.cssText = 'background:#fef3c7;border:2px solid #f59e0b;color:#92400e;padding:0.8rem 1rem;border-radius:12px;margin-bottom:1rem;text-align:center;font-size:0.95rem;animation:slideUp 0.3s ease-out;';
         const container = document.querySelector('.container');
         if (container) container.insertBefore(banner, container.children[1]);
       }

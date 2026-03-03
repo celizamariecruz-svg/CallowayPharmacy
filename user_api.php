@@ -149,7 +149,7 @@ switch($action) {
         $fullName = trim($input['full_name'] ?? '');
         $roleId = intval($input['role_id'] ?? 0);
         $isActive = intval($input['is_active'] ?? 1);
-        $employeeId = intval($input['employee_id'] ?? 0);
+        $employeeId = !empty($input['employee_id']) ? intval($input['employee_id']) : null;
         
         // Validation
         if (empty($username) || empty($password)) {
@@ -227,9 +227,15 @@ switch($action) {
         // Hash password
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         
-        $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, full_name, role_id, is_active, employee_id) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssiii", $username, $email, $hashedPassword, $fullName, $roleId, $isActive, $employeeId);
+        if ($employeeId !== null) {
+            $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, full_name, role_id, is_active, employee_id) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssiii", $username, $email, $hashedPassword, $fullName, $roleId, $isActive, $employeeId);
+        } else {
+            $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, full_name, role_id, is_active, employee_id) 
+                        VALUES (?, ?, ?, ?, ?, ?, NULL)");
+            $stmt->bind_param("ssssii", $username, $email, $hashedPassword, $fullName, $roleId, $isActive);
+        }
         
         if ($stmt->execute()) {
             $auth->logActivity($auth->getCurrentUser()['user_id'], 'CREATE', 'users', "Created user: $username");
@@ -259,7 +265,7 @@ switch($action) {
         $fullName = trim($input['full_name'] ?? '');
         $roleId = intval($input['role_id'] ?? 0);
         $isActive = intval($input['is_active'] ?? 1);
-        $employeeId = intval($input['employee_id'] ?? 0);
+        $employeeId = !empty($input['employee_id']) ? intval($input['employee_id']) : null;
         
         if (empty($username)) {
             echo json_encode(['success' => false, 'message' => 'Username is required']);
@@ -327,16 +333,30 @@ switch($action) {
         if (!empty($password)) {
             // Update with new password
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-            $stmt = $conn->prepare("UPDATE users 
-                                   SET username = ?, email = ?, password_hash = ?, full_name = ?, role_id = ?, is_active = ?, employee_id = ?
-                                   WHERE user_id = ?");
-            $stmt->bind_param("ssssiiii", $username, $email, $hashedPassword, $fullName, $roleId, $isActive, $employeeId, $userId);
+            if ($employeeId !== null) {
+                $stmt = $conn->prepare("UPDATE users 
+                                       SET username = ?, email = ?, password_hash = ?, full_name = ?, role_id = ?, is_active = ?, employee_id = ?
+                                       WHERE user_id = ?");
+                $stmt->bind_param("ssssiiii", $username, $email, $hashedPassword, $fullName, $roleId, $isActive, $employeeId, $userId);
+            } else {
+                $stmt = $conn->prepare("UPDATE users 
+                                       SET username = ?, email = ?, password_hash = ?, full_name = ?, role_id = ?, is_active = ?, employee_id = NULL
+                                       WHERE user_id = ?");
+                $stmt->bind_param("ssssiii", $username, $email, $hashedPassword, $fullName, $roleId, $isActive, $userId);
+            }
         } else {
             // Update without password change
-            $stmt = $conn->prepare("UPDATE users 
-                                   SET username = ?, email = ?, full_name = ?, role_id = ?, is_active = ?, employee_id = ?
-                                   WHERE user_id = ?");
-            $stmt->bind_param("sssiiii", $username, $email, $fullName, $roleId, $isActive, $employeeId, $userId);
+            if ($employeeId !== null) {
+                $stmt = $conn->prepare("UPDATE users 
+                                       SET username = ?, email = ?, full_name = ?, role_id = ?, is_active = ?, employee_id = ?
+                                       WHERE user_id = ?");
+                $stmt->bind_param("sssiiii", $username, $email, $fullName, $roleId, $isActive, $employeeId, $userId);
+            } else {
+                $stmt = $conn->prepare("UPDATE users 
+                                       SET username = ?, email = ?, full_name = ?, role_id = ?, is_active = ?, employee_id = NULL
+                                       WHERE user_id = ?");
+                $stmt->bind_param("sssiii", $username, $email, $fullName, $roleId, $isActive, $userId);
+            }
         }
         
         if ($stmt->execute()) {

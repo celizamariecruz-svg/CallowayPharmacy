@@ -10,20 +10,14 @@
   isolation: isolate;
 }
 
-/* Ambient glow behind everything */
+/* Ambient tint behind everything */
 .home-shell::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  background:
-    radial-gradient(ellipse 1100px 600px at 10% 0%,
-      rgba(var(--primary-rgb), 0.12), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 90% 20%,
-      rgba(var(--primary-rgb), 0.07), transparent 55%),
-    radial-gradient(ellipse 600px 400px at 50% 80%,
-      rgba(var(--primary-rgb), 0.04), transparent 50%);
+  background: rgba(var(--primary-rgb), 0.04);
 }
 
 /* ── Hero banner ───────────────────────────────────────────── */
@@ -46,12 +40,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(
-    90deg,
-    rgba(var(--primary-rgb), 0.7),
-    rgba(var(--primary-rgb), 0.25) 60%,
-    transparent
-  );
+  background: rgba(var(--primary-rgb), 0.55);
 }
 
 .home-hero-greeting {
@@ -128,9 +117,9 @@
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition:
-    transform 0.22s cubic-bezier(.4,.0,.2,1),
-    box-shadow 0.22s cubic-bezier(.4,.0,.2,1),
-    border-color 0.22s ease;
+    transform 0.18s cubic-bezier(.2,.0,0,1),
+    box-shadow 0.18s cubic-bezier(.2,.0,0,1),
+    border-color 0.18s ease;
   will-change: transform;
 }
 
@@ -148,7 +137,7 @@
 }
 
 .home-card:hover {
-  transform: translateY(-3px);
+  transform: translate3d(0, -3px, 0);
   box-shadow:
     var(--shadow-md),
     0 8px 24px -6px rgba(var(--primary-rgb), 0.12);
@@ -160,7 +149,7 @@
 }
 
 .home-card:active {
-  transform: translateY(-1px);
+  transform: translate3d(0, -1px, 0);
   transition-duration: 0.08s;
 }
 

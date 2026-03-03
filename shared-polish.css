@@ -231,22 +231,20 @@
 
 /* Skeleton Loading */
 .skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
+    background: var(--c-surface-sunken, #f0f0f0);
+    animation: loading 1.2s ease-in-out infinite;
 }
 
 [data-theme="dark"] .skeleton {
-    background: linear-gradient(90deg, #2d3748 25%, #1a202c 50%, #2d3748 75%);
-    background-size: 200% 100%;
+    background: var(--c-surface, #2d3748);
 }
 
 @keyframes loading {
-    0% {
-        background-position: 200% 0;
+    0%, 100% {
+        opacity: 1;
     }
-    100% {
-        background-position: -200% 0;
+    50% {
+        opacity: 0.4;
     }
 }
 

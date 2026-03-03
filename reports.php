@@ -348,7 +348,7 @@ $page_title = 'Reports & Analytics';
         <!-- Date Range Filter -->
         <div class="date-range-selector">
             <span style="font-weight: 600; color: var(--text-color);"><i class="far fa-calendar-alt"></i> Date Range:</span>
-            <button class="quick-range-btn active" onclick="setRange('today')">Today</button>
+            <button class="quick-range-btn" onclick="setRange('today')">Today</button>
             <button class="quick-range-btn" onclick="setRange('7days')">Last 7 Days</button>
             <button class="quick-range-btn" onclick="setRange('month')">This Month</button>
             <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">

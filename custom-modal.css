@@ -59,22 +59,22 @@
 }
 
 .cmodal-icon-circle.warning {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    background: #fef3c7;
     color: #d97706;
 }
 
 .cmodal-icon-circle.danger {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    background: #fee2e2;
     color: #dc2626;
 }
 
 .cmodal-icon-circle.info {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    background: #dbeafe;
     color: #2563eb;
 }
 
 .cmodal-icon-circle.success {
-    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    background: #dcfce7;
     color: #16a34a;
 }
 
@@ -160,36 +160,36 @@
 }
 
 .cmodal-btn-confirm {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: #2563eb;
     color: white;
 }
 
 .cmodal-btn-confirm:hover {
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    background: #1d4ed8;
 }
 
 .cmodal-btn-confirm.danger {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: #ef4444;
 }
 
 .cmodal-btn-confirm.danger:hover {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    background: #dc2626;
 }
 
 .cmodal-btn-confirm.warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: #f59e0b;
 }
 
 .cmodal-btn-confirm.warning:hover {
-    background: linear-gradient(135deg, #d97706, #b45309);
+    background: #d97706;
 }
 
 .cmodal-btn-confirm.success {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: #22c55e;
 }
 
 .cmodal-btn-confirm.success:hover {
-    background: linear-gradient(135deg, #16a34a, #15803d);
+    background: #16a34a;
 }
 
 .cmodal-btn-cancel {
@@ -208,22 +208,22 @@
 }
 
 [data-theme="dark"] .cmodal-icon-circle.warning {
-    background: linear-gradient(135deg, #78350f, #92400e);
+    background: #78350f;
     color: #fbbf24;
 }
 
 [data-theme="dark"] .cmodal-icon-circle.danger {
-    background: linear-gradient(135deg, #7f1d1d, #991b1b);
+    background: #7f1d1d;
     color: #f87171;
 }
 
 [data-theme="dark"] .cmodal-icon-circle.info {
-    background: linear-gradient(135deg, #1e3a5f, #1e40af);
+    background: #1e3a5f;
     color: #60a5fa;
 }
 
 [data-theme="dark"] .cmodal-icon-circle.success {
-    background: linear-gradient(135deg, #14532d, #166534);
+    background: #14532d;
     color: #4ade80;
 }
 
