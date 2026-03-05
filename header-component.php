@@ -60,7 +60,7 @@ if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- Sidebar -->
-<nav class="sidebar open" id="sidebar">
+<nav class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close menu">
       <i class="fas fa-times"></i>
