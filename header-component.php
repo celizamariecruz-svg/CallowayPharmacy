@@ -484,6 +484,23 @@ if ($_headerIsDemo && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="notification-tray.js" defer></script>
 <?php endif; ?>
 
+<?php if ($_headerIsAdmin): ?>
+<!-- Auto-trigger daily email cron after 2 PM if not yet run today -->
+<script>
+(function(){
+    var h = new Date().getHours();
+    if (h < 14) return;
+    var key = 'cron_last_trigger_' + new Date().toISOString().slice(0,10);
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    fetch('cron_web.php', {method:'POST',headers:{'Content-Type':'application/json'}})
+        .then(function(r){return r.json();})
+        .then(function(d){if(d.success && !d.skipped) console.log('Daily email cron triggered.');})
+        .catch(function(){});
+})();
+</script>
+<?php endif; ?>
+
 <?php if ($_headerIsDemo): ?>
 <!-- ═══ DEMO / SURVEY MODE BANNER + JS GUARD ════════════════════════════ -->
 <style>
