@@ -994,7 +994,11 @@ $page_title = 'Inventory Management';
                 const exp = await expiringRes.json();
 
                 if (low.success) document.getElementById('lowStock').textContent = low.count || 0;
-                if (exp.success) document.getElementById('expiringSoon').textContent = exp.expiring_soon_count ?? exp.count ?? 0;
+                if (exp.success) {
+                    const today = new Date().toISOString().split('T')[0];
+                    const soonCount = (exp.data || []).filter(p => p.expiry_date >= today).length;
+                    document.getElementById('expiringSoon').textContent = soonCount;
+                }
 
             } catch (e) { console.error(e); }
         }

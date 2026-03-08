@@ -760,6 +760,8 @@ $page_title = 'Point of Sale';
             border-radius: 16px;
             width: 100%;
             max-width: 440px;
+            max-height: 90vh;
+            overflow-y: auto;
             position: relative;
             transform: scale(0.95);
             animation: modalPop 0.2s ease forwards;
