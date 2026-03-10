@@ -45,3 +45,24 @@ foreach ($files as $f) {
 echo "\nPHP version: " . PHP_VERSION . "\n";
 echo "Document root: " . ($_SERVER['DOCUMENT_ROOT'] ?? 'N/A') . "\n";
 echo "Script dir: " . __DIR__ . "\n";
+
+echo "\n=== Permissions ===\n";
+$path = __DIR__ . '/onlineordering.php';
+echo "  readable: " . (is_readable($path) ? 'yes' : 'no') . "\n";
+echo "  perms: " . substr(sprintf('%o', fileperms($path)), -4) . "\n";
+echo "  owner: " . posix_getpwuid(fileowner($path))['name'] . "\n";
+
+echo "\n=== Nginx Config ===\n";
+$cfgPaths = ['/etc/nginx/nginx.conf', '/etc/nginx/sites-enabled/default', '/etc/nginx/conf.d/default.conf', '/home/site/default'];
+foreach ($cfgPaths as $cp) {
+    if (file_exists($cp)) {
+        echo "--- {$cp} ---\n";
+        echo file_get_contents($cp) . "\n";
+    }
+}
+
+echo "\n=== PHP-FPM pool ===\n";
+foreach (glob('/usr/local/etc/php-fpm.d/*.conf') as $fp) {
+    echo "--- {$fp} ---\n";
+    echo file_get_contents($fp) . "\n";
+}
