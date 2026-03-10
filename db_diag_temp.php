@@ -50,19 +50,35 @@ echo "\n=== Permissions ===\n";
 $path = __DIR__ . '/onlineordering.php';
 echo "  readable: " . (is_readable($path) ? 'yes' : 'no') . "\n";
 echo "  perms: " . substr(sprintf('%o', fileperms($path)), -4) . "\n";
-echo "  owner: " . posix_getpwuid(fileowner($path))['name'] . "\n";
 
-echo "\n=== Nginx Config ===\n";
-$cfgPaths = ['/etc/nginx/nginx.conf', '/etc/nginx/sites-enabled/default', '/etc/nginx/conf.d/default.conf', '/home/site/default'];
-foreach ($cfgPaths as $cp) {
-    if (file_exists($cp)) {
-        echo "--- {$cp} ---\n";
-        echo file_get_contents($cp) . "\n";
+echo "\n=== DB Tables ===\n";
+try {
+    if ($ssl) {
+        $c2 = mysqli_init();
+        $c2->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, false);
+        $c2->ssl_set(null, null, null, null, null);
+        $c2->real_connect($host, $user, $pass, 'pharmacycalloway-database', 3306, null, MYSQLI_CLIENT_SSL);
+    } else {
+        $c2 = new mysqli($host, $user, $pass, 'pharmacycalloway-database');
     }
+    $tr = $c2->query("SHOW TABLES");
+    if ($tr && $tr->num_rows > 0) {
+        while ($row = $tr->fetch_row()) echo "  - {$row[0]}\n";
+    } else {
+        echo "  (no tables)\n";
+    }
+    $c2->close();
+} catch (Exception $e) {
+    echo "  Error: {$e->getMessage()}\n";
 }
 
-echo "\n=== PHP-FPM pool ===\n";
-foreach (glob('/usr/local/etc/php-fpm.d/*.conf') as $fp) {
-    echo "--- {$fp} ---\n";
-    echo file_get_contents($fp) . "\n";
+echo "\n=== Test require onlineordering ===\n";
+ob_start();
+try {
+    // Don't actually require it - just check if PHP can parse it
+    $output = shell_exec('php -l /home/site/wwwroot/onlineordering.php 2>&1');
+    echo "Lint: {$output}\n";
+} catch (Exception $e) {
+    echo "Error: {$e->getMessage()}\n";
 }
+ob_end_flush();
