@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Figure 1 – System Architecture</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#fff;font-family:'Segoe UI',Arial,sans-serif}
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+  <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#FF9800"/></marker>
+  <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#fff"/></marker>
+  <linearGradient id="dbGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#64B5F6"/><stop offset="100%" stop-color="#1E88E5"/></linearGradient>
+  <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%"><feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.25"/></filter>
+</defs>
+
+<!-- Background & border -->
+<rect width="1920" height="1080" fill="#fff"/>
+<rect x="1" y="1" width="1918" height="1078" fill="none" stroke="#222" stroke-width="3" rx="4"/>
+
+<!-- Title -->
+<text x="960" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#1a202c">System Architecture</text>
+<text x="960" y="64" text-anchor="middle" font-size="14" fill="#555" font-style="italic">Figure 1 — High-level architecture of the Calloway Pharmacy Management System</text>
+
+<!-- ============ LEFT DARK PANEL ============ -->
+<rect x="25" y="85" width="540" height="960" rx="8" fill="#3a3a3a"/>
+
+<!-- User group icon -->
+<g transform="translate(155,460)">
+  <!-- Left person -->
+  <circle cx="-42" cy="-8" r="20" fill="#FFA726"/>
+  <rect x="-60" y="18" width="36" height="38" rx="8" fill="#FFA726"/>
+  <!-- Right person -->
+  <circle cx="42" cy="-8" r="20" fill="#FFA726"/>
+  <rect x="24" y="18" width="36" height="38" rx="8" fill="#FFA726"/>
+  <!-- Center person (front, larger) -->
+  <circle cx="0" cy="-18" r="26" fill="#FFB300"/>
+  <rect x="-22" y="14" width="44" height="46" rx="10" fill="#FFB300"/>
+  <!-- Label -->
+  <text x="0" y="90" text-anchor="middle" font-size="14" fill="#ccc" font-weight="600">Admin / Pharmacist / Customer</text>
+</g>
+
+<!-- INPUT blue box -->
+<rect x="330" y="395" width="200" height="55" rx="5" fill="#2979FF" filter="url(#shadow)"/>
+<text x="430" y="430" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">INPUT</text>
+
+<!-- OUTPUT blue box -->
+<rect x="330" y="545" width="200" height="55" rx="5" fill="#2979FF" filter="url(#shadow)"/>
+<text x="430" y="580" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">OUTPUT</text>
+
+<!-- Orange arrows: User → INPUT -->
+<line x1="218" y1="460" x2="322" y2="422" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+<!-- Orange arrows: OUTPUT → User -->
+<line x1="322" y1="572" x2="218" y2="510" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+
+<!-- ============ MIDDLE SECTION ============ -->
+
+<!-- DATA VALIDATION box (top middle) -->
+<rect x="610" y="120" width="200" height="50" rx="5" fill="#2979FF" filter="url(#shadow)"/>
+<text x="710" y="152" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">DATA VALIDATION</text>
+
+<!-- Orange arrow: INPUT right edge → DATA VALIDATION (curved up) -->
+<path d="M535 420 C580 420 590 250 610 170" fill="none" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+
+<!-- Database cylinder -->
+<g transform="translate(670,220)">
+  <rect x="0" y="18" width="80" height="60" fill="url(#dbGrad)"/>
+  <ellipse cx="40" cy="78" rx="40" ry="14" fill="#1565C0"/>
+  <ellipse cx="40" cy="18" rx="40" ry="14" fill="#64B5F6"/>
+  <ellipse cx="40" cy="18" rx="40" ry="14" fill="none" stroke="#1565C0" stroke-width="1"/>
+  <text x="40" y="55" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">MySQL</text>
+  <text x="40" y="70" text-anchor="middle" font-size="10" fill="#E3F2FD">MariaDB</text>
+</g>
+
+<!-- Orange arrow: DATA VALIDATION ↓ Database -->
+<line x1="710" y1="175" x2="710" y2="230" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+
+<!-- USER INTERFACE tall vertical blue bar -->
+<rect x="590" y="350" width="58" height="500" rx="5" fill="#2979FF" filter="url(#shadow)"/>
+<text x="619" y="600" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" transform="rotate(-90,619,600)" letter-spacing="2">USER INTERFACE</text>
+
+<!-- Orange arrow: INPUT → USER INTERFACE bar -->
+<line x1="535" y1="422" x2="583" y2="450" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+
+<!-- Orange arrow: USER INTERFACE bar → OUTPUT (back) -->
+<line x1="583" y1="650" x2="535" y2="572" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+
+<!-- Orange arrow: Database → right panel -->
+<path d="M752 268 C800 268 830 200 870 180" fill="none" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+
+<!-- ============ RIGHT DARK PANEL ============ -->
+<rect x="860" y="85" width="1035" height="960" rx="8" fill="#3a3a3a"/>
+
+<!-- Process boxes - vertical pipeline -->
+<!-- Box 1: DATA COLLECTION -->
+<rect x="1100" y="130" width="500" height="75" rx="6" fill="#4a4a4a" stroke="#777" stroke-width="1.5"/>
+<rect x="1100" y="130" width="500" height="5" rx="3" fill="#2979FF"/>
+<text x="1350" y="176" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">DATA COLLECTION</text>
+
+<!-- ↓ arrow -->
+<line x1="1350" y1="210" x2="1350" y2="260" stroke="#fff" stroke-width="2.5" marker-end="url(#aw)"/>
+
+<!-- Box 2: DATA INTEGRATION & CLEANSING -->
+<rect x="1100" y="266" width="500" height="75" rx="6" fill="#4a4a4a" stroke="#777" stroke-width="1.5"/>
+<rect x="1100" y="266" width="500" height="5" rx="3" fill="#2979FF"/>
+<text x="1350" y="312" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">DATA INTEGRATION &amp; CLEANSING</text>
+
+<!-- ↓ arrow -->
+<line x1="1350" y1="346" x2="1350" y2="396" stroke="#fff" stroke-width="2.5" marker-end="url(#aw)"/>
+
+<!-- Box 3: DATA COMPUTATION -->
+<rect x="1100" y="402" width="500" height="75" rx="6" fill="#4a4a4a" stroke="#777" stroke-width="1.5"/>
+<rect x="1100" y="402" width="500" height="5" rx="3" fill="#2979FF"/>
+<text x="1350" y="448" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">DATA COMPUTATION</text>
+
+<!-- ↓ arrow -->
+<line x1="1350" y1="482" x2="1350" y2="532" stroke="#fff" stroke-width="2.5" marker-end="url(#aw)"/>
+
+<!-- Box 4: DATA ANALYSIS & VISUALIZATION -->
+<rect x="1100" y="538" width="500" height="75" rx="6" fill="#4a4a4a" stroke="#777" stroke-width="1.5"/>
+<rect x="1100" y="538" width="500" height="5" rx="3" fill="#2979FF"/>
+<text x="1350" y="584" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">DATA ANALYSIS &amp; VISUALIZATION</text>
+
+<!-- ↓ arrow -->
+<line x1="1350" y1="618" x2="1350" y2="668" stroke="#fff" stroke-width="2.5" marker-end="url(#aw)"/>
+
+<!-- Box 5: RULE BASE -->
+<rect x="1100" y="674" width="500" height="75" rx="6" fill="#4a4a4a" stroke="#777" stroke-width="1.5"/>
+<rect x="1100" y="674" width="500" height="5" rx="3" fill="#2979FF"/>
+<text x="1350" y="720" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">RULE BASE</text>
+
+<!-- ↓ arrow -->
+<line x1="1350" y1="754" x2="1350" y2="804" stroke="#fff" stroke-width="2.5" marker-end="url(#aw)"/>
+
+<!-- Box 6: INFORMATION REPORTS -->
+<rect x="1100" y="810" width="500" height="75" rx="6" fill="#4a4a4a" stroke="#777" stroke-width="1.5"/>
+<rect x="1100" y="810" width="500" height="5" rx="3" fill="#2979FF"/>
+<text x="1350" y="856" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">INFORMATION REPORTS</text>
+
+<!-- Orange arrow: INFORMATION REPORTS → back left to OUTPUT -->
+<path d="M1095 848 C900 848 700 920 600 870 C540 840 540 610 535 605" fill="none" stroke="#FF9800" stroke-width="3" marker-end="url(#ao)"/>
+
+<!-- Label annotations -->
+<text x="295" y="365" text-anchor="middle" font-size="11" fill="#aaa">Login Credentials, Product Data,</text>
+<text x="295" y="380" text-anchor="middle" font-size="11" fill="#aaa">Sale Items, Orders</text>
+<text x="295" y="530" text-anchor="middle" font-size="11" fill="#aaa">Reports, Receipts,</text>
+<text x="295" y="545" text-anchor="middle" font-size="11" fill="#aaa">Notifications, QR Codes</text>
+
+<!-- Right panel title -->
+<text x="1350" y="115" text-anchor="middle" font-size="13" fill="#aaa" font-weight="600" letter-spacing="1">PROCESSING PIPELINE</text>
+
+<!-- Middle area labels -->
+<text x="710" y="110" text-anchor="middle" font-size="11" fill="#888">Auth · CSRF · RBAC</text>
+<text x="710" y="320" text-anchor="middle" font-size="11" fill="#888">PDO Connection</text>
+
+</svg>
+</body>
+</html>

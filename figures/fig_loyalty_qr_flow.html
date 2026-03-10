@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Figure 8 - Loyalty QR Flow</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#fff;font-family:'Segoe UI',Arial,sans-serif}
+body{display:flex;justify-content:center;align-items:center}
+.fig{width:96vw;height:94vh;border:1.5px solid #bbb;padding:8px 14px;display:flex;flex-direction:column;background:#fff}
+h2{text-align:center;font-size:13px;font-weight:700;color:#1a202c;margin-bottom:1px}
+.cap{text-align:center;font-size:10px;color:#666;font-style:italic;margin-bottom:4px}
+.wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wrap svg{max-width:100%!important;max-height:100%!important}
+</style>
+<script>
+mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{
+primaryColor:'#f0f4f8',primaryTextColor:'#1a202c',primaryBorderColor:'#a0aec0',
+lineColor:'#718096',fontFamily:'Segoe UI,sans-serif',fontSize:'11px',
+clusterBkg:'#f7fafc',clusterBorder:'#cbd5e0'
+},flowchart:{htmlLabels:true,curve:'basis',nodeSpacing:24,rankSpacing:30,padding:6}});
+</script>
+</head>
+<body>
+<div class="fig">
+<h2>Loyalty QR Reward Flow</h2>
+<p class="cap">Figure 8. Loyalty QR flow showing registration, scanning, points calculation, and reward redemption</p>
+<div class="wrap">
+<pre class="mermaid">
+flowchart TD
+    subgraph REG ["1. Registration"]
+        R1(["Customer makes purchase"]) --> R2{"Member<br/>exists?"}
+        R2 -->|No| R3["Auto-create from<br/>email / user_id"]
+        R2 -->|Yes| R4["Load existing member"]
+    end
+
+    subgraph GEN ["2. QR Generation"]
+        G1["POS completes sale"] --> G2["Generate QR code<br/><i>RWD-{hex}-{ts}</i>"]
+        G2 --> G3["Points = sale / 500 x 25"]
+        G3 --> G4["Store in reward_qr_codes<br/><i>Expires: 30 days</i>"]
+    end
+
+    R3 --> G1
+    R4 --> G1
+
+    subgraph SCAN ["3. QR Scanning"]
+        S1{"Who scans?"}
+        S2["Customer self-scan<br/>on Loyalty page"]
+        S3["Staff scans at POS<br/>for customer"]
+    end
+
+    G4 --> S1
+    S1 -->|Customer| S2
+    S1 -->|Staff| S3
+
+    subgraph VAL ["4. Validation &amp; Award"]
+        V1{"Valid code?<br/><i>exists, unused, not expired</i>"}
+        V2["Rejected"]
+        V3["Add points to<br/>loyalty_members"]
+        V4["Log: QR_SCAN<br/>in points_log"]
+    end
+
+    S2 --> V1
+    S3 --> V1
+    V1 -->|Invalid| V2
+    V1 -->|Valid| V3 --> V4
+
+    subgraph RED ["5. Reward Redemption"]
+        D1["Customer places<br/>online order"] --> D2["View points balance"]
+        D2 --> D3["Apply as discount<br/><i>1 point = 1 peso</i>"]
+        D3 --> D4["Deduct points"]
+        D4 --> D5["Log: REDEEM<br/>in points_log"]
+    end
+
+    V4 --> D1
+    D5 --> DONE(["Cycle Complete"])
+
+    classDef reg fill:#ebf8ff,stroke:#63b3ed,stroke-width:1px,color:#2b6cb0
+    classDef gen fill:#e9d8fd,stroke:#9f7aea,stroke-width:1px,color:#553c9a
+    classDef scan fill:#fefce8,stroke:#ecc94b,stroke-width:1px,color:#744210
+    classDef val fill:#fed7e2,stroke:#ed64a6,stroke-width:1px,color:#97266d
+    classDef red fill:#c6f6d5,stroke:#68d391,stroke-width:1px,color:#276749
+    classDef dec fill:#fefcbf,stroke:#d69e2e,stroke-width:1px,color:#744210
+    classDef fail fill:#fed7d7,stroke:#fc8181,stroke-width:1px,color:#9b2c2c
+    class R1,R3,R4 reg
+    class G1,G2,G3,G4 gen
+    class S2,S3 scan
+    class V3,V4 val
+    class D1,D2,D3,D4,D5,DONE red
+    class R2,S1,V1 dec
+    class V2 fail
+</pre>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Figure 7 - Online Ordering Flow</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#fff;font-family:'Segoe UI',Arial,sans-serif}
+body{display:flex;justify-content:center;align-items:center}
+.fig{width:96vw;height:94vh;border:1.5px solid #bbb;padding:8px 14px;display:flex;flex-direction:column;background:#fff}
+h2{text-align:center;font-size:13px;font-weight:700;color:#1a202c;margin-bottom:1px}
+.cap{text-align:center;font-size:10px;color:#666;font-style:italic;margin-bottom:4px}
+.wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wrap svg{max-width:100%!important;max-height:100%!important}
+</style>
+<script>
+mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{
+primaryColor:'#f0f4f8',primaryTextColor:'#1a202c',primaryBorderColor:'#a0aec0',
+lineColor:'#718096',fontFamily:'Segoe UI,sans-serif',fontSize:'11px',
+clusterBkg:'#f7fafc',clusterBorder:'#cbd5e0'
+},flowchart:{htmlLabels:true,curve:'basis',nodeSpacing:24,rankSpacing:28,padding:6}});
+</script>
+</head>
+<body>
+<div class="fig">
+<h2>Online Ordering Flow</h2>
+<p class="cap">Figure 7. Online ordering flow from catalog browse through payment processing and pickup</p>
+<div class="wrap">
+<pre class="mermaid">
+flowchart TD
+    C(["Customer"]) --> BROWSE["Browse Catalog<br/><i>Search &amp; filter</i>"]
+    BROWSE --> CART["Add to Cart"]
+    CART --> LGN{"Logged in?"}
+    LGN -->|No| LOGIN["Login / Register"] --> LGN
+    LGN -->|Yes| PAY{"Payment Method"}
+
+    PAY -->|"Cash on Pickup"| SUB["Submit Order"]
+    PAY -->|"GCash"| SUB
+    PAY -->|"Loyalty Points"| SUB
+
+    SUB --> V1["Verify prices from DB"]
+    V1 --> V2["Check stock availability"]
+    V2 --> V3["Expiry enforcement"]
+    V3 --> V4["Rx product check"]
+    V4 --> V5["Validate points balance"]
+
+    V5 --> TXN["Create order record<br/>Status: Pending"]
+    TXN --> ITEMS["Insert order items"]
+    ITEMS --> DEDUCT["Deduct stock immediately"]
+    DEDUCT --> NOTIF["Notify POS staff"]
+
+    NOTIF --> STAFF(["POS Staff"])
+    STAFF --> CONFIRM["Confirmed"]
+    CONFIRM --> PREP["Preparing"]
+    PREP --> READY["Ready for Pickup"]
+    READY --> PICKUP["Mark Picked Up"]
+
+    PICKUP --> SALE["Create sales record"]
+    SALE --> AWARD["Award loyalty points<br/><i>500 peso = 25 pts</i>"]
+    AWARD --> DONE(["Order Complete"])
+
+    STAFF -->|"Cancel"| CANCEL["Restore stock<br/>Cancel order"]
+
+    classDef cust fill:#ebf8ff,stroke:#63b3ed,stroke-width:1px,color:#2b6cb0
+    classDef dec fill:#fefcbf,stroke:#d69e2e,stroke-width:1px,color:#744210
+    classDef val fill:#fed7e2,stroke:#ed64a6,stroke-width:1px,color:#97266d
+    classDef txn fill:#e9d8fd,stroke:#9f7aea,stroke-width:1px,color:#553c9a
+    classDef staff fill:#fefce8,stroke:#ecc94b,stroke-width:1px,color:#744210
+    classDef ok fill:#c6f6d5,stroke:#68d391,stroke-width:1px,color:#276749
+    classDef cancel fill:#fed7d7,stroke:#fc8181,stroke-width:1px,color:#9b2c2c
+    class C,BROWSE,CART,LOGIN,SUB cust
+    class LGN,PAY dec
+    class V1,V2,V3,V4,V5 val
+    class TXN,ITEMS,DEDUCT,NOTIF txn
+    class STAFF,CONFIRM,PREP,READY,PICKUP staff
+    class SALE,AWARD,DONE ok
+    class CANCEL cancel
+</pre>
+</div>
+</div>
+</body>
+</html>

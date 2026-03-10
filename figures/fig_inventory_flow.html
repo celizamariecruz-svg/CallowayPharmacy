@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Figure 5 - Inventory Flow</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#fff;font-family:'Segoe UI',Arial,sans-serif}
+body{display:flex;justify-content:center;align-items:center}
+.fig{width:96vw;height:94vh;border:1.5px solid #bbb;padding:8px 14px;display:flex;flex-direction:column;background:#fff}
+h2{text-align:center;font-size:13px;font-weight:700;color:#1a202c;margin-bottom:1px}
+.cap{text-align:center;font-size:10px;color:#666;font-style:italic;margin-bottom:4px}
+.wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wrap svg{max-width:100%!important;max-height:100%!important}
+</style>
+<script>
+mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{
+primaryColor:'#f0f4f8',primaryTextColor:'#1a202c',primaryBorderColor:'#a0aec0',
+lineColor:'#718096',fontFamily:'Segoe UI,sans-serif',fontSize:'11px',
+clusterBkg:'#f7fafc',clusterBorder:'#cbd5e0'
+},flowchart:{htmlLabels:true,curve:'basis',nodeSpacing:24,rankSpacing:30,padding:6}});
+</script>
+</head>
+<body>
+<div class="fig">
+<h2>Inventory Management Flow</h2>
+<p class="cap">Figure 5. Inventory flow showing stock tracking, expiry monitoring, and alert generation</p>
+<div class="wrap">
+<pre class="mermaid">
+flowchart TD
+    S(["Staff Login"]) --> AUTH{"Permission<br/>Verified?"}
+    AUTH -->|No| X["Access Denied"]
+    AUTH -->|Yes| DASH["Inventory Dashboard"]
+
+    DASH --> ADD["Add Product"]
+    DASH --> MOV["Stock Movement"]
+    DASH --> EXP["Expiry Monitor"]
+    DASH --> LOW{"Stock &le;<br/>Reorder Level?"}
+
+    ADD --> INS["Insert product<br/>+ initial stock record"]
+    INS --> LOG1["Log activity"]
+
+    MOV --> TYP{"Type?"}
+    TYP -->|"IN"| SI["stock += qty"]
+    TYP -->|"OUT"| SO["stock -= qty"]
+    TYP -->|"ADJUST"| SA["stock = new val"]
+    SI --> LOCK["Row lock &rarr; Update<br/>products &amp; stock_movements"]
+    SO --> LOCK
+    SA --> LOCK
+    LOCK --> LOG2["Log activity"]
+
+    EXP --> SCAN["Scan expiry dates"]
+    SCAN --> CHK{"Status?"}
+    CHK -->|"Expired"| BLK["Block sale &amp;<br/>deactivate"]
+    CHK -->|"Soon<br/>0-30d"| WRN["Warn at POS"]
+    CHK -->|"Valid"| OK["Allow sale"]
+
+    BLK --> ALR["Generate Alert"]
+    WRN --> ALR
+    LOW -->|Yes| LSA["Low Stock Alert"]
+    LSA --> ALR
+
+    ALR --> NTF["Notification Tray"]
+    ALR --> CRON["Daily Cron"]
+    CRON --> EMAL["Email staff"]
+
+    classDef p fill:#ebf8ff,stroke:#63b3ed,stroke-width:1px,color:#2b6cb0
+    classDef d fill:#fefcbf,stroke:#d69e2e,stroke-width:1px,color:#744210
+    classDef a fill:#fed7d7,stroke:#fc8181,stroke-width:1px,color:#9b2c2c
+    classDef ok fill:#c6f6d5,stroke:#68d391,stroke-width:1px,color:#276749
+    classDef db fill:#e9d8fd,stroke:#9f7aea,stroke-width:1px,color:#553c9a
+    classDef bg fill:#fefce8,stroke:#ecc94b,stroke-width:1px,color:#744210
+    class S,DASH,ADD,MOV,EXP p
+    class AUTH,TYP,CHK,LOW d
+    class BLK,WRN,ALR,LSA,X a
+    class OK,LOG1,LOG2 ok
+    class INS,SI,SO,SA,LOCK,SCAN db
+    class NTF,CRON,EMAL bg
+</pre>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calloway Pharmacy System Design</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --muted: #475569;
+      --line: #0f766e;
+      --line-soft: #64748b;
+      --users: #fef9c3;
+      --users-border: #ca8a04;
+      --ui: #ecfeff;
+      --ui-border: #0891b2;
+      --app: #eff6ff;
+      --app-border: #2563eb;
+      --data: #dcfce7;
+      --data-border: #16a34a;
+      --ops: #eef2ff;
+      --ops-border: #6366f1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #0b1220;
+      font-family: "Segoe UI", Arial, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .canvas {
+      width: 1600px;
+      height: 1000px;
+      background: var(--bg);
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .title {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      right: 20px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #0f766e;
+      letter-spacing: .4px;
+    }
+
+    .subtitle {
+      position: absolute;
+      top: 54px;
+      left: 20px;
+      right: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .layer {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 14px 14px 10px;
+    }
+
+    .layer-label {
+      position: absolute;
+      top: -11px;
+      left: 14px;
+      background: var(--bg);
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .3px;
+      color: #0e7490;
+      text-transform: uppercase;
+    }
+
+    .row { display: flex; gap: 14px; }
+
+    .box {
+      border-radius: 10px;
+      border: 2px solid #94a3b8;
+      background: #fff;
+      padding: 10px 12px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+      flex: 1;
+      min-height: 96px;
+    }
+
+    .box h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: .2px;
+    }
+
+    .box p {
+      margin: 0;
+      font-size: 12px;
+      color: #334155;
+      line-height: 1.35;
+    }
+
+    .users { background: var(--users); border-color: var(--users-border); }
+    .ui { background: var(--ui); border-color: var(--ui-border); }
+    .app { background: var(--app); border-color: var(--app-border); }
+    .data { background: var(--data); border-color: var(--data-border); }
+    .ops { background: var(--ops); border-color: var(--ops-border); }
+
+    .legend {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 52px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .caption {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 16px;
+      text-align: center;
+      font-size: 12px;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    svg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .edge { stroke: var(--line); stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+    .edge-dash { stroke: var(--line-soft); stroke-width: 2; fill: none; stroke-dasharray: 6 5; marker-end: url(#arrowSoft); }
+    .flow-label { font-size: 11px; font-weight: 700; fill: #0f172a; }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="title">System Design Architecture</div>
+    <div class="subtitle">Calloway Pharmacy Management Platform</div>
+
+    <section class="layer" style="top: 90px; height: 118px;">
+      <div class="layer-label">Users</div>
+      <div class="row">
+        <div class="box users"><h3>Admin</h3><p>Manages users, permissions, settings, and backups.</p></div>
+        <div class="box users"><h3>Staff</h3><p>Performs inventory, medicine lookup, and operations.</p></div>
+        <div class="box users"><h3>Cashier</h3><p>Handles POS transactions and order fulfillment.</p></div>
+        <div class="box users"><h3>Customer</h3><p>Places online orders and tracks order status.</p></div>
+      </div>
+    </section>
+
+    <section class="layer" style="top: 230px; height: 136px;">
+      <div class="layer-label">Presentation Layer</div>
+      <div class="row">
+        <div class="box ui"><h3>Admin Dashboard UI</h3><p>Dashboard, reports, system configuration, monitoring pages.</p></div>
+        <div class="box ui"><h3>Staff and POS UI</h3><p>Inventory management, POS, medicine-locator, notifications.</p></div>
+        <div class="box ui"><h3>Customer Web Portal</h3><p>Online ordering, order tracking, account pages.</p></div>
+      </div>
+    </section>
+
+    <section class="layer" style="top: 388px; height: 242px;">
+      <div class="layer-label">Application Layer (PHP)</div>
+      <div class="row" style="margin-bottom: 12px;">
+        <div class="box app"><h3>Routing and API Endpoints</h3><p>PHP pages and JSON APIs receive requests and return responses.</p></div>
+        <div class="box app"><h3>Authentication and Authorization</h3><p>Session management, role checks, permission checks, CSRF protection.</p></div>
+      </div>
+      <div class="row">
+        <div class="box app"><h3>Business Modules</h3><p>Orders, inventory, medicine locator, reports, settings, online ordering.</p></div>
+        <div class="box app"><h3>Notification and Activity Logging</h3><p>POS notifications, operational alerts, and user activity logs.</p></div>
+      </div>
+    </section>
+
+    <section class="layer" style="top: 652px; height: 180px;">
+      <div class="layer-label">Data and Operations Layer</div>
+      <div class="row">
+        <div class="box data"><h3>MySQL or MariaDB Database</h3><p>Users, roles, products, sales, online orders, notifications, logs, settings.</p></div>
+        <div class="box data"><h3>File Storage</h3><p>Backup files, export files, and system log files.</p></div>
+        <div class="box ops"><h3>Background Jobs and External Service</h3><p>Scheduled jobs for backup and email, plus SMTP email delivery.</p></div>
+      </div>
+    </section>
+
+    <svg viewBox="0 0 1600 1000" aria-hidden="true">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#0f766e"></path>
+        </marker>
+        <marker id="arrowSoft" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"></path>
+        </marker>
+      </defs>
+
+      <line class="edge" x1="800" y1="208" x2="800" y2="230" />
+      <line class="edge" x1="800" y1="366" x2="800" y2="388" />
+      <line class="edge" x1="800" y1="630" x2="800" y2="652" />
+
+      <line class="edge" x1="540" y1="520" x2="790" y2="520" />
+      <line class="edge" x1="1040" y1="520" x2="1270" y2="520" />
+
+      <line class="edge-dash" x1="1310" y1="760" x2="1110" y2="590" />
+      <text class="flow-label" x="862" y="224">User Request Flow</text>
+      <text class="flow-label" x="843" y="381">UI to Backend Processing</text>
+      <text class="flow-label" x="841" y="646">Application to Persistence</text>
+      <text class="flow-label" x="1118" y="620">Scheduled / Async Tasks</text>
+    </svg>
+
+    <div class="legend">
+      <span>Solid arrows: primary runtime flow</span>
+      <span>Dashed arrows: scheduled/asynchronous operations</span>
+      <span>Diagram reflects current PHP backend + MySQL/MariaDB + cron/email architecture</span>
+    </div>
+
+    <div class="caption">Figure: Simplified and complete system architecture of the Calloway Pharmacy platform for research documentation.</div>
+  </div>
+</body>
+</html>

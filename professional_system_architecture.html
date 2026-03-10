@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calloway Pharmacy - System Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#f8f9fa',
+                primaryTextColor: '#2c3e50',
+                primaryBorderColor: '#bdc3c7',
+                lineColor: '#7f8c8d',
+                secondaryColor: '#e8f4f8',
+                tertiaryColor: '#fff',
+                fontFamily: 'Segoe UI, Arial, sans-serif',
+                fontSize: '14px',
+                clusterBkg: '#fdfdfd',
+                clusterBorder: '#dcdde1'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis',
+                nodeSpacing: 50,
+                rankSpacing: 60
+            }
+        });
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Calloway Pharmacy System Architecture</h1>
+    <p class="subtitle">High-Level N-Tier Architectural Design</p>
+
+    <div class="mermaid">
+    flowchart TB
+        %% CLient Layer
+        subgraph CL [Client Interface Layer]
+            direction LR
+            C1(["💻 Admin / Manager<br/>(Web Browser)"])
+            C2(["🖥️ Pharmacist / Cashier<br/>(POS Interface)"])
+            C3(["📱 Customer<br/>(Mobile / Web)"])
+        end
+
+        %% Server / Network Layer
+        subgraph N [Web Server / Routing Layer]
+            WS["🌐 Web Server (Apache)"]
+            RT["🔀 Router / Front Controller"]
+            WS --> RT
+        end
+
+        %% Application Layer
+        subgraph AL [Application Layer - Core PHP Engine]
+            direction TB
+            subgraph SEC [Security & Auth]
+                AUTH["Identity & Access<br/>(Session / JWT)"]
+                CSRF["Security Logs & CSRF"]
+            end
+            
+            subgraph BLL [Business Logic Modules]
+                POS["🛒 Point of Sale (POS)"]
+                INV["📦 Inventory Engine"]
+                RX["💊 Prescription (RX) Logic"]
+                ORD["🛍️ Online Orders"]
+                REP["📊 Reporting & Analytics"]
+            end
+
+            subgraph ASYNC [Background Services]
+                CRON["⏱️ Task Scheduler (Cron)"]
+                MAIL["📧 Email Notification Service"]
+                EXP["⚠️ Medicine Expiry Monitor"]
+            end
+        end
+
+        %% Data Layer
+        subgraph DL [Data & Storage Layer]
+            direction LR
+            DB[("🗄️ Relational Database<br/>(MySQL / MariaDB)")]
+            FS[("📁 File System<br/>(Backups & Receipts)")]
+        end
+
+        %% Connections
+        CL -->|HTTPS Request| WS
+        RT -->|Route Dispatch| SEC
+        SEC --> BLL
+        BLL -.->|Triggers| ASYNC
+        
+        BLL -->|PDO / SQL| DB
+        ASYNC -->|Scheduled Queries| DB
+        BLL -->|File I/O| FS
+        CRON -->|Log Write| FS
+
+        %% Custom CSS Classes for styling
+        classDef client fill:#eef2f5,stroke:#b2bec3,stroke-width:2px,color:#2d3436,rx:10,ry:10;
+        classDef server fill:#dfe6e9,stroke:#636e72,stroke-width:2px,color:#2d3436;
+        classDef application fill:#e3f2fd,stroke:#74b9ff,stroke-width:2px,color:#0984e3;
+        classDef module fill:#ffffff,stroke:#0984e3,stroke-width:1px,color:#2d3436;
+        classDef secure fill:#ffeaa7,stroke:#fdcb6e,stroke-width:1px,color:#2d3436;
+        classDef async fill:#f8efba,stroke:#f8c291,stroke-width:1px,color:#2d3436;
+        classDef data fill:#dff9fb,stroke:#22a6b3,stroke-width:2px,color:#130f40;
+
+        class C1,C2,C3 client;
+        class WS,RT server;
+        class AL application;
+        class POS,INV,RX,ORD,REP module;
+        class AUTH,CSRF secure;
+        class CRON,MAIL,EXP async;
+        class DB,FS data;
+
+        %% Link Styles
+        linkStyle default stroke:#636e72,stroke-width:2px;
+    </div>
+</div>
+
+</body>
+</html>

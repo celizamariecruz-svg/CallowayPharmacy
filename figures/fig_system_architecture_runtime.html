@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Figure X - System Architecture (Runtime/Deployment)</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #0f766e;
+      --edge: #1d4ed8;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+    }
+
+    .page {
+      width: 1920px;
+      height: 1080px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 2px solid #1e293b;
+      padding: 28px 32px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 34px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      color: #0f766e;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      margin: 0;
+      text-align: center;
+      font-size: 16px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .diagram-wrap {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .mermaid {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .caption {
+      margin: 0;
+      text-align: center;
+      font-size: 14px;
+      color: #334155;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .note {
+      margin: 0;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    @media print {
+      html, body {
+        background: #fff;
+      }
+      .page {
+        border: none;
+        margin: 0;
+      }
+    }
+  </style>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      securityLevel: "loose",
+      themeVariables: {
+        background: "#ffffff",
+        primaryColor: "#e0f2fe",
+        primaryTextColor: "#0f172a",
+        primaryBorderColor: "#1d4ed8",
+        lineColor: "#0f766e",
+        secondaryColor: "#ecfeff",
+        tertiaryColor: "#eff6ff",
+        clusterBkg: "#f8fafc",
+        clusterBorder: "#64748b",
+        fontFamily: "Segoe UI, Arial, sans-serif",
+        fontSize: "18px"
+      },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: "basis",
+        nodeSpacing: 60,
+        rankSpacing: 80,
+        padding: 18
+      }
+    });
+  </script>
+</head>
+<body>
+  <div class="page">
+    <h1>System Architecture</h1>
+    <p class="subtitle">Calloway Pharmacy IMS - Deployment and Runtime View</p>
+
+    <div class="diagram-wrap">
+        <pre class="mermaid">
+    flowchart LR
+      subgraph Z1[Client Zone]
+        U1[Admin and Staff Browser]
+        U2[Customer Browser]
+      end
+
+      subgraph AZ[Microsoft Azure Cloud]
+        subgraph Z2[Azure App Service Zone]
+          W1[App Service Front End\nHTTPS Endpoint]
+          A1[Calloway PHP Application\nPages + APIs + Auth + Services]
+          J1[Scheduled Automation\nWebJobs or Azure Functions\nbackup + email tasks]
+        end
+
+        subgraph Z3[Azure Data Zone]
+          D1[(Azure Database for MySQL)]
+          D2[(Azure Storage\ncache logs backups)]
+        end
+      end
+
+      subgraph Z4[External Service Zone]
+        E1[SMTP Provider]
+      end
+
+      U1 -->|HTTPS 443| W1
+      U2 -->|HTTPS 443| W1
+      W1 --> A1
+
+      A1 -->|SQL over TCP 3306| D1
+      A1 -->|Read Write| D2
+      A1 -->|SMTP 465 or 587| E1
+
+      J1 -->|Scheduled execution| A1
+      J1 -->|Database backup read| D1
+      J1 -->|Backup and logs write| D2
+        </pre>
+    </div>
+
+    <p class="caption">
+      Figure X. System Architecture of the Calloway Pharmacy IMS showing Azure deployment/runtime nodes,
+      zone boundaries, communication interfaces, and operational dependencies.
+    </p>
+    <p class="note">
+      Note: XAMPP is used for local development only; this diagram represents production runtime on Microsoft Azure.
+    </p>
+  </div>
+</body>
+</html>
