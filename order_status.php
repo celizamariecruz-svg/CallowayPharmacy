@@ -307,6 +307,111 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         color: var(--text-color);
     }
 
+    /* Detail Modal */
+    .os-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .os-modal-overlay.active { display: flex; }
+    .os-modal {
+        background: var(--card-bg, white);
+        border-radius: 16px;
+        max-width: 550px;
+        width: 100%;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 1.5rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        position: relative;
+    }
+    .os-modal-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: var(--hover-bg);
+        color: var(--text-light);
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .os-modal h2 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--text-color);
+        margin: 0 0 1rem;
+    }
+    .os-detail-section {
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--table-border);
+    }
+    .os-detail-section:last-child { border-bottom: none; }
+    .os-detail-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-light, #94a3b8);
+        margin-bottom: 0.3rem;
+    }
+    .os-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0;
+        font-size: 0.88rem;
+        color: var(--text-color);
+    }
+    .os-detail-row span:first-child { color: var(--text-light); }
+    .os-detail-row span:last-child { font-weight: 600; }
+    .os-points-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+    .os-points-earned { background: #dcfce7; color: #166534; }
+    .os-points-redeemed { background: #fef3c7; color: #92400e; }
+    .os-detail-items {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .os-detail-items li {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.35rem 0;
+        font-size: 0.85rem;
+        color: var(--text-color);
+        border-bottom: 1px dashed var(--table-border);
+    }
+    .os-detail-items li:last-child { border-bottom: none; }
+    .os-admin-badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: #ede9fe;
+        color: #6d28d9;
+        margin-left: 0.5rem;
+    }
+
     @media (max-width: 600px) {
         .os-container { padding: 1rem 0.75rem 2rem; }
         .os-orders-list { grid-template-columns: 1fr; }
@@ -315,6 +420,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         .os-tracker::before { left: 18px; right: 18px; }
         .os-tracker-dot { width: 24px; height: 24px; font-size: 0.55rem; }
         .os-tracker-label { font-size: 0.55rem; max-width: 45px; }
+        .os-modal { padding: 1rem; }
     }
 
 
@@ -339,8 +445,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         <button class="os-filter-btn active" data-filter="all">All Orders</button>
         <button class="os-filter-btn" data-filter="active">Active</button>
         <button class="os-filter-btn" data-filter="pending">Pending</button>
-        <button class="os-filter-btn" data-filter="confirmed">Confirmed</button>
-        <button class="os-filter-btn" data-filter="preparing">Preparing</button>
+        <button class="os-filter-btn" data-filter="confirmed_preparing">Confirmed &amp; Preparing</button>
         <button class="os-filter-btn" data-filter="ready">Ready</button>
         <button class="os-filter-btn" data-filter="completed">Completed</button>
         <button class="os-filter-btn" data-filter="cancelled">Cancelled</button>
@@ -355,11 +460,20 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
     </div>
   </main>
 
+  <!-- Detail Modal -->
+  <div class="os-modal-overlay" id="osDetailModal" onclick="if(event.target===this)closeDetailModal()">
+    <div class="os-modal">
+        <button class="os-modal-close" onclick="closeDetailModal()">&times;</button>
+        <div id="osDetailContent"></div>
+    </div>
+  </div>
+
   <?php include 'pills-background.php'; ?>
   <script src="theme.js"></script>
   <script>
     let allOrders = [];
     let currentFilter = 'all';
+    let isStaff = false;
 
     // Escape HTML
     function escapeHtml(str) {
@@ -381,9 +495,11 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
             }
 
             allOrders = data.orders || [];
+            isStaff = data.is_staff || false;
 
             if (allOrders.length === 0) {
-                showEmpty('No orders yet', 'Your orders will appear here once you place one', 'fa-shopping-bag', true);
+                const emptyMsg = isStaff ? 'No online orders have been placed yet.' : 'Your orders will appear here once you place one';
+                showEmpty('No orders yet', emptyMsg, 'fa-shopping-bag', !isStaff);
                 return;
             }
 
@@ -432,15 +548,18 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
         if (currentFilter === 'active') {
             filtered = allOrders.filter(o => ['pending', 'confirmed', 'preparing', 'ready'].includes((o.status || '').toLowerCase()));
+        } else if (currentFilter === 'confirmed_preparing') {
+            filtered = allOrders.filter(o => ['confirmed', 'preparing'].includes((o.status || '').toLowerCase()));
         } else if (currentFilter !== 'all') {
             filtered = allOrders.filter(o => (o.status || '').toLowerCase() === currentFilter);
         }
 
         if (filtered.length === 0) {
+            const emptyLabel = currentFilter === 'all' ? 'orders' : `${currentFilter} orders`;
             list.innerHTML = `
                 <div class="os-empty">
                     <i class="fas fa-filter"></i>
-                    <p>No ${currentFilter} orders</p>
+                    <p>No ${emptyLabel} found</p>
                     <span>Try a different filter</span>
                 </div>`;
             return;
@@ -513,7 +632,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         const timeStr = orderDate ? orderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
 
         return `
-            <div class="os-order-card">
+            <div class="os-order-card" onclick="openDetailModal(${order.order_id})" style="cursor:pointer;">
                 <div class="os-order-header">
                     <span class="os-order-ref">${escapeHtml(order.order_ref)}</span>
                     <span class="os-status-badge ${statusClass}">${escapeHtml(order.status)}</span>
@@ -524,8 +643,85 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
                     <span class="os-order-total">₱${parseFloat(order.total_amount).toFixed(2)}</span>
                     <span class="os-order-date"><i class="far fa-calendar-alt"></i> ${dateStr} ${timeStr}</span>
                 </div>
+                ${order.points_earned > 0 ? `<div style="margin-top:0.4rem;"><span class="os-points-badge os-points-earned"><i class="fas fa-star"></i> +${parseFloat(order.points_earned).toFixed(0)} pts earned</span></div>` : ''}
+                ${order.points_redeemed > 0 ? `<div style="margin-top:0.3rem;"><span class="os-points-badge os-points-redeemed"><i class="fas fa-gift"></i> ${parseFloat(order.points_redeemed).toFixed(0)} pts used</span></div>` : ''}
             </div>`;
     }
+
+    // Detail Modal
+    function openDetailModal(orderId) {
+        const order = allOrders.find(o => o.order_id == orderId);
+        if (!order) return;
+
+        const statusClass = (order.status || 'pending').toLowerCase();
+        const orderDate = order.created_at ? new Date(order.created_at) : null;
+        const dateStr = orderDate ? orderDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A';
+        const timeStr = orderDate ? orderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+        const updatedDate = order.updated_at ? new Date(order.updated_at) : null;
+        const updatedStr = updatedDate ? updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + updatedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+
+        let html = `<h2><i class="fas fa-receipt" style="color:var(--primary-color);margin-right:0.4rem;"></i> ${escapeHtml(order.order_ref)}<span class="os-status-badge ${statusClass}" style="margin-left:0.5rem;font-size:0.7rem;">${escapeHtml(order.status)}</span></h2>`;
+
+        // Order info
+        html += `<div class="os-detail-section">
+            <div class="os-detail-label"><i class="fas fa-info-circle"></i> Order Information</div>
+            <div class="os-detail-row"><span>Order Date</span><span>${dateStr}</span></div>
+            <div class="os-detail-row"><span>Order Time</span><span>${timeStr}</span></div>
+            <div class="os-detail-row"><span>Last Updated</span><span>${updatedStr}</span></div>
+            <div class="os-detail-row"><span>Payment Method</span><span>${escapeHtml(order.payment_method || 'Cash on Pickup')}</span></div>
+        </div>`;
+
+        // Admin extra details
+        if (isStaff) {
+            html += `<div class="os-detail-section">
+                <div class="os-detail-label"><i class="fas fa-user-shield"></i> Admin Details <span class="os-admin-badge">STAFF VIEW</span></div>
+                <div class="os-detail-row"><span>Customer Name</span><span>${escapeHtml(order.customer_full_name || order.customer_name || 'N/A')}</span></div>
+                <div class="os-detail-row"><span>Customer Email</span><span>${escapeHtml(order.customer_email || 'N/A')}</span></div>
+                <div class="os-detail-row"><span>Customer ID</span><span>#${order.customer_id || 'N/A'}</span></div>
+                <div class="os-detail-row"><span>Order ID</span><span>#${order.order_id}</span></div>
+                ${order.notes ? `<div class="os-detail-row"><span>Notes</span><span>${escapeHtml(order.notes)}</span></div>` : ''}
+            </div>`;
+        }
+
+        // Items section
+        html += `<div class="os-detail-section">
+            <div class="os-detail-label"><i class="fas fa-pills"></i> Items (${order.items ? order.items.length : 0})</div>
+            <ul class="os-detail-items">`;
+        if (order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+                html += `<li><span>${escapeHtml(item.product_name)} × ${item.quantity}</span><span>₱${parseFloat(item.subtotal).toFixed(2)}</span></li>`;
+            });
+        } else {
+            html += `<li><span>${order.item_count || 0} item(s)</span><span></span></li>`;
+        }
+        html += `</ul></div>`;
+
+        // Points & Totals
+        html += `<div class="os-detail-section">
+            <div class="os-detail-label"><i class="fas fa-calculator"></i> Summary</div>
+            <div class="os-detail-row"><span>Total Amount</span><span style="font-size:1.1rem;font-weight:800;">₱${parseFloat(order.total_amount).toFixed(2)}</span></div>`;
+        
+        if (order.points_redeemed > 0) {
+            html += `<div class="os-detail-row"><span>Points Redeemed</span><span class="os-points-badge os-points-redeemed"><i class="fas fa-gift"></i> ${parseFloat(order.points_redeemed).toFixed(0)} points (₱${parseFloat(order.points_redeemed).toFixed(2)} discount)</span></div>`;
+        }
+        if (order.points_earned > 0) {
+            html += `<div class="os-detail-row"><span>Points Earned</span><span class="os-points-badge os-points-earned"><i class="fas fa-star"></i> +${parseFloat(order.points_earned).toFixed(0)} points</span></div>`;
+        }
+        if (statusClass === 'completed' && order.points_earned == 0 && !isStaff) {
+            html += `<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.3rem;"><i class="fas fa-info-circle"></i> Points are awarded upon order pickup verification.</div>`;
+        }
+        html += `</div>`;
+
+        document.getElementById('osDetailContent').innerHTML = html;
+        document.getElementById('osDetailModal').classList.add('active');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('osDetailModal').classList.remove('active');
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetailModal(); });
 
     // Filter buttons
     document.querySelectorAll('.os-filter-btn').forEach(btn => {

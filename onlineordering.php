@@ -236,7 +236,7 @@ if ($prodResult) {
             transition: background-color 0.3s, color 0.3s;
             min-height: 100vh;
             margin: 0;
-            padding: 60px 0 0;
+            padding: 0;
         }
 
         /* ─── Topbar Adjustments ─── */
@@ -256,6 +256,10 @@ if ($prodResult) {
 
         /* Mobile: compact topbar search */
         @media (max-width: 768px) {
+            body {
+                padding: 60px 0 0;
+            }
+
             .topbar .browse-toolbar-row {
                 max-width: 100%;
                 gap: 0.5rem;
@@ -3033,7 +3037,7 @@ if ($prodResult) {
         const topbarCenter = document.getElementById('topbarCenter');
         const topbarExtras = document.getElementById('topbarRightExtras');
         
-        if (topbarCenter && topbarExtras) {
+        if (topbarExtras) {
             // Wishlist button
             const wlBtn = document.createElement('button');
             wlBtn.className = 'topbar-wishlist-btn';
@@ -3056,10 +3060,12 @@ if ($prodResult) {
             ordersBtn.innerHTML = '<i class="fas fa-clipboard-list"></i> <span>My Orders</span>';
             topbarExtras.appendChild(ordersBtn);
             <?php endif; ?>
+        }
 
-            // Move Search Bar to Center
+        // Move Search Bar to Center when the slot exists
+        if (topbarCenter) {
             const toolbarRow = document.querySelector('.browse-toolbar-row');
-            if (toolbarRow) {
+            if (toolbarRow && topbarCenter) {
                 topbarCenter.appendChild(toolbarRow);
                 // Also hide the separate browse-toolbar container to avoid layout issues
                 const toolbarContainer = document.querySelector('.browse-toolbar');
@@ -3398,7 +3404,7 @@ if ($prodResult) {
                         <div class="payment-card">
                             <i class="fas fa-gift" style="color:#7c3aed; font-size:1.5rem;"></i>
                             <span class="payment-label">Loyalty Points</span>
-                            <span class="payment-desc">Use points for full payment</span>
+                            <span class="payment-desc">Use points for full or partial payment</span>
                         </div>
                     </label>
                     <?php endif; ?>
@@ -3494,16 +3500,16 @@ if ($prodResult) {
                             <span id="receiptTotal"></span>
                         </div>
 
-                        <div id="receiptQrSection" style="margin-top: 1.5rem; text-align: center;">
-                            <p style="font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.5rem;">Scan for Pickup</p>
-                            <div id="receiptQrCode" style="display: inline-block; padding: 10px; background: white; border-radius: 8px;"></div>
-                        </div>
                     </div>
 
-                    <button class="checkout-done-btn" onclick="closeCheckoutModal(); location.reload();" style="width: 100%; padding: 0.9rem; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer;">
-                        <i class="fas fa-thumbs-up"></i> Got it!
-                    </button>
-                    <!-- Print receipt trigger could be added here later -->
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                        <button class="checkout-done-btn" onclick="downloadOrderReceipt()" style="flex:1; min-width:180px; padding: 0.9rem; background: #0f172a; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer;">
+                            <i class="fas fa-download"></i> Download Receipt
+                        </button>
+                        <button class="checkout-done-btn" onclick="closeCheckoutModal(); location.reload();" style="flex:1; min-width:180px; padding: 0.9rem; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer;">
+                            <i class="fas fa-thumbs-up"></i> Got it!
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4630,8 +4636,10 @@ if ($prodResult) {
 
         function updateCartUI() {
             const total = cart.reduce((s, i) => s + i.quantity, 0);
-            document.getElementById('cartCount').textContent = total;
-            document.getElementById('headerCartCount').textContent = total;
+            const cartCountEl = document.getElementById('cartCount');
+            const headerCartCountEl = document.getElementById('headerCartCount');
+            if (cartCountEl) cartCountEl.textContent = total;
+            if (headerCartCountEl) headerCartCountEl.textContent = total;
             // floating cart hidden — badge is in topbar now
         }
 
@@ -4820,15 +4828,15 @@ if ($prodResult) {
             const paymentEl = document.querySelector('input[name="paymentMethod"]:checked');
             const paymentMethod = paymentEl ? paymentEl.value : 'Cash on Pickup';
 
-            if (paymentMethod === 'Loyalty Points') {
-                const requiredPoints = roundMoney(orderSubtotal);
-                const usablePoints = roundMoney(Math.min(pointsToRedeem, userLoyaltyPoints));
-                if (usablePoints + 0.0001 < requiredPoints) {
-                    showToast(`Insufficient points for full payment. Need ${formatPoints(requiredPoints)} points.`, 'info');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
-                    return;
+            if (paymentMethod === 'Loyalty Points' && pointsToRedeem <= 0) {
+                if (userLoyaltyPoints <= 0) {
+                    showToast('You have 0 loyalty points. Please use Cash on Pickup.', 'info');
+                } else {
+                    showToast('Please enter points to redeem for Loyalty Points payment.', 'info');
                 }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
+                return;
             }
 
             // Map cart items to ensure 'qty' property exists for the backend
@@ -4924,28 +4932,18 @@ if ($prodResult) {
                         </div>
                     `).join('');
 
-                    // Generate QR Code for Order Reference
-                    const qrContainer = document.getElementById('receiptQrCode');
-                    qrContainer.innerHTML = '';
-                    if (typeof QRCode !== 'undefined') {
-                        new QRCode(qrContainer, {
-                            text: orderRef,
-                            width: 128,
-                            height: 128,
-                            colorDark: "#000000",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.H
-                        });
-                    } else {
-                        // Fallback: use QR code image API
-                        const img = document.createElement('img');
-                        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=' + encodeURIComponent(orderRef);
-                        img.alt = 'Order QR Code';
-                        img.width = 128;
-                        img.height = 128;
-                        img.style.borderRadius = '4px';
-                        qrContainer.appendChild(img);
-                    }
+                    latestOrderReceipt = {
+                        orderRef: orderRef,
+                        date: document.getElementById('receiptDate').textContent,
+                        total: finalTotal,
+                        paymentMethod: paymentMethod,
+                        items: cart.map(item => ({
+                            name: item.name,
+                            quantity: item.quantity,
+                            price: item.price,
+                            subtotal: (item.price * item.quantity)
+                        }))
+                    };
 
                     // Clear cart
                     cart = [];
@@ -5010,6 +5008,7 @@ if ($prodResult) {
         let userLoyaltyPoints = 0;
         let pointsToRedeem = 0;
         let orderSubtotal = 0;
+        let latestOrderReceipt = null;
 
         function roundMoney(value) {
             return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
@@ -5028,9 +5027,21 @@ if ($prodResult) {
         function syncPointsWithPaymentMethod() {
             const selected = getSelectedPaymentMethod();
             const input = document.getElementById('pointsToRedeem');
+            const pointsError = document.getElementById('pointsError');
             if (!input) return;
 
             if (selected === 'Loyalty Points') {
+                if (userLoyaltyPoints <= 0) {
+                    pointsToRedeem = 0;
+                    input.value = '0.00';
+                    if (pointsError) {
+                        pointsError.textContent = 'You currently have 0 loyalty points. Please choose Cash on Pickup or earn points first.';
+                        pointsError.style.display = 'block';
+                        pointsError.style.color = '#ffcccb';
+                    }
+                    recalcCheckoutTotal();
+                    return;
+                }
                 const needed = roundMoney(orderSubtotal);
                 const maxUsable = roundMoney(Math.min(userLoyaltyPoints, needed));
                 input.value = maxUsable.toFixed(2);
@@ -5087,12 +5098,12 @@ if ($prodResult) {
                 pointsError.style.display = 'none';
             }
 
-            if (selectedMethod === 'Loyalty Points') {
-                const required = maxOrderPoints;
-                if (points < required) {
-                    const lacking = roundMoney(required - points);
-                    pointsError.textContent = `Insufficient points for full loyalty payment. Need ${formatPoints(lacking)} more points.`;
+            if (selectedMethod === 'Loyalty Points' && points > 0) {
+                const remaining = roundMoney(orderSubtotal - points);
+                if (remaining > 0) {
+                    pointsError.textContent = `Remaining ₱${remaining.toFixed(2)} will be paid as cash on pickup.`;
                     pointsError.style.display = 'block';
+                    pointsError.style.color = '#90EE90';
                 }
             }
 
@@ -5125,6 +5136,44 @@ if ($prodResult) {
             });
         });
         <?php endif; ?>
+
+        function downloadOrderReceipt() {
+            if (!latestOrderReceipt || !latestOrderReceipt.orderRef) {
+                showToast('No receipt data available to download yet.', 'info');
+                return;
+            }
+
+            const lines = [];
+            lines.push('CALLOWAY PHARMACY');
+            lines.push('Integrated Management System');
+            lines.push('----------------------------------------');
+            lines.push('Order Receipt');
+            lines.push('Order Ref: ' + latestOrderReceipt.orderRef);
+            lines.push('Date: ' + latestOrderReceipt.date);
+            lines.push('Payment: ' + latestOrderReceipt.paymentMethod);
+            lines.push('----------------------------------------');
+
+            latestOrderReceipt.items.forEach(item => {
+                lines.push(item.quantity + 'x ' + item.name + '  -  ₱' + item.subtotal.toFixed(2));
+            });
+
+            lines.push('----------------------------------------');
+            lines.push('Total Amount: ' + latestOrderReceipt.total);
+            lines.push('Status: Pending');
+            lines.push('');
+            lines.push('Thank you for ordering with Calloway Pharmacy.');
+
+            const content = lines.join('\n');
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            const objectUrl = URL.createObjectURL(blob);
+            link.href = objectUrl;
+            link.download = latestOrderReceipt.orderRef + '-receipt.txt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(objectUrl);
+        }
     </script>
 
     <!-- Reward QR Code Popup Modal -->

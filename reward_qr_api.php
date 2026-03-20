@@ -231,6 +231,13 @@ function generateRewardQR($conn) {
     
     if (isset($input['customer_user_id']) && intval($input['customer_user_id']) > 0) {
         $generatedForUser = intval($input['customer_user_id']);
+        if (!isUserEligibleForLoyalty($conn, $generatedForUser)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Admin/staff accounts are not eligible for loyalty points.'
+            ]);
+            return;
+        }
         // Look up customer name if not provided
         if ($customerName === 'Customer' || empty($customerName)) {
             $stmt = $conn->prepare("SELECT full_name FROM users WHERE user_id = ?");
@@ -294,6 +301,11 @@ function redeemRewardQR($conn) {
     $userId = intval($_SESSION['user_id']);
     $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Customer';
     $userEmail = '';
+
+    if (!isUserEligibleForLoyalty($conn, $userId)) {
+        echo json_encode(['success' => false, 'message' => 'Admin/staff accounts are not eligible for loyalty points.']);
+        return;
+    }
     
     // Get user email
     $stmt = $conn->prepare("SELECT email, full_name FROM users WHERE user_id = ?");
@@ -399,6 +411,16 @@ function getMyPoints($conn) {
     $userId = intval($_SESSION['user_id']);
     $userName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Customer';
     $userEmail = '';
+
+    if (!isUserEligibleForLoyalty($conn, $userId)) {
+        echo json_encode([
+            'success' => true,
+            'points' => 0,
+            'member' => null,
+            'message' => 'Admin/staff accounts are not eligible for loyalty points.'
+        ]);
+        return;
+    }
     
     $stmt = $conn->prepare("SELECT email FROM users WHERE user_id = ?");
     $stmt->bind_param("i", $userId);
@@ -451,6 +473,15 @@ function getMyQRHistory($conn) {
     }
     
     $userId = intval($_SESSION['user_id']);
+
+    if (!isUserEligibleForLoyalty($conn, $userId)) {
+        echo json_encode([
+            'success' => true,
+            'qr_codes' => [],
+            'points_log' => []
+        ]);
+        return;
+    }
     
     // Get QR codes generated for this user OR redeemed by this user
     $stmt = $conn->prepare("SELECT * FROM reward_qr_codes WHERE generated_for_user = ? OR redeemed_by_user = ? ORDER BY created_at DESC LIMIT 50");
@@ -625,7 +656,7 @@ function staffRedeemForCustomer($conn) {
     }
 
     // Validate member exists
-    $stmt = $conn->prepare("SELECT member_id, name, points FROM loyalty_members WHERE member_id = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT member_id, name, points, user_id FROM loyalty_members WHERE member_id = ? LIMIT 1");
     $stmt->bind_param("i", $memberId);
     $stmt->execute();
     $member = $stmt->get_result()->fetch_assoc();
@@ -633,6 +664,10 @@ function staffRedeemForCustomer($conn) {
 
     if (!$member) {
         echo json_encode(['success' => false, 'message' => 'Loyalty member not found']);
+        return;
+    }
+    if (!empty($member['user_id']) && !isUserEligibleForLoyalty($conn, intval($member['user_id']))) {
+        echo json_encode(['success' => false, 'message' => 'Admin/staff accounts are not eligible for loyalty points']);
         return;
     }
 
@@ -688,6 +723,27 @@ function staffRedeemForCustomer($conn) {
         error_log('Staff QR redemption error: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Failed to redeem QR code']);
     }
+}
+
+/**
+ * Helper: loyalty eligibility (customers only; admin/staff blocked)
+ */
+function isUserEligibleForLoyalty($conn, $userId) {
+    $stmt = $conn->prepare("
+        SELECT LOWER(COALESCE(r.role_name, '')) AS role_name
+        FROM users u
+        LEFT JOIN roles r ON u.role_id = r.role_id
+        WHERE u.user_id = ?
+        LIMIT 1
+    ");
+    if (!$stmt) return false;
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$row) return false;
+    return !in_array($row['role_name'], ['admin', 'cashier', 'inventory_manager', 'staff'], true);
 }
 
 /**

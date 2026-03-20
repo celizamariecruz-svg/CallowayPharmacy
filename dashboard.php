@@ -215,6 +215,8 @@ $salesTrend = getSalesTrend($conn);
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
     <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="award-winning-animations.css">
+    <link rel="stylesheet" href="premium-components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .dashboard-hero {
@@ -574,10 +576,18 @@ $salesTrend = getSalesTrend($conn);
 
             <!-- Right Column: Top Products & Month Stats -->
             <div style="display: flex; flex-direction: column; gap: 2rem;">
-                <!-- Month Sales Summary -->
-                <div class="glass-panel"
-                    style="padding: 1.5rem; border-radius: 16px; background: var(--primary-color); color: white;">
-                    <h3 style="margin: 0 0 1rem; opacity: 0.9; font-weight: 500;">This Month's Revenue</h3>
+                <!-- Month Sales Summary - Premium Hero Card -->
+                <div class="glass-panel stat-card-hero"
+                    style="padding: 1.75rem; border-radius: 20px; background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%); color: white; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -30%; right: -10%; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: none;"></div>
+                    <div style="position: absolute; bottom: -20%; left: -5%; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; pointer-events: none;"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                            <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3 style="margin: 0; font-size: 0.9rem; font-weight: 500; opacity: 0.9;">This Month's Revenue</h3>
+                        </div>
                     <div style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">
                         ₱<?php echo number_format($stats['month_sales'], 2); ?>
                     </div>
@@ -587,12 +597,26 @@ $salesTrend = getSalesTrend($conn);
                     <div style="opacity: 0.6; font-size: 0.78rem; margin-top: 0.3rem;">
                         <i class="fas fa-database"></i> <?php echo number_format($stats['total_customers']); ?> All-Time
                     </div>
+                    </div>
+                </div>
+
+                <!-- 7-Day Sales Trend Chart -->
+                <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
+                    <h3 class="chart-title" style="margin-bottom: 0.5rem;">
+                        <i class="fas fa-chart-area" style="color: var(--primary-color);"></i>
+                        7-Day Sales Trend
+                        <span class="status-badge-live" style="margin-left: auto; font-size: 0.7rem; padding: 0.25rem 0.6rem;">
+                            <span style="width: 6px; height: 6px;"></span>
+                            Live
+                        </span>
+                    </h3>
+                    <div id="salesTrendChart" style="width: 100%; min-height: 180px;"></div>
                 </div>
 
                 <!-- Top Products -->
                 <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px;">
                     <h3 class="chart-title" style="margin-bottom: 1rem;"><i class="fas fa-trophy"
-                            style="color: var(--accent-color);"></i> Top Sellers</h3>
+                            style="color: var(--accent-color);"></i> Top Products</h3>
                     <div style="display: flex; flex-direction: column; gap: 1rem;">
                         <?php if (empty($topProducts)): ?>
                             <div style="text-align: center; opacity: 0.5;">No sales data yet.</div>
@@ -623,6 +647,230 @@ $salesTrend = getSalesTrend($conn);
 
     <script src="theme.js"></script>
     <script src="shared-polish.js"></script>
+    <script src="premium-effects.js"></script>
+    <script src="premium-charts.js"></script>
+
+    <script>
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PREMIUM DASHBOARD ENHANCEMENTS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Animate stat values with counting effect
+      document.querySelectorAll('.stat-content .value').forEach(el => {
+        const text = el.textContent;
+        const numericValue = parseFloat(text.replace(/[^\d.-]/g, ''));
+
+        if (!isNaN(numericValue)) {
+          const prefix = text.includes('₱') ? '₱' : '';
+          const hasDecimals = text.includes('.');
+
+          el.setAttribute('data-counter', '');
+          el.setAttribute('data-counter-end', numericValue);
+          el.setAttribute('data-counter-prefix', prefix);
+          el.setAttribute('data-counter-decimals', hasDecimals ? '2' : '0');
+
+          // Trigger animation
+          if (window.animatedCounter) {
+            window.animatedCounter.animate(el, {
+              end: numericValue,
+              prefix: prefix,
+              decimals: hasDecimals ? 2 : 0,
+              duration: 1500
+            });
+          }
+        }
+      });
+
+      // Add scroll reveal to cards
+      document.querySelectorAll('.stat-card-premium, .glass-panel').forEach((el, i) => {
+        el.setAttribute('data-scroll-reveal', 'fade-up');
+        el.style.animationDelay = `${i * 0.05}s`;
+      });
+
+      // Initialize sales trend chart if container exists
+      const chartContainer = document.getElementById('salesTrendChart');
+            if (chartContainer) {
+                const salesData = <?php echo json_encode(array_map(function($item) {
+                    return ['label' => $item['date'], 'value' => floatval($item['amount'])];
+                }, $salesTrend)); ?>;
+
+                if (typeof AnimatedLineChart !== 'undefined') {
+                    new AnimatedLineChart(chartContainer, {
+                        data: salesData,
+                        height: 220,
+                        lineColor: '#667eea',
+                        showArea: true,
+                        showPoints: true
+                    });
+                } else {
+                    chartContainer.innerHTML = '<div style="height:220px;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:0.88rem;">Chart library is not available.</div>';
+                }
+      }
+
+      // Add stagger animation to table rows
+      document.querySelectorAll('.table-enhanced tbody tr').forEach((row, i) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-20px)';
+        row.style.transition = 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
+        row.style.transitionDelay = `${0.1 + (i * 0.05)}s`;
+
+        setTimeout(() => {
+          row.style.opacity = '1';
+          row.style.transform = 'translateX(0)';
+        }, 100);
+      });
+
+      // Add spotlight effect to hero section
+      const heroSection = document.querySelector('.dashboard-hero');
+      if (heroSection) {
+        heroSection.classList.add('spotlight-effect');
+        heroSection.addEventListener('mousemove', (e) => {
+          const rect = heroSection.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          heroSection.style.setProperty('--mouse-x', `${x}%`);
+          heroSection.style.setProperty('--mouse-y', `${y}%`);
+        });
+      }
+
+      // Live data indicator
+      const createLiveIndicator = () => {
+        const indicator = document.createElement('div');
+        indicator.className = 'live-indicator';
+        indicator.innerHTML = `
+          <span class="live-dot"></span>
+          <span class="live-text">Live</span>
+        `;
+        indicator.style.cssText = `
+          position: fixed;
+          bottom: 1.5rem;
+          left: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: var(--c-surface);
+          padding: 0.5rem 1rem;
+          border-radius: 50px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--c-success);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          z-index: 100;
+          border: 1px solid var(--c-border);
+        `;
+
+        const dot = indicator.querySelector('.live-dot');
+        dot.style.cssText = `
+          width: 8px;
+          height: 8px;
+          background: var(--c-success);
+          border-radius: 50%;
+          animation: pulse 2s ease-in-out infinite;
+        `;
+
+        document.body.appendChild(indicator);
+      };
+
+      createLiveIndicator();
+
+      // Add keyboard shortcut hint
+      console.log('%c⌨️ Press Ctrl+/ to see keyboard shortcuts', 'color: #667eea; font-weight: bold;');
+    });
+    </script>
+
+    <style>
+    /* Additional Dashboard Premium Styles */
+    .dashboard-hero {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dashboard-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255,255,255,0.1) 0%,
+        transparent 50%
+      );
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .dashboard-hero:hover::before {
+      opacity: 1;
+    }
+
+    .stat-card-premium {
+      animation: fadeSlideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+    }
+
+    .stat-card-premium:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card-premium:nth-child(2) { animation-delay: 0.15s; }
+    .stat-card-premium:nth-child(3) { animation-delay: 0.2s; }
+    .stat-card-premium:nth-child(4) { animation-delay: 0.25s; }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+      }
+    }
+
+    /* Chart Container */
+    #salesTrendChart {
+      min-height: 220px;
+      margin-top: 1rem;
+    }
+
+    /* Premium Table Hover */
+    .table-enhanced tbody tr {
+      transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .table-enhanced tbody tr:hover {
+      background: var(--c-brand-ghost);
+      transform: scale(1.01);
+      box-shadow: 0 4px 15px -5px rgba(0,0,0,0.08);
+    }
+
+    /* Quick Action Button Enhancement */
+    .action-btn-glass {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-btn-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .action-btn-glass:hover::before {
+      opacity: 1;
+    }
+    </style>
 </body>
 
 </html>

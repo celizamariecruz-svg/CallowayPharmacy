@@ -12,6 +12,16 @@ $auth->requireAuth('login.php');
 
 $currentUser = $auth->getCurrentUser();
 $page_title = 'Point of Sale';
+
+// Fetch tax rate from settings (VAT-inclusive)
+$taxRate = 12.00;
+$taxStmt = $conn->prepare("SELECT setting_value FROM settings WHERE setting_key = 'tax_rate' LIMIT 1");
+if ($taxStmt) {
+    $taxStmt->execute();
+    $taxRow = $taxStmt->get_result()->fetch_assoc();
+    if ($taxRow) $taxRate = floatval($taxRow['setting_value']);
+    $taxStmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -3123,6 +3133,12 @@ $page_title = 'Point of Sale';
         function updatePrinterUI() {
             const btn = document.getElementById('printerConnectBtn');
             const hint = document.getElementById('printerHint');
+
+            // Some POS variants do not render printer controls; avoid breaking the page.
+            if (!btn) {
+                return;
+            }
+
             if (isPrinterConnected()) {
                 btn.classList.add('connected');
                 btn.title = 'Printer: ' + (btDevice.name || 'Connected') + ' (click to disconnect)';

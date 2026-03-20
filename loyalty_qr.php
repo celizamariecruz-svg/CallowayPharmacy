@@ -316,6 +316,146 @@ $page_title = 'Loyalty & QR';
             max-width: 500px;
             width: 90%;
         }
+
+        .insights-modal-content {
+            max-width: 1050px;
+            width: 96%;
+            max-height: 86vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .member-insights-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--input-border);
+        }
+
+        .member-insights-head h2 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+        }
+
+        .member-insights-head p {
+            margin: 0.35rem 0 0;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .insight-card {
+            background: var(--bg-color);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            padding: 0.9rem;
+        }
+
+        .insight-card .label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.35rem;
+        }
+
+        .insight-card .value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-color);
+        }
+
+        .insights-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .insights-panel {
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            padding: 0.9rem;
+            background: var(--bg-color);
+            min-height: 280px;
+        }
+
+        .insights-panel h3 {
+            margin: 0 0 0.8rem;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .insights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .timeline-item,
+        .tx-item {
+            border: 1px solid var(--input-border);
+            border-radius: 10px;
+            padding: 0.7rem;
+            background: var(--card-bg, #fff);
+        }
+
+        .timeline-top,
+        .tx-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-points {
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .timeline-points.plus { color: #16a34a; }
+        .timeline-points.minus { color: #dc2626; }
+
+        .tiny-muted {
+            color: var(--text-light);
+            font-size: 0.78rem;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 0.15rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .pill.pos { background: #dbeafe; color: #1d4ed8; }
+        .pill.online { background: #dcfce7; color: #166534; }
+
+        .empty-state {
+            padding: 1.2rem;
+            border: 1px dashed var(--input-border);
+            border-radius: 10px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.88rem;
+        }
         
         [data-theme="dark"] .modal-content {
             background: #1e293b;
@@ -402,6 +542,16 @@ $page_title = 'Loyalty & QR';
             .action-cards {
                 grid-template-columns: 1fr;
             }
+
+            .insights-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .insights-modal-content {
+                width: 98%;
+                max-height: 90vh;
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -414,6 +564,7 @@ $page_title = 'Loyalty & QR';
             <p><?php echo $isCustomer ? 'Earn points with every purchase! Scan your QR codes below.' : 'Reward your customers with points and manage QR codes'; ?></p>
         </div>
 
+        <?php if (!$isStaff): ?>
         <!-- Points Display Card -->
         <div style="max-width:500px; margin:0 auto 2rem; padding:2rem; background:#667eea; border-radius:16px; color:white; text-align:center; box-shadow:0 8px 24px rgba(102,126,234,0.3);">
             <div style="font-size:0.9rem; opacity:0.9; margin-bottom:0.5rem;">Your Loyalty Points</div>
@@ -421,12 +572,15 @@ $page_title = 'Loyalty & QR';
             <div style="font-size:0.85rem; opacity:0.8;">1 point = ₱1 discount on your next order</div>
             <div id="memberSinceDisplay" style="font-size:0.8rem; opacity:0.7; margin-top:0.5rem;"></div>
         </div>
+        <?php endif; ?>
         
         <!-- Tabs -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('scan', this)">📷 Scan QR Code</button>
+            <?php if (!$isStaff): ?>
             <button class="tab" onclick="switchTab('myqr', this)">🎫 My QR Codes</button>
             <button class="tab" onclick="switchTab('history', this)">📊 Points History</button>
+            <?php endif; ?>
             <?php if ($isStaff): ?>
             <button class="tab" onclick="switchTab('customers', this)">👥 All Members</button>
             <?php endif; ?>
@@ -437,12 +591,18 @@ $page_title = 'Loyalty & QR';
             <div class="scanner-area">
                 <div class="scanner-icon">📷</div>
                 <h2>Scan Reward QR Code</h2>
+                <?php if ($isStaff): ?>
+                <p>Scan a receipt QR code and assign points to a customer loyalty member.</p>
+                <?php else: ?>
                 <p>Enter or scan the QR code from your receipt to earn loyalty points</p>
+                <?php endif; ?>
                 <input type="text" class="scanner-input" id="qrScanInput" placeholder="Paste or scan QR code here..." autofocus>
                 <div style="display:flex; gap:0.75rem; justify-content:center; margin-top:1rem;">
+                    <?php if (!$isStaff): ?>
                     <button class="btn btn-primary" onclick="redeemQRCode()" style="padding:0.85rem 2rem; font-size:1rem;">
                         <i class="fas fa-qrcode"></i> Redeem Points
                     </button>
+                    <?php endif; ?>
                     <?php if ($isStaff): ?>
                     <button class="btn btn-secondary" onclick="openStaffRedeemModal(document.getElementById('qrScanInput').value.trim())" style="padding:0.85rem 1.5rem; font-size:1rem; background:#059669; color:#fff; border:none;">
                         <i class="fas fa-user-plus"></i> Redeem for Customer
@@ -453,6 +613,7 @@ $page_title = 'Loyalty & QR';
             </div>
         </div>
         
+        <?php if (!$isStaff): ?>
         <!-- My QR Codes Tab -->
         <div class="tab-content" id="myqrTab">
             <div style="max-width:700px; margin:0 auto;">
@@ -472,7 +633,7 @@ $page_title = 'Loyalty & QR';
                     <table>
                         <thead>
                             <tr>
-                                <th>Date</th>
+                                <th>Date & Time</th>
                                 <th>Type</th>
                                 <th>Points</th>
                                 <th>Details</th>
@@ -485,6 +646,7 @@ $page_title = 'Loyalty & QR';
                 </div>
             </div>
         </div>
+        <?php endif; ?>
         
         <?php if ($isStaff): ?>
         <!-- Customers Tab (Staff Only) -->
@@ -520,6 +682,40 @@ $page_title = 'Loyalty & QR';
         </div>
         <?php endif; ?>
     </div>
+
+    <?php if ($isStaff): ?>
+    <!-- Member Insights Modal -->
+    <div class="modal" id="memberInsightsModal">
+        <div class="modal-content insights-modal-content">
+            <div class="member-insights-head">
+                <div>
+                    <h2 id="insightMemberTitle">Member Insights</h2>
+                    <p id="insightMemberMeta">View points flow, purchases, and transaction footprint.</p>
+                </div>
+                <button class="close-modal" onclick="closeMemberInsightsModal()">&times;</button>
+            </div>
+
+            <div id="memberInsightsLoading" class="empty-state">
+                <i class="fas fa-spinner fa-spin"></i> Loading member history...
+            </div>
+
+            <div id="memberInsightsContent" style="display:none;">
+                <div class="insights-grid" id="insightSummaryCards"></div>
+
+                <div class="insights-sections">
+                    <div class="insights-panel">
+                        <h3><i class="fas fa-coins"></i> Points Timeline</h3>
+                        <div class="insights-list" id="insightPointsTimeline"></div>
+                    </div>
+                    <div class="insights-panel">
+                        <h3><i class="fas fa-receipt"></i> Purchase & Order Transactions</h3>
+                        <div class="insights-list" id="insightTransactions"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
     
     <!-- Add Customer Modal -->
     <div class="modal" id="customerModal">
@@ -592,10 +788,14 @@ $page_title = 'Loyalty & QR';
     
     <script src="theme.js"></script>
     <script>
+        const isStaffUser = <?php echo $isStaff ? 'true' : 'false'; ?>;
+
         // Load data on page load
         document.addEventListener('DOMContentLoaded', function() {
+            <?php if (!$isStaff): ?>
             loadMyPoints();
             loadMyQRCodes();
+            <?php endif; ?>
             <?php if ($isStaff): ?>
             loadLoyaltyMembers();
             <?php endif; ?>
@@ -614,7 +814,11 @@ $page_title = 'Loyalty & QR';
                     const input = document.getElementById('qrScanInput');
                     if (input) {
                         input.value = autoRedeem;
+                        <?php if ($isStaff): ?>
+                        openStaffRedeemModal(autoRedeem);
+                        <?php else: ?>
                         redeemQRCode();
+                        <?php endif; ?>
                     }
                 }, 400);
                 // Clean URL
@@ -681,6 +885,11 @@ $page_title = 'Loyalty & QR';
 
         // Redeem QR code
         async function redeemQRCode() {
+            if (isStaffUser) {
+                showToast('Staff accounts cannot redeem points for themselves. Use Redeem for Customer.', 'error');
+                return;
+            }
+
             const input = document.getElementById('qrScanInput');
             const qrCode = input.value.trim();
             const resultDiv = document.getElementById('scanResult');
@@ -762,7 +971,7 @@ $page_title = 'Loyalty & QR';
                         <div style="flex:1; min-width:0;">
                             <div style="font-weight:700; font-size:0.9rem; color:var(--text-color); margin-bottom:0.2rem; word-break:break-all;">${escapeHtml(qr.qr_code)}</div>
                             <div style="font-size:0.8rem; color:var(--text-light);">Source: ${qr.source_type === 'pos' ? '🏪 In-store' : '🌐 Online'} &bull; ${qr.points_value} point</div>
-                            <div style="font-size:0.78rem; color:var(--text-light);">Created: ${new Date(qr.created_at).toLocaleDateString()}</div>
+                            <div style="font-size:0.78rem; color:var(--text-light);">Created: ${new Date(qr.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })} ${new Date(qr.created_at).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })}</div>
                             <div style="margin-top:0.4rem; display:inline-block; padding:0.2rem 0.6rem; background:${statusBg}; color:${statusColor}; border-radius:6px; font-size:0.75rem; font-weight:700;">${statusText}</div>
                         </div>
                         ${!isRedeemed && !isExpired ? `<button onclick="quickRedeem('${escapeHtml(qr.qr_code)}')" style="padding:0.5rem 1rem; background:var(--primary-color,#2563eb); color:white; border:none; border-radius:8px; font-weight:600; font-size:0.82rem; cursor:pointer; white-space:nowrap;">Scan Now</button>` : ''}
@@ -817,7 +1026,7 @@ $page_title = 'Loyalty & QR';
                 };
                 return `
                     <tr>
-                        <td>${new Date(entry.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })}</td>
+                        <td>${new Date(entry.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' })} ${new Date(entry.created_at).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })}</td>
                         <td>${typeLabels[entry.transaction_type] || entry.transaction_type}</td>
                         <td><span style="font-weight:700; color:${isPositive ? '#16a34a' : '#dc2626'};">${isPositive ? '+' : ''}${entry.points}</span></td>
                         <td style="font-size:0.85rem; color:var(--text-light);">${escapeHtml(entry.description || entry.reference_id || '-')}</td>
@@ -947,10 +1156,114 @@ $page_title = 'Loyalty & QR';
             }
         }
         
-        function viewCustomer(id) {
-            const customer = loyaltyMembers.find(c => (c.id || c.member_id) == id);
-            if (customer) {
-                customAlert('Customer Details', `Name: ${customer.name}\nEmail: ${customer.email || 'N/A'}\nPhone: ${customer.phone || 'N/A'}\nPoints: ${customer.points} pts\nMember Since: ${customer.memberSince || customer.member_since || 'N/A'}`, 'info');
+        async function viewCustomer(id) {
+            const modal = document.getElementById('memberInsightsModal');
+            const loading = document.getElementById('memberInsightsLoading');
+            const content = document.getElementById('memberInsightsContent');
+            const title = document.getElementById('insightMemberTitle');
+            const meta = document.getElementById('insightMemberMeta');
+
+            modal.classList.add('active');
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            title.textContent = 'Member Insights';
+            meta.textContent = 'Fetching points and transaction history...';
+
+            try {
+                const res = await fetch('api/get_loyalty_members.php?action=member_details&member_id=' + encodeURIComponent(id));
+                const data = await res.json();
+
+                if (!data.success) {
+                    loading.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + escapeHtml(data.message || 'Failed to load member details');
+                    return;
+                }
+
+                renderMemberInsights(data);
+                loading.style.display = 'none';
+                content.style.display = 'block';
+            } catch (err) {
+                loading.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Network error while loading member history';
+            }
+        }
+
+        function closeMemberInsightsModal() {
+            const modal = document.getElementById('memberInsightsModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function renderMemberInsights(payload) {
+            const member = payload.member || {};
+            const summary = payload.summary || {};
+            const pointsLog = payload.points_log || [];
+            const txs = payload.transactions || [];
+
+            document.getElementById('insightMemberTitle').textContent = member.name ? (member.name + ' - Loyalty Insights') : 'Member Insights';
+            document.getElementById('insightMemberMeta').textContent =
+                `Email: ${member.email || 'N/A'} • Phone: ${member.phone || 'N/A'} • Member since: ${formatDate(member.member_since)}`;
+
+            document.getElementById('insightSummaryCards').innerHTML = [
+                { label: 'Current Points', value: `${formatNum(summary.net_points || member.points || 0)} pts` },
+                { label: 'Points Earned', value: `+${formatNum(summary.points_earned || 0)}` },
+                { label: 'Points Redeemed', value: `-${formatNum(summary.points_redeemed || 0)}` },
+                { label: 'Point Events', value: `${formatNum(summary.log_count || 0)}` },
+                { label: 'Transactions', value: `${formatNum(summary.transaction_count || 0)}` },
+                { label: 'Total Spend', value: `₱${formatMoney(summary.total_transaction_value || 0)}` }
+            ].map(card => `
+                <div class="insight-card">
+                    <span class="label">${card.label}</span>
+                    <div class="value">${card.value}</div>
+                </div>
+            `).join('');
+
+            const timelineEl = document.getElementById('insightPointsTimeline');
+            if (!pointsLog.length) {
+                timelineEl.innerHTML = '<div class="empty-state">No point movements yet.</div>';
+            } else {
+                timelineEl.innerHTML = pointsLog.map(entry => {
+                    const points = parseFloat(entry.points || 0);
+                    const plus = points >= 0;
+                    const type = escapeHtml(entry.transaction_type || 'EVENT');
+                    const ref = escapeHtml(entry.reference_id || '-');
+                    const desc = escapeHtml(entry.description || '');
+                    return `
+                        <div class="timeline-item">
+                            <div class="timeline-top">
+                                <span class="pill">${type}</span>
+                                <span class="timeline-points ${plus ? 'plus' : 'minus'}">${plus ? '+' : ''}${formatNum(points)}</span>
+                            </div>
+                            <div class="tiny-muted">Ref: ${ref}</div>
+                            <div style="font-size:0.86rem; color:var(--text-color); margin-top:0.2rem;">${desc || 'No description provided.'}</div>
+                            <div class="tiny-muted" style="margin-top:0.25rem;">${formatDateTime(entry.created_at)}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const txEl = document.getElementById('insightTransactions');
+            if (!txs.length) {
+                txEl.innerHTML = '<div class="empty-state">No linked purchases/orders found yet.</div>';
+            } else {
+                txEl.innerHTML = txs.map(tx => {
+                    const source = (tx.source || 'N/A').toUpperCase();
+                    const sourceClass = source === 'POS' ? 'pos' : 'online';
+                    const statusHtml = tx.status ? `<span class="tiny-muted">Status: ${escapeHtml(tx.status)}</span>` : '';
+                    const redeemedHtml = tx.points_redeemed && parseFloat(tx.points_redeemed) > 0
+                        ? `<span class="tiny-muted">Points used: ${formatNum(tx.points_redeemed)}</span>`
+                        : '';
+                    return `
+                        <div class="tx-item">
+                            <div class="tx-top">
+                                <span class="pill ${sourceClass}">${source}</span>
+                                <strong>₱${formatMoney(tx.amount || 0)}</strong>
+                            </div>
+                            <div style="font-size:0.88rem; color:var(--text-color);">Ref: ${escapeHtml(tx.reference || '-')}</div>
+                            <div class="tiny-muted">Payment: ${escapeHtml(tx.payment_method || 'N/A')} • By: ${escapeHtml(tx.actor || 'N/A')}</div>
+                            ${statusHtml}
+                            ${redeemedHtml}
+                            <div class="tiny-muted" style="margin-top:0.25rem;">${formatDateTime(tx.created_at)}</div>
+                        </div>
+                    `;
+                }).join('');
             }
         }
         <?php endif; ?>
@@ -1061,7 +1374,6 @@ $page_title = 'Loyalty & QR';
                         </div>`;
                     showToast(data.message, 'success');
                     // Refresh data
-                    loadMyPoints();
                     loadLoyaltyMembers();
                     // Close after 2s
                     setTimeout(() => closeStaffRedeemModal(), 2500);
@@ -1098,8 +1410,24 @@ $page_title = 'Loyalty & QR';
         }
         
         function formatDate(dateString) {
+            if (!dateString) return 'N/A';
             const date = new Date(dateString);
             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function formatDateTime(dateString) {
+            if (!dateString) return 'N/A';
+            const d = new Date(dateString);
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' +
+                d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatNum(value) {
+            return Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
     </script>
     <script src="shared-polish.js"></script>

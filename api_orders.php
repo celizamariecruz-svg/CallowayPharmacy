@@ -4,6 +4,9 @@
  * Tracks online orders by reference for customer-facing lookups
  */
 require_once 'db_connection.php';
+ob_start();
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -91,8 +94,10 @@ switch ($action) {
 
     case 'my_orders':
         // Returns all orders for the currently logged-in customer
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) session_start();
         $userId = $_SESSION['user_id'] ?? 0;
+        $roleName = $_SESSION['role_name'] ?? 'customer';
+        $isStaff = in_array(strtolower($roleName), ['admin', 'cashier', 'inventory_manager', 'staff']);
         
         if ($userId <= 0) {
             echo json_encode(['success' => false, 'message' => 'Please log in to view your orders']);
@@ -100,19 +105,53 @@ switch ($action) {
         }
 
         $orders = [];
+
+        // Check column availability once for both branches
+        $hasCustId = false;
+        $hasNotes = false;
+        $hasPayment = false;
+        try {
+            $chk = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='online_orders' AND COLUMN_NAME='customer_id' LIMIT 1");
+            $hasCustId = ($chk && $chk->num_rows > 0);
+            $chk2 = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='online_orders' AND COLUMN_NAME='notes' LIMIT 1");
+            $hasNotes = ($chk2 && $chk2->num_rows > 0);
+            $chk3 = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='online_orders' AND COLUMN_NAME='payment_method' LIMIT 1");
+            $hasPayment = ($chk3 && $chk3->num_rows > 0);
+        } catch (Exception $e) {}
         
-        // Fetch orders placed by this customer
-        $stmt = $conn->prepare("
-            SELECT o.order_id, o.customer_name, o.status, o.total_amount, 
-                   o.payment_method, o.notes, o.created_at, o.updated_at
-            FROM online_orders o
-            WHERE o.customer_id = ?
-            ORDER BY o.created_at DESC
-            LIMIT 50
-        ");
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
+        // Staff/admin can see all orders; customers see only their own
+        if ($isStaff) {
+            $cols = "o.order_id, o.customer_name, o.status, o.total_amount, o.created_at, o.updated_at";
+            if ($hasCustId) $cols .= ", o.customer_id";
+            if ($hasNotes) $cols .= ", o.notes";
+            if ($hasPayment) $cols .= ", o.payment_method";
+            
+            $stmt = $conn->prepare("SELECT $cols FROM online_orders o ORDER BY o.created_at DESC LIMIT 100");
+            $stmt->execute();
+        } else {
+            // Customer query - need customer_id column to filter
+            if (!$hasCustId) {
+                // customer_id column doesn't exist - try alternative lookup
+                echo json_encode(['success' => true, 'orders' => [], 'is_staff' => false]);
+                exit;
+            }
+            $custCols = "o.order_id, o.customer_name, o.status, o.total_amount, o.created_at, o.updated_at";
+            if ($hasPayment) $custCols .= ", o.payment_method";
+            if ($hasNotes) $custCols .= ", o.notes";
+            $stmt = $conn->prepare("SELECT $custCols FROM online_orders o WHERE o.customer_id = ? ORDER BY o.created_at DESC LIMIT 50");
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+        }
         $result = $stmt->get_result();
+
+        // Get user email for loyalty lookup
+        $userEmail = '';
+        $emailStmt = $conn->prepare("SELECT email FROM users WHERE user_id = ? LIMIT 1");
+        $emailStmt->bind_param("i", $userId);
+        $emailStmt->execute();
+        $emailRow = $emailStmt->get_result()->fetch_assoc();
+        if ($emailRow) $userEmail = $emailRow['email'];
+        $emailStmt->close();
         
         while ($row = $result->fetch_assoc()) {
             $orderId = $row['order_id'];
@@ -135,11 +174,49 @@ switch ($action) {
             
             $row['items'] = $items;
             $row['item_count'] = count($items);
+
+            // Look up loyalty points earned for this order
+            $refId = 'ORDER-' . $orderId;
+            $row['points_earned'] = 0;
+            $row['points_redeemed'] = 0;
+            try {
+                $logStmt = $conn->prepare("SELECT points, transaction_type FROM loyalty_points_log WHERE reference_id = ?");
+                $logStmt->bind_param("s", $refId);
+                $logStmt->execute();
+                $logResult = $logStmt->get_result();
+                while ($logRow = $logResult->fetch_assoc()) {
+                    if ($logRow['transaction_type'] === 'EARN') {
+                        $row['points_earned'] = abs(floatval($logRow['points']));
+                    } elseif ($logRow['transaction_type'] === 'REDEEM') {
+                        $row['points_redeemed'] = abs(floatval($logRow['points']));
+                    }
+                }
+                $logStmt->close();
+            } catch (Exception $e) {
+                // Loyalty table may not exist
+            }
+
+            // Admin extra details
+            if ($isStaff) {
+                try {
+                    $custStmt = $conn->prepare("SELECT email, full_name FROM users WHERE user_id = ? LIMIT 1");
+                    $custUserId = intval($row['customer_id'] ?? 0);
+                    $custStmt->bind_param("i", $custUserId);
+                    $custStmt->execute();
+                    $custRow = $custStmt->get_result()->fetch_assoc();
+                    $custStmt->close();
+                    if ($custRow) {
+                        $row['customer_email'] = $custRow['email'];
+                        $row['customer_full_name'] = $custRow['full_name'];
+                    }
+                } catch (Exception $e) {}
+            }
+
             $orders[] = $row;
         }
         $stmt->close();
 
-        echo json_encode(['success' => true, 'orders' => $orders]);
+        echo json_encode(['success' => true, 'orders' => $orders, 'is_staff' => $isStaff]);
         break;
 
     default:

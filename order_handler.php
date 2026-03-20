@@ -190,15 +190,18 @@ if (!in_array($paymentMethod, ['Cash on Pickup', 'Loyalty Points', 'GCash'], tru
 }
 
 if ($paymentMethod === 'Loyalty Points') {
-    $requiredPoints = round($totalAmount, 2);
-    if ($pointsDiscount + 0.0001 < $requiredPoints) {
+    if ($pointsDiscount <= 0) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'message' => 'Insufficient loyalty points for Loyalty Points payment method.'
+            'message' => 'Please enter points to redeem for Loyalty Points payment.'
         ]);
         ob_end_flush();
         exit;
+    }
+    // Partial points allowed - remaining will be cash on pickup
+    if ($pointsDiscount < round($totalAmount, 2)) {
+        $paymentMethod = 'Loyalty Points + Cash';
     }
 }
 

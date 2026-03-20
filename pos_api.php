@@ -184,10 +184,22 @@ switch ($action) {
                 ];
             }
 
-            // Apply 12% VAT and optional discount
+            // Get tax rate from settings (VAT-inclusive: tax is already part of the price)
+            $taxRate = 0.12; // default 12%
+            $taxStmt = $conn->prepare("SELECT setting_value FROM settings WHERE setting_key = 'tax_rate' LIMIT 1");
+            if ($taxStmt) {
+                $taxStmt->execute();
+                $taxRow = $taxStmt->get_result()->fetch_assoc();
+                if ($taxRow) {
+                    $taxRate = floatval($taxRow['setting_value']) / 100;
+                }
+                $taxStmt->close();
+            }
+
+            // VAT-inclusive: prices already include tax, extract tax component
             $subtotal = $serverTotal;
-            $taxAmount = round($subtotal * 0.12, 2);
-            $beforeDiscount = round($subtotal + $taxAmount, 2);
+            $taxAmount = round($subtotal - ($subtotal / (1 + $taxRate)), 2);
+            $beforeDiscount = $subtotal; // price already includes tax
             
             // Apply discount if provided (e.g., 20% SC/PWD discount)
             $discountPercent = floatval($input['discount_percent'] ?? 0);

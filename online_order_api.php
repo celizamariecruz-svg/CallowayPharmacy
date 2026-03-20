@@ -482,6 +482,17 @@ function awardLoyaltyForPickup($conn, $orderId) {
         $customerId = intval($order['customer_id']);
         $totalAmount = floatval($order['total_amount']);
 
+        // Block admin/staff from earning loyalty points to prevent abuse
+        $roleStmt = $conn->prepare("SELECT r.role_name FROM users u JOIN roles r ON u.role_id = r.role_id WHERE u.user_id = ? LIMIT 1");
+        $roleStmt->bind_param("i", $customerId);
+        $roleStmt->execute();
+        $roleRow = $roleStmt->get_result()->fetch_assoc();
+        $roleStmt->close();
+        if ($roleRow && in_array(strtolower($roleRow['role_name']), ['admin', 'cashier', 'inventory_manager', 'staff'])) {
+            $result['reason'] = 'Staff and admin accounts are not eligible for loyalty points';
+            return $result;
+        }
+
         // Get user email from users table (customer_id may reference users.user_id)
         $email = $order['email'] ?? '';
         if (empty($email)) {
