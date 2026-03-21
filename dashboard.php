@@ -220,7 +220,7 @@ $salesTrend = getSalesTrend($conn);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .dashboard-hero {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
             color: white;
             padding: 2rem 1.75rem;
             margin-top: 0;
@@ -578,7 +578,7 @@ $salesTrend = getSalesTrend($conn);
             <div style="display: flex; flex-direction: column; gap: 2rem;">
                 <!-- Month Sales Summary - Premium Hero Card -->
                 <div class="glass-panel stat-card-hero"
-                    style="padding: 1.75rem; border-radius: 20px; background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%); color: white; position: relative; overflow: hidden;">
+                    style="padding: 1.75rem; border-radius: 20px; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; position: relative; overflow: hidden;">
                     <div style="position: absolute; top: -30%; right: -10%; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: none;"></div>
                     <div style="position: absolute; bottom: -20%; left: -5%; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; pointer-events: none;"></div>
                     <div style="position: relative; z-index: 1;">
@@ -699,7 +699,7 @@ $salesTrend = getSalesTrend($conn);
                     new AnimatedLineChart(chartContainer, {
                         data: salesData,
                         height: 220,
-                        lineColor: '#667eea',
+                        lineColor: '#3b82f6',
                         showArea: true,
                         showPoints: true
                     });

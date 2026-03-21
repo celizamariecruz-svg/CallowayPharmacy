@@ -127,6 +127,25 @@ $_headerIsCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] ==
 </header>
 
 <style>
+  /* Force consistent active sidebar style across pages and CSS layers */
+  .sidebar .sidebar-link.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3) !important;
+  }
+
+  .sidebar .sidebar-link.active i,
+  .sidebar .sidebar-link.active span {
+    color: #ffffff !important;
+  }
+
+  .sidebar .sidebar-link.active::before,
+  .sidebar-nav .sidebar-link.active::before {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+    opacity: 1 !important;
+  }
+
   .topbar-center {
     flex: 1;
     min-width: 0;
