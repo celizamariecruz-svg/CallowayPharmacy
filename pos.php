@@ -814,9 +814,15 @@ if ($taxStmt) {
 
         .payment-methods {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 0.6rem;
             margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 560px) {
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
         }
 
         .method-btn {
@@ -1157,6 +1163,79 @@ if ($taxStmt) {
         }
         .points-remaining-display .amount.covered {
             color: #16a34a;
+        }
+
+        .gcash-input-group {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 112, 240, 0.08);
+            border: 1.5px solid rgba(0, 112, 240, 0.35);
+            border-radius: 10px;
+        }
+        .gcash-input-group.show { display: block; }
+        .gcash-input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0.6rem 0 0.35rem;
+            color: var(--text-color);
+        }
+        .gcash-input-group input {
+            width: 100%;
+            padding: 0.62rem 0.8rem;
+            border: 1.5px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+        .gcash-input-group input:focus {
+            outline: none;
+            border-color: #0070f0;
+        }
+        .gcash-note {
+            font-size: 0.76rem;
+            color: var(--text-light);
+            margin-top: 0.4rem;
+            line-height: 1.35;
+        }
+        .gcash-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #005fcc;
+            background: rgba(0, 112, 240, 0.12);
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            margin-bottom: 0.45rem;
+        }
+        .gcash-qr-wrap {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            padding: 0.45rem;
+            width: 152px;
+            height: 152px;
+            margin: 0 auto 0.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gcash-qr-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .gcash-qr-fallback {
+            display: none;
+            text-align: center;
+            font-size: 0.74rem;
+            color: var(--text-light);
         }
 
         .modal-actions .btn-cancel:hover { border-color: var(--text-light); }
@@ -2015,6 +2094,9 @@ if ($taxStmt) {
                 <button class="method-btn active" onclick="setPaymentMethod('cash', this)">
                     <i class="fas fa-money-bill-wave"></i> Cash
                 </button>
+                <button class="method-btn" onclick="setPaymentMethod('gcash', this)">
+                    <i class="fas fa-mobile-alt"></i> GCash
+                </button>
                 <button class="method-btn" onclick="setPaymentMethod('loyalty_points', this)" id="loyaltyPointsBtn" disabled title="Select a loyalty member first">
                     <i class="fas fa-coins"></i> Points
                 </button>
@@ -2047,6 +2129,19 @@ if ($taxStmt) {
                     <span class="label">Remaining to Pay</span>
                     <span class="amount due" id="remainingAfterPoints">₱0.00</span>
                 </div>
+            </div>
+
+            <div class="gcash-input-group" id="gcashInputGroup">
+                <span class="gcash-badge">Manual Verification</span>
+                <div class="gcash-qr-wrap" id="gcashQrWrap">
+                    <img src="images/gcash-qr.jpg" alt="Scan to pay with GCash" id="gcashQrImage" onerror="handleGcashQrMissing()">
+                </div>
+                <div class="gcash-qr-fallback" id="gcashQrFallback">GCash QR not found. Place image at images/gcash-qr.jpg</div>
+                <label for="gcashPaidAmount">GCash Amount Received (PHP)</label>
+                <input type="number" id="gcashPaidAmount" min="0" step="0.01" placeholder="0.00">
+                <label for="gcashReference">GCash Reference Number</label>
+                <input type="text" id="gcashReference" maxlength="40" placeholder="e.g. 123456789012">
+                <div class="gcash-note">Cashier should verify successful transfer before completing the sale.</div>
             </div>
 
             <div class="modal-actions">
@@ -2097,6 +2192,7 @@ if ($taxStmt) {
         let allLoyaltyMembers = [];
         let customerSearchTimeout = null;
         let pointsToRedeem = 0;
+        let gcashPaidAmount = 0;
 
         // Storage-safe helpers (for browsers with strict tracking prevention)
         const posStorageAvailable = (() => {
@@ -2281,6 +2377,13 @@ if ($taxStmt) {
             updateChange();
         }
 
+        function handleGcashQrMissing() {
+            const wrap = document.getElementById('gcashQrWrap');
+            const fallback = document.getElementById('gcashQrFallback');
+            if (wrap) wrap.style.display = 'none';
+            if (fallback) fallback.style.display = 'block';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
             loadLoyaltyMembers();
@@ -2320,6 +2423,8 @@ if ($taxStmt) {
             });
 
             document.getElementById('amountTendered').addEventListener('input', updateChange);
+            document.getElementById('gcashPaidAmount').addEventListener('input', updateChange);
+            document.getElementById('gcashReference').addEventListener('input', updateChange);
 
             // Keyboard shortcuts — cashier speed
             document.addEventListener('keydown', (e) => {
@@ -2776,6 +2881,21 @@ if ($taxStmt) {
             if (cart.length === 0) return;
             document.getElementById('paymentModal').classList.add('active');
             document.getElementById('amountTendered').value = '';
+            document.getElementById('gcashPaidAmount').value = '';
+            document.getElementById('gcashReference').value = '';
+            pointsToRedeem = 0;
+            gcashPaidAmount = 0;
+            const pointsInput = document.getElementById('pointsToRedeemInput');
+            if (pointsInput) pointsInput.value = '';
+            const pointsGroup = document.getElementById('pointsInputGroup');
+            if (pointsGroup) pointsGroup.classList.remove('show');
+
+            const defaultBtn = document.querySelector('.method-btn');
+            if (defaultBtn) {
+                document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+                defaultBtn.classList.add('active');
+            }
+            paymentMethod = 'cash';
 
             const total = getTotal();
             generateQuickCash(total);
@@ -2825,12 +2945,16 @@ if ($taxStmt) {
 
             const cashGroup = document.getElementById('cashInputGroup');
             const pointsGroup = document.getElementById('pointsInputGroup');
+            const gcashGroup = document.getElementById('gcashInputGroup');
 
             cashGroup.style.display = (method === 'cash' || method === 'loyalty_points') ? 'block' : 'none';
             pointsGroup.classList.toggle('show', method === 'loyalty_points');
+            gcashGroup.classList.toggle('show', method === 'gcash');
 
             if (method === 'cash') {
                 document.getElementById('amountTendered').focus();
+            } else if (method === 'gcash') {
+                document.getElementById('gcashPaidAmount').focus();
             } else if (method === 'loyalty_points') {
                 document.getElementById('pointsToRedeemInput').focus();
                 // Auto-fill with max usable points
@@ -2842,13 +2966,16 @@ if ($taxStmt) {
         function updateChange() {
             const total = getTotal();
             const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
+            gcashPaidAmount = parseFloat(document.getElementById('gcashPaidAmount').value) || 0;
             const remainingDue = paymentMethod === 'loyalty_points'
                 ? Math.max(0, total - pointsToRedeem)
                 : total;
-            const change = tendered - remainingDue;
+            const methodCoverage = paymentMethod === 'gcash' ? gcashPaidAmount : 0;
+            const change = (tendered + methodCoverage) - remainingDue;
 
             if (remainingDue > 0) {
-                generateQuickCash(remainingDue);
+                const remainingAfterMethod = Math.max(0, remainingDue - methodCoverage);
+                generateQuickCash(remainingAfterMethod || remainingDue);
             }
 
             const display = document.getElementById('changeDisplay');
@@ -2857,6 +2984,7 @@ if ($taxStmt) {
 
             const cashGroup = document.getElementById('cashInputGroup');
             const cashLabel = cashGroup.querySelector('label');
+            const gcashReference = (document.getElementById('gcashReference').value || '').trim();
             if (paymentMethod === 'loyalty_points') {
                 cashGroup.style.display = remainingDue > 0 ? 'block' : 'none';
                 if (cashLabel) {
@@ -2864,8 +2992,17 @@ if ($taxStmt) {
                         ? 'Cash Tendered (Remaining)' 
                         : 'Cash Tendered';
                 }
+            } else if (paymentMethod === 'gcash') {
+                const remainingAfterGcash = Math.max(0, remainingDue - methodCoverage);
+                cashGroup.style.display = remainingAfterGcash > 0 ? 'block' : 'none';
+                if (cashLabel) {
+                    cashLabel.textContent = remainingAfterGcash > 0
+                        ? 'Cash Tendered (Top-up)'
+                        : 'Cash Tendered';
+                }
             } else if (cashLabel) {
                 cashLabel.textContent = 'Cash Tendered';
+                cashGroup.style.display = 'block';
             }
 
             const btn = document.getElementById('completeSaleBtn');
@@ -2873,6 +3010,9 @@ if ($taxStmt) {
                 btn.disabled = true;
             } else if (paymentMethod === 'loyalty_points') {
                 btn.disabled = tendered + 0.005 < remainingDue;
+            } else if (paymentMethod === 'gcash') {
+                const remainingAfterGcash = Math.max(0, remainingDue - methodCoverage);
+                btn.disabled = methodCoverage <= 0 || !gcashReference || (tendered + 0.005 < remainingAfterGcash);
             } else {
                 btn.disabled = false;
             }
@@ -2903,6 +3043,10 @@ if ($taxStmt) {
             const total = beforeDiscount - discountAmount;
             const tenderedInput = parseFloat(document.getElementById('amountTendered').value) || 0;
             const pointsApplied = paymentMethod === 'loyalty_points' ? pointsToRedeem : 0;
+            const gcashInput = paymentMethod === 'gcash' ? (parseFloat(document.getElementById('gcashPaidAmount').value) || 0) : 0;
+            const gcashReference = paymentMethod === 'gcash'
+                ? (document.getElementById('gcashReference').value || '').trim()
+                : '';
             const remainingDue = Math.max(0, total - pointsApplied);
 
             if (paymentMethod === 'loyalty_points' && tenderedInput + 0.005 < remainingDue) {
@@ -2911,6 +3055,31 @@ if ($taxStmt) {
                 btn.textContent = 'Confirm Payment';
                 return;
             }
+
+            if (paymentMethod === 'gcash') {
+                if (gcashInput <= 0) {
+                    showToast('Enter GCash amount received', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm Payment';
+                    return;
+                }
+                if (!gcashReference) {
+                    showToast('Enter GCash reference number', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm Payment';
+                    return;
+                }
+                const remainingAfterGcash = Math.max(0, remainingDue - gcashInput);
+                if (tenderedInput + 0.005 < remainingAfterGcash) {
+                    showToast('Insufficient total payment. Remaining ₱' + remainingAfterGcash.toFixed(2), 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm Payment';
+                    return;
+                }
+            }
+
+            const paidTotal = tenderedInput + gcashInput;
+            const changeAmount = Math.max(0, paidTotal - remainingDue);
 
             const now = new Date();
             const saleData = {
@@ -2922,6 +3091,10 @@ if ($taxStmt) {
                 discount_amount: discountAmount,
                 payment_method: paymentMethod,
                 amount_tendered: tenderedInput,
+                amount_paid: paidTotal,
+                change_amount: changeAmount,
+                gcash_paid_amount: gcashInput,
+                gcash_reference: gcashReference,
                 receipt_no: 'TX-' + now.getTime().toString().slice(-8),
                 created_at: now.toISOString(),
                 cashier: document.body.dataset.cashierName || 'Cashier',
@@ -3329,7 +3502,9 @@ if ($taxStmt) {
             const pointsRedeemed = parseFloat(saleData.points_to_redeem ?? saleData.points_redeemed ?? 0) || 0;
             const cashDue = Math.max(0, total - pointsRedeemed);
             const tendered = (typeof saleData.amount_tendered === 'number') ? saleData.amount_tendered : total;
-            const change = Math.max(0, tendered - cashDue);
+            const gcashPaid = parseFloat(saleData.gcash_paid_amount ?? 0) || 0;
+            const paidTotal = (typeof saleData.amount_paid === 'number') ? saleData.amount_paid : (tendered + gcashPaid);
+            const change = (typeof saleData.change_amount === 'number') ? saleData.change_amount : Math.max(0, paidTotal - cashDue);
             const payMethod = saleData.payment_method || 'cash';
 
             // Header
@@ -3374,7 +3549,16 @@ if ($taxStmt) {
             await sendBytes(ESCPOS.BOLD_ON);
             await sendText(padLine('TOTAL', fmtMoney(total), W) + '\n');
             await sendBytes(ESCPOS.BOLD_OFF);
-            await sendText(padLine('Paid (' + payMethod + ')', fmtMoney(tendered), W) + '\n');
+            if (gcashPaid > 0) {
+                await sendText(padLine('GCash Paid', fmtMoney(gcashPaid), W) + '\n');
+                if (saleData.gcash_reference) {
+                    await sendText('Ref: ' + saleData.gcash_reference + '\n');
+                }
+            }
+            if (tendered > 0) {
+                await sendText(padLine('Cash Paid', fmtMoney(tendered), W) + '\n');
+            }
+            await sendText(padLine('Paid (' + payMethod + ')', fmtMoney(paidTotal), W) + '\n');
             await sendText(padLine('Change', fmtMoney(change), W) + '\n');
 
             // Footer
@@ -3483,7 +3667,9 @@ if ($taxStmt) {
             const pointsRedeemed = parseFloat(saleData.points_to_redeem ?? saleData.points_redeemed ?? 0) || 0;
             const cashDue = Math.max(0, total - pointsRedeemed);
             const tendered = (typeof saleData.amount_tendered === 'number') ? saleData.amount_tendered : total;
-            const change = Math.max(0, tendered - cashDue);
+            const gcashPaid = parseFloat(saleData.gcash_paid_amount ?? 0) || 0;
+            const paidTotal = (typeof saleData.amount_paid === 'number') ? saleData.amount_paid : (tendered + gcashPaid);
+            const change = (typeof saleData.change_amount === 'number') ? saleData.change_amount : Math.max(0, paidTotal - cashDue);
             const payMethod = saleData.payment_method || 'cash';
 
             const out = [];
@@ -3513,7 +3699,16 @@ if ($taxStmt) {
                 out.push(padLine('Discount (' + discountPct + '%)', '-' + fmtMoney(discountAmt), W));
             }
             out.push(padLine('TOTAL', fmtMoney(total), W));
-            out.push(padLine('Paid (' + payMethod + ')', fmtMoney(tendered), W));
+            if (gcashPaid > 0) {
+                out.push(padLine('GCash Paid', fmtMoney(gcashPaid), W));
+                if (saleData.gcash_reference) {
+                    out.push('Ref: ' + saleData.gcash_reference);
+                }
+            }
+            if (tendered > 0) {
+                out.push(padLine('Cash Paid', fmtMoney(tendered), W));
+            }
+            out.push(padLine('Paid (' + payMethod + ')', fmtMoney(paidTotal), W));
             out.push(padLine('Change', fmtMoney(change), W));
             out.push('');
             out.push('Thank you! Get well soon.');
@@ -3600,7 +3795,9 @@ if ($taxStmt) {
             const pointsRedeemed = parseFloat(saleData.points_to_redeem ?? saleData.points_redeemed ?? 0) || 0;
             const cashDue = Math.max(0, total - pointsRedeemed);
             const tendered = (typeof saleData.amount_tendered === 'number') ? saleData.amount_tendered : total;
-            const change = Math.max(0, tendered - cashDue);
+            const gcashPaid = parseFloat(saleData.gcash_paid_amount ?? 0) || 0;
+            const paidTotal = (typeof saleData.amount_paid === 'number') ? saleData.amount_paid : (tendered + gcashPaid);
+            const change = (typeof saleData.change_amount === 'number') ? saleData.change_amount : Math.max(0, paidTotal - cashDue);
 
             const rows = saleData.items.map(item => {
                 const lineTotal = item.price * item.qty;
@@ -3644,7 +3841,10 @@ if ($taxStmt) {
                     <div class="row"><span>VAT (12%)</span><span>₱${tax.toFixed(2)}</span></div>
                     ${discountPct > 0 ? `<div class="row" style="color:#dc2626;"><span>Discount (${discountPct}%)</span><span>-₱${discountAmt.toFixed(2)}</span></div>` : ''}
                     <div class="row total"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
-                    <div class="row"><span>Paid (${saleData.payment_method})</span><span>₱${tendered.toFixed(2)}</span></div>
+                    ${gcashPaid > 0 ? `<div class="row"><span>GCash Paid</span><span>₱${gcashPaid.toFixed(2)}</span></div>` : ''}
+                    ${saleData.gcash_reference ? `<div class="row"><span>GCash Ref</span><span>${escapeHtmlPos(saleData.gcash_reference)}</span></div>` : ''}
+                    ${tendered > 0 ? `<div class="row"><span>Cash Paid</span><span>₱${tendered.toFixed(2)}</span></div>` : ''}
+                    <div class="row"><span>Paid (${saleData.payment_method})</span><span>₱${paidTotal.toFixed(2)}</span></div>
                     <div class="row"><span>Change</span><span>₱${change.toFixed(2)}</span></div>
                 </div>
 

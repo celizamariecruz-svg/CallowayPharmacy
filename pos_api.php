@@ -52,6 +52,8 @@ switch ($action) {
         $total           = floatval($input['total'] ?? 0);
         $paymentMethod   = strtolower(trim($input['payment_method'] ?? 'cash'));
         $amountTendered  = floatval($input['amount_tendered'] ?? $total);
+        $gcashPaidAmount = floatval($input['gcash_paid_amount'] ?? 0);
+        $gcashReference  = trim((string)($input['gcash_reference'] ?? ''));
         // Server-generated receipt number — never trust client-supplied values
         $receiptNo       = 'TX-' . substr(time(), -8) . '-' . mt_rand(100, 999);
         // Cashier always comes from session — prevent impersonation
@@ -67,7 +69,7 @@ switch ($action) {
             exit;
         }
 
-        $allowedPaymentMethods = ['cash', 'loyalty_points'];
+        $allowedPaymentMethods = ['cash', 'gcash', 'loyalty_points'];
         if (!in_array($paymentMethod, $allowedPaymentMethods, true)) {
             echo json_encode(['success' => false, 'message' => 'Invalid payment method']);
             exit;
@@ -87,6 +89,12 @@ switch ($action) {
             }
             if (!posColumnExists($conn, 'sales', 'points_redeemed')) {
                 $conn->query("ALTER TABLE sales ADD COLUMN points_redeemed DECIMAL(12,2) DEFAULT 0");
+            }
+            if (!posColumnExists($conn, 'sales', 'gcash_paid_amount')) {
+                $conn->query("ALTER TABLE sales ADD COLUMN gcash_paid_amount DECIMAL(12,2) DEFAULT 0");
+            }
+            if (!posColumnExists($conn, 'sales', 'gcash_reference')) {
+                $conn->query("ALTER TABLE sales ADD COLUMN gcash_reference VARCHAR(60) NULL");
             }
             // Ensure loyalty_members has decimal points
             $conn->query("ALTER TABLE loyalty_members MODIFY COLUMN points DECIMAL(12,2) NOT NULL DEFAULT 0");
@@ -217,23 +225,45 @@ switch ($action) {
             $pointsApplied = ($pointsToRedeem > 0 && $loyaltyMemberId) ? min($pointsToRedeem, $total) : 0;
             $cashDue = max(0, $total - $pointsApplied);
 
+            if ($paymentMethod === 'gcash' && $gcashPaidAmount <= 0) {
+                echo json_encode(['success' => false, 'message' => 'GCash amount is required']);
+                ob_end_flush();
+                exit;
+            }
+            if ($paymentMethod === 'gcash' && $gcashReference === '') {
+                echo json_encode(['success' => false, 'message' => 'GCash reference number is required']);
+                ob_end_flush();
+                exit;
+            }
+
             if ($paymentMethod === 'loyalty_points' && $amountTendered + 0.005 < $cashDue) {
                 echo json_encode(['success' => false, 'message' => 'Cash is not enough for the remaining amount (₱' . number_format($cashDue, 2) . ')']);
                 ob_end_flush();
                 exit;
             }
 
-            $changeAmount = max(0, $amountTendered - $cashDue);
-            $paymentMethodStored = ($paymentMethod === 'loyalty_points' && $pointsApplied > 0 && $cashDue > 0)
-                ? 'loyalty_points+cash'
-                : $paymentMethod;
+            if ($paymentMethod === 'gcash' && ($gcashPaidAmount + $amountTendered + 0.005) < $cashDue) {
+                echo json_encode(['success' => false, 'message' => 'Insufficient payment amount for this GCash transaction']);
+                ob_end_flush();
+                exit;
+            }
+
+            $paidAmount = $amountTendered + ($paymentMethod === 'gcash' ? $gcashPaidAmount : 0);
+            $changeAmount = max(0, $paidAmount - $cashDue);
+            if ($paymentMethod === 'loyalty_points' && $pointsApplied > 0 && $cashDue > 0) {
+                $paymentMethodStored = 'loyalty_points+cash';
+            } elseif ($paymentMethod === 'gcash' && $amountTendered > 0) {
+                $paymentMethodStored = 'gcash+cash';
+            } else {
+                $paymentMethodStored = $paymentMethod;
+            }
 
             // 2. Insert sale header with subtotal, tax, discount, loyalty info
             $stmt = $conn->prepare("
-                INSERT INTO sales (sale_reference, subtotal, tax_amount, discount_percent, discount_amount, total, payment_method, paid_amount, change_amount, cashier, loyalty_member_id, points_redeemed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO sales (sale_reference, subtotal, tax_amount, discount_percent, discount_amount, total, payment_method, paid_amount, change_amount, cashier, loyalty_member_id, points_redeemed, gcash_paid_amount, gcash_reference)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->bind_param("sdddddsddsid", $receiptNo, $subtotal, $taxAmount, $discountPercent, $discountAmount, $total, $paymentMethodStored, $amountTendered, $changeAmount, $cashier, $loyaltyMemberId, $pointsApplied);
+            $stmt->bind_param("sdddddsddsidds", $receiptNo, $subtotal, $taxAmount, $discountPercent, $discountAmount, $total, $paymentMethodStored, $paidAmount, $changeAmount, $cashier, $loyaltyMemberId, $pointsApplied, $gcashPaidAmount, $gcashReference);
             $stmt->execute();
             $saleId = $stmt->insert_id;
 
