@@ -1213,30 +1213,6 @@ if ($taxStmt) {
             border-radius: 999px;
             margin-bottom: 0.45rem;
         }
-        .gcash-qr-wrap {
-            background: #ffffff;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 10px;
-            padding: 0.45rem;
-            width: 152px;
-            height: 152px;
-            margin: 0 auto 0.35rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .gcash-qr-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 6px;
-        }
-        .gcash-qr-fallback {
-            display: none;
-            text-align: center;
-            font-size: 0.74rem;
-            color: var(--text-light);
-        }
 
         .modal-actions .btn-cancel:hover { border-color: var(--text-light); }
 
@@ -2133,10 +2109,6 @@ if ($taxStmt) {
 
             <div class="gcash-input-group" id="gcashInputGroup">
                 <span class="gcash-badge">Manual Verification</span>
-                <div class="gcash-qr-wrap" id="gcashQrWrap">
-                    <img src="images/gcash-qr.jpg" alt="Scan to pay with GCash" id="gcashQrImage" onerror="handleGcashQrMissing()">
-                </div>
-                <div class="gcash-qr-fallback" id="gcashQrFallback">GCash QR not found. Place image at images/gcash-qr.jpg</div>
                 <label for="gcashPaidAmount">GCash Amount Received (PHP)</label>
                 <input type="number" id="gcashPaidAmount" min="0" step="0.01" placeholder="0.00">
                 <label for="gcashReference">GCash Reference Number</label>
@@ -2375,13 +2347,6 @@ if ($taxStmt) {
             remainingEl.classList.toggle('due', remaining > 0);
 
             updateChange();
-        }
-
-        function handleGcashQrMissing() {
-            const wrap = document.getElementById('gcashQrWrap');
-            const fallback = document.getElementById('gcashQrFallback');
-            if (wrap) wrap.style.display = 'none';
-            if (fallback) fallback.style.display = 'block';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
