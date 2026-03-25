@@ -470,7 +470,7 @@ $salesTrend = getSalesTrend($conn);
 
             <!-- Low Stock -->
             <a href="inventory_management.php?filter=low_stock" style="text-decoration: none;">
-                <div class="stat-card-premium glass-panel" style="border-left: 4px solid var(--accent-color);">
+                <div class="stat-card-premium glass-panel" style="border-color: var(--accent-color);">
                     <div class="stat-content">
                         <h3>Low Stock</h3>
                         <div class="value" style="color: var(--accent-color);">
@@ -486,7 +486,7 @@ $salesTrend = getSalesTrend($conn);
             <!-- Expiring Soon -->
             <a href="medicine-locator.php" style="text-decoration: none;">
                 <div class="stat-card-premium glass-panel"
-                    style="<?php echo $stats['expiring_soon'] > 0 ? 'border-left: 4px solid var(--danger-color);' : ''; ?>">
+                    style="<?php echo $stats['expiring_soon'] > 0 ? 'border-color: var(--danger-color);' : ''; ?>">
                     <div class="stat-content">
                         <h3>Expiring Soon</h3>
                         <div class="value"

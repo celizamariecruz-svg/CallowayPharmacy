@@ -1735,6 +1735,12 @@ if ($taxStmt) {
             transition: border-color 0.15s, box-shadow 0.15s;
             cursor: pointer;
         }
+        .oo-card.status-pending { border-color: rgba(245, 158, 11, 0.55); }
+        .oo-card.status-confirmed { border-color: rgba(59, 130, 246, 0.5); }
+        .oo-card.status-preparing { border-color: rgba(124, 58, 237, 0.5); }
+        .oo-card.status-ready { border-color: rgba(16, 185, 129, 0.5); }
+        .oo-card.status-completed { border-color: rgba(34, 197, 94, 0.5); }
+        .oo-card.status-cancelled { border-color: rgba(239, 68, 68, 0.5); }
         .oo-card:hover {
             border-color: var(--primary-color);
             box-shadow: 0 2px 10px rgba(var(--primary-rgb), 0.08);
@@ -4086,7 +4092,7 @@ if ($taxStmt) {
                 const actions = getOrderActions(order);
 
                 return `
-                    <div class="oo-card" id="ooCard${order.order_id}" onclick="toggleOrderExpand(${order.order_id})">
+                    <div class="oo-card status-${statusClass}" id="ooCard${order.order_id}" onclick="toggleOrderExpand(${order.order_id})">
                         <div class="oo-card-header">
                             <span class="oo-card-ref">
                                 <i class="fas fa-shopping-cart"></i>

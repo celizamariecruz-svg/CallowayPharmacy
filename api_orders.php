@@ -15,6 +15,17 @@ header('Expires: 0');
 
 $action = $_GET['action'] ?? '';
 
+function columnExistsInTable($conn, $tableName, $columnName) {
+    $stmt = $conn->prepare("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1");
+    if (!$stmt) return false;
+    $stmt->bind_param('ss', $tableName, $columnName);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $exists = ($res && $res->num_rows > 0);
+    $stmt->close();
+    return $exists;
+}
+
 switch ($action) {
     case 'track':
         $ref = trim($_GET['ref'] ?? '');
@@ -156,6 +167,9 @@ switch ($action) {
         while ($row = $result->fetch_assoc()) {
             $orderId = $row['order_id'];
             $row['order_ref'] = 'ONL-' . str_pad($orderId, 6, '0', STR_PAD_LEFT);
+            $row['entry_type'] = 'online_order';
+            $row['source'] = 'ONLINE';
+            $row['entry_id'] = 'online_' . $orderId;
             
             // Fetch items for this order
             $itemStmt = $conn->prepare("
@@ -215,6 +229,121 @@ switch ($action) {
             $orders[] = $row;
         }
         $stmt->close();
+
+        // Optionally include POS sales history (staff: all recent; customer: loyalty-linked only)
+        try {
+            if ($conn->query("SHOW TABLES LIKE 'sales'")->num_rows > 0) {
+                $hasSalesPayment = columnExistsInTable($conn, 'sales', 'payment_method');
+                $hasSalesCashier = columnExistsInTable($conn, 'sales', 'cashier');
+                $hasSalesStatus = columnExistsInTable($conn, 'sales', 'status');
+                $hasSalesPointsRedeemed = columnExistsInTable($conn, 'sales', 'points_redeemed');
+                $hasSalesLoyaltyMemberId = columnExistsInTable($conn, 'sales', 'loyalty_member_id');
+
+                $salesCols = "s.sale_id, s.sale_reference, s.total, s.created_at";
+                if ($hasSalesPayment) $salesCols .= ", s.payment_method";
+                if ($hasSalesCashier) $salesCols .= ", s.cashier";
+                if ($hasSalesStatus) $salesCols .= ", s.status";
+                if ($hasSalesPointsRedeemed) $salesCols .= ", s.points_redeemed";
+
+                $salesRows = [];
+                if ($isStaff) {
+                    $salesStmt = $conn->prepare("SELECT $salesCols FROM sales s ORDER BY s.created_at DESC LIMIT 100");
+                    if ($salesStmt) {
+                        $salesStmt->execute();
+                        $salesRes = $salesStmt->get_result();
+                        while ($s = $salesRes->fetch_assoc()) {
+                            $salesRows[] = $s;
+                        }
+                        $salesStmt->close();
+                    }
+                } else {
+                    $loyaltyMemberId = 0;
+                    if ($hasSalesLoyaltyMemberId && $conn->query("SHOW TABLES LIKE 'loyalty_members'")->num_rows > 0) {
+                        $hasLmUserId = columnExistsInTable($conn, 'loyalty_members', 'user_id');
+                        $hasLmEmail = columnExistsInTable($conn, 'loyalty_members', 'email');
+
+                        if ($hasLmUserId) {
+                            $lmStmt = $conn->prepare("SELECT member_id FROM loyalty_members WHERE user_id = ? LIMIT 1");
+                            if ($lmStmt) {
+                                $lmStmt->bind_param('i', $userId);
+                                $lmStmt->execute();
+                                $lmRow = $lmStmt->get_result()->fetch_assoc();
+                                $lmStmt->close();
+                                if ($lmRow) $loyaltyMemberId = intval($lmRow['member_id']);
+                            }
+                        }
+
+                        if ($loyaltyMemberId <= 0 && $hasLmEmail && !empty($userEmail)) {
+                            $lmStmt = $conn->prepare("SELECT member_id FROM loyalty_members WHERE email = ? LIMIT 1");
+                            if ($lmStmt) {
+                                $lmStmt->bind_param('s', $userEmail);
+                                $lmStmt->execute();
+                                $lmRow = $lmStmt->get_result()->fetch_assoc();
+                                $lmStmt->close();
+                                if ($lmRow) $loyaltyMemberId = intval($lmRow['member_id']);
+                            }
+                        }
+                    }
+
+                    if ($loyaltyMemberId > 0 && $hasSalesLoyaltyMemberId) {
+                        $salesStmt = $conn->prepare("SELECT $salesCols FROM sales s WHERE s.loyalty_member_id = ? ORDER BY s.created_at DESC LIMIT 100");
+                        if ($salesStmt) {
+                            $salesStmt->bind_param('i', $loyaltyMemberId);
+                            $salesStmt->execute();
+                            $salesRes = $salesStmt->get_result();
+                            while ($s = $salesRes->fetch_assoc()) {
+                                $salesRows[] = $s;
+                            }
+                            $salesStmt->close();
+                        }
+                    }
+                }
+
+                foreach ($salesRows as $sale) {
+                    $saleId = intval($sale['sale_id']);
+
+                    $saleItems = [];
+                    if ($conn->query("SHOW TABLES LIKE 'sale_items'")->num_rows > 0) {
+                        $siStmt = $conn->prepare("SELECT name AS product_name, quantity, line_total AS subtotal FROM sale_items WHERE sale_id = ?");
+                        if ($siStmt) {
+                            $siStmt->bind_param('i', $saleId);
+                            $siStmt->execute();
+                            $siRes = $siStmt->get_result();
+                            while ($si = $siRes->fetch_assoc()) {
+                                $saleItems[] = $si;
+                            }
+                            $siStmt->close();
+                        }
+                    }
+
+                    $orders[] = [
+                        'order_id' => $saleId,
+                        'entry_id' => 'pos_' . $saleId,
+                        'entry_type' => 'pos_sale',
+                        'source' => 'POS',
+                        'order_ref' => $sale['sale_reference'] ?? ('TX-' . $saleId),
+                        'status' => ucfirst($sale['status'] ?? 'Completed'),
+                        'total_amount' => floatval($sale['total'] ?? 0),
+                        'created_at' => $sale['created_at'] ?? null,
+                        'updated_at' => $sale['created_at'] ?? null,
+                        'payment_method' => $sale['payment_method'] ?? 'N/A',
+                        'cashier' => $sale['cashier'] ?? 'POS',
+                        'items' => $saleItems,
+                        'item_count' => count($saleItems),
+                        'points_earned' => 0,
+                        'points_redeemed' => floatval($sale['points_redeemed'] ?? 0)
+                    ];
+                }
+            }
+        } catch (Exception $e) {
+            // Keep endpoint resilient even when POS history is unavailable.
+        }
+
+        usort($orders, function ($a, $b) {
+            $at = strtotime($a['created_at'] ?? '1970-01-01 00:00:00');
+            $bt = strtotime($b['created_at'] ?? '1970-01-01 00:00:00');
+            return $bt <=> $at;
+        });
 
         echo json_encode(['success' => true, 'orders' => $orders, 'is_staff' => $isStaff]);
         break;

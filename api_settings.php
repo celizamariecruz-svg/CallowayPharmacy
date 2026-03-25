@@ -114,6 +114,37 @@ function getAllSettings($conn) {
     ]);
 }
 
+function isBlockedTestDomain($email) {
+    $email = strtolower(trim((string)$email));
+    if ($email === '' || strpos($email, '@') === false) return false;
+
+    $domain = substr(strrchr($email, '@'), 1);
+    $blockedDomains = [
+        'example.com',
+        'example.org',
+        'example.net',
+        'test.com',
+        'local.invalid'
+    ];
+
+    return in_array($domain, $blockedDomains, true);
+}
+
+function validateRealEmailOrThrow($email, $fieldName = 'Email') {
+    $email = trim((string)$email);
+    if ($email === '') return '';
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        throw new Exception($fieldName . ' is not a valid email address');
+    }
+
+    if (isBlockedTestDomain($email)) {
+        throw new Exception($fieldName . ' uses a test/fake domain. Please use a real inbox domain.');
+    }
+
+    return $email;
+}
+
 function saveCompanyInfo($conn) {
     $company_name = $_POST['company_name'] ?? '';
     $company_address = $_POST['company_address'] ?? '';
@@ -287,6 +318,8 @@ function saveAlertSettings($conn) {
     if (!in_array($report_frequency, ['daily', 'weekly', 'monthly'], true)) {
         $report_frequency = 'daily';
     }
+
+    $alert_email = validateRealEmailOrThrow($alert_email, 'Alert email');
     
     $settings = [
         'low_stock_threshold' => $low_stock_threshold,
@@ -317,6 +350,8 @@ function testEmail($conn) {
     if (empty($test_email)) {
         throw new Exception('Test email address is required');
     }
+
+    $test_email = validateRealEmailOrThrow($test_email, 'Test email');
     
     require_once 'email_service.php';
 

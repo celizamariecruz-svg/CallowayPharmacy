@@ -43,6 +43,7 @@ while ($row = $settings_result->fetch_assoc()) {
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
     <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="award-winning-polish.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js?v=2"></script>
@@ -885,6 +886,21 @@ while ($row = $settings_result->fetch_assoc()) {
                             <small>How often the store performance report is emailed</small>
                         </div>
                     </div>
+
+                    <hr style="border:none; border-top:1px solid var(--divider-color, #e2e8f0); margin:1.5rem 0;">
+
+                    <div class="form-group">
+                        <label>Email Automation Status</label>
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap; padding:0.65rem 0.8rem; border:1px solid var(--divider-color,#e2e8f0); border-radius:10px; background:var(--bg-color,#fff);">
+                            <div style="font-size:0.88rem; color:var(--text-color,#1e293b);">
+                                Last Email Cron Run: <strong id="cronLastRunLabel">Checking...</strong>
+                            </div>
+                            <button type="button" class="btn btn-secondary" id="runCronNowBtn" onclick="runCronNow()">
+                                <i class="fa-solid fa-bolt"></i> Run Now
+                            </button>
+                        </div>
+                        <small>Use this if alerts were missed. The system also auto-triggers daily for admin sessions.</small>
+                    </div>
                     
                     <?php if ($auth->hasPermission('settings.edit')): ?>
                     <div style="margin-top:1.5rem;">
@@ -1160,11 +1176,60 @@ while ($row = $settings_result->fetch_assoc()) {
                 master.addEventListener('change', toggle);
             }
         })();
+
+        async function loadCronStatus() {
+            const label = document.getElementById('cronLastRunLabel');
+            if (!label) return;
+
+            label.textContent = 'Checking...';
+            try {
+                const response = await fetch('api_settings.php?action=get_all_settings', { cache: 'no-store' });
+                const result = await response.json();
+                if (!result.success) {
+                    label.textContent = 'Unavailable';
+                    return;
+                }
+
+                const val = result.settings?.cron_last_run?.value || '';
+                if (!val) {
+                    label.textContent = 'Never';
+                    return;
+                }
+
+                label.textContent = val;
+            } catch (err) {
+                label.textContent = 'Unavailable';
+            }
+        }
+
+        async function runCronNow() {
+            const btn = document.getElementById('runCronNowBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running...';
+            }
+
+            try {
+                const response = await fetch('cron_web.php', { method: 'GET', credentials: 'same-origin', cache: 'no-store' });
+                const result = await response.json();
+                customAlert('Email Cron', result.message || (result.success ? 'Email cron executed.' : 'Email cron failed.'), result.success ? 'success' : 'error');
+                await loadCronStatus();
+            } catch (error) {
+                customAlert('Email Cron Error', 'Failed to trigger email cron: ' + error.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Run Now';
+                }
+            }
+        }
         
         function saveBackupConfig(e) {
             e.preventDefault();
             saveSettings('backupConfigForm', 'save_backup_config', 'backup-config-success');
         }
+
+        loadCronStatus();
         
         // Test Email
         async function testEmail() {

@@ -71,7 +71,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
     .os-filter-bar {
         display: flex;
         gap: 0.4rem;
-        margin-bottom: 1.2rem;
+        margin-bottom: 0.65rem;
         overflow-x: auto;
         padding-bottom: 0.3rem;
     }
@@ -100,6 +100,30 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         border-color: var(--primary-color);
     }
 
+    .os-source-bar {
+        display: flex;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+        overflow-x: auto;
+        padding-bottom: 0.2rem;
+    }
+    .os-source-btn {
+        padding: 0.34rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid var(--table-border);
+        background: var(--card-bg);
+        color: var(--text-light, #94a3b8);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .os-source-btn.active {
+        border-color: rgba(var(--primary-rgb), 0.35);
+        color: var(--primary-color);
+        background: rgba(var(--primary-rgb), 0.08);
+    }
+
     /* Orders list */
     .os-orders-list {
         display: grid;
@@ -115,6 +139,15 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         padding: 1.2rem;
         transition: transform 0.15s, box-shadow 0.15s;
         box-shadow: var(--shadow-sm);
+    }
+    .os-order-card.status-pending { border-color: rgba(245, 158, 11, 0.55); }
+    .os-order-card.status-confirmed { border-color: rgba(59, 130, 246, 0.5); }
+    .os-order-card.status-preparing { border-color: rgba(124, 58, 237, 0.5); }
+    .os-order-card.status-ready { border-color: rgba(16, 185, 129, 0.5); }
+    .os-order-card.status-completed { border-color: rgba(34, 197, 94, 0.5); }
+    .os-order-card.status-cancelled { border-color: rgba(239, 68, 68, 0.5); }
+    .os-order-card.source-pos {
+        box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.15), var(--shadow-sm);
     }
     .os-order-card:hover {
         transform: translateY(-1px);
@@ -442,13 +475,14 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
     <!-- Filter tabs -->
     <div class="os-filter-bar">
-        <button class="os-filter-btn active" data-filter="all">All Orders</button>
-        <button class="os-filter-btn" data-filter="active">Active</button>
-        <button class="os-filter-btn" data-filter="pending">Pending</button>
-        <button class="os-filter-btn" data-filter="confirmed_preparing">Confirmed &amp; Preparing</button>
-        <button class="os-filter-btn" data-filter="ready">Ready</button>
-        <button class="os-filter-btn" data-filter="completed">Completed</button>
-        <button class="os-filter-btn" data-filter="cancelled">Cancelled</button>
+        <button class="os-filter-btn active" data-filter="active">Active Orders</button>
+        <button class="os-filter-btn" data-filter="history">Order History</button>
+    </div>
+
+    <div class="os-source-bar" id="osSourceBar" style="display:none;">
+        <button class="os-source-btn active" data-source="all">All History</button>
+        <button class="os-source-btn" data-source="online">Online</button>
+        <button class="os-source-btn" data-source="pos">POS Sales</button>
     </div>
 
     <!-- Orders list -->
@@ -472,7 +506,8 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
   <script src="theme.js"></script>
   <script>
     let allOrders = [];
-    let currentFilter = 'all';
+    let currentFilter = 'active';
+    let currentSource = 'all';
     let isStaff = false;
 
     // Escape HTML
@@ -525,37 +560,55 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
     function renderSummary() {
         const summary = document.getElementById('osSummary');
-        const counts = { total: allOrders.length, active: 0, completed: 0, cancelled: 0 };
+        const counts = { total: allOrders.length, active: 0, history: 0, pos: 0, online: 0 };
         allOrders.forEach(o => {
             const s = (o.status || '').toLowerCase();
+            const isPos = (o.entry_type === 'pos_sale');
+            if (isPos) {
+                counts.pos++;
+                counts.history++;
+                return;
+            }
+            counts.online++;
             if (['pending', 'confirmed', 'preparing', 'ready'].includes(s)) counts.active++;
-            else if (s === 'completed') counts.completed++;
-            else if (s === 'cancelled') counts.cancelled++;
+            if (['completed', 'cancelled'].includes(s)) counts.history++;
         });
 
         summary.style.display = 'flex';
         summary.innerHTML = `
             <div class="os-summary-chip"><strong>${counts.total}</strong> Total</div>
             <div class="os-summary-chip" style="color:#2563eb;"><strong>${counts.active}</strong> Active</div>
-            <div class="os-summary-chip" style="color:#22c55e;"><strong>${counts.completed}</strong> Completed</div>
-            ${counts.cancelled > 0 ? `<div class="os-summary-chip" style="color:#ef4444;"><strong>${counts.cancelled}</strong> Cancelled</div>` : ''}
+            <div class="os-summary-chip" style="color:#16a34a;"><strong>${counts.history}</strong> History</div>
+            <div class="os-summary-chip" style="color:#1d4ed8;"><strong>${counts.pos}</strong> POS</div>
+            <div class="os-summary-chip" style="color:#7c3aed;"><strong>${counts.online}</strong> Online</div>
         `;
     }
 
     function renderOrders() {
         const list = document.getElementById('osOrdersList');
         let filtered = allOrders;
+        const sourceBar = document.getElementById('osSourceBar');
 
         if (currentFilter === 'active') {
-            filtered = allOrders.filter(o => ['pending', 'confirmed', 'preparing', 'ready'].includes((o.status || '').toLowerCase()));
-        } else if (currentFilter === 'confirmed_preparing') {
-            filtered = allOrders.filter(o => ['confirmed', 'preparing'].includes((o.status || '').toLowerCase()));
-        } else if (currentFilter !== 'all') {
-            filtered = allOrders.filter(o => (o.status || '').toLowerCase() === currentFilter);
+            sourceBar.style.display = 'none';
+            filtered = allOrders.filter(o => {
+                if (o.entry_type === 'pos_sale') return false;
+                return ['pending', 'confirmed', 'preparing', 'ready'].includes((o.status || '').toLowerCase());
+            });
+        } else {
+            sourceBar.style.display = 'flex';
+            filtered = allOrders.filter(o => {
+                const isPos = (o.entry_type === 'pos_sale');
+                if (currentSource === 'pos' && !isPos) return false;
+                if (currentSource === 'online' && isPos) return false;
+
+                if (isPos) return true;
+                return ['completed', 'cancelled'].includes((o.status || '').toLowerCase());
+            });
         }
 
         if (filtered.length === 0) {
-            const emptyLabel = currentFilter === 'all' ? 'orders' : `${currentFilter} orders`;
+            const emptyLabel = currentFilter === 'active' ? 'active orders' : 'history records';
             list.innerHTML = `
                 <div class="os-empty">
                     <i class="fas fa-filter"></i>
@@ -569,7 +622,9 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
     }
 
     function renderOrderCard(order) {
+        const isPos = order.entry_type === 'pos_sale';
         const statusClass = (order.status || 'pending').toLowerCase();
+        const safeStatusClass = statusClass.replace(/[^a-z0-9_-]/g, '-');
         const statusSteps = ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Completed'];
         const currentIndex = statusSteps.findIndex(s => s.toLowerCase() === statusClass);
         const isCancelled = statusClass === 'cancelled';
@@ -591,7 +646,15 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
 
         // Tracker
         let trackerHtml = '';
-        if (isCancelled) {
+        if (isPos) {
+            trackerHtml = `
+                <div class="os-tracker" style="justify-content:center;">
+                    <div class="os-tracker-step">
+                        <div class="os-tracker-dot active"><i class="fas fa-cash-register"></i></div>
+                        <span class="os-tracker-label active">POS Sale</span>
+                    </div>
+                </div>`;
+        } else if (isCancelled) {
             trackerHtml = `
                 <div class="os-tracker" style="justify-content:center;">
                     <div class="os-tracker-step">
@@ -632,7 +695,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         const timeStr = orderDate ? orderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
 
         return `
-            <div class="os-order-card" onclick="openDetailModal(${order.order_id})" style="cursor:pointer;">
+            <div class="os-order-card status-${safeStatusClass} ${isPos ? 'source-pos' : 'source-online'}" onclick='openDetailModal(${JSON.stringify(order.entry_id || order.order_id)})' style="cursor:pointer;">
                 <div class="os-order-header">
                     <span class="os-order-ref">${escapeHtml(order.order_ref)}</span>
                     <span class="os-status-badge ${statusClass}">${escapeHtml(order.status)}</span>
@@ -643,16 +706,18 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
                     <span class="os-order-total">₱${parseFloat(order.total_amount).toFixed(2)}</span>
                     <span class="os-order-date"><i class="far fa-calendar-alt"></i> ${dateStr} ${timeStr}</span>
                 </div>
-                ${order.points_earned > 0 ? `<div style="margin-top:0.4rem;"><span class="os-points-badge os-points-earned"><i class="fas fa-star"></i> +${parseFloat(order.points_earned).toFixed(0)} pts earned</span></div>` : ''}
+                ${isPos ? `<div style="margin-top:0.4rem;font-size:0.8rem;color:var(--text-light);"><i class="fas fa-store"></i> Cashier: ${escapeHtml(order.cashier || 'POS')}</div>` : ''}
+                ${!isPos && order.points_earned > 0 ? `<div style="margin-top:0.4rem;"><span class="os-points-badge os-points-earned"><i class="fas fa-star"></i> +${parseFloat(order.points_earned).toFixed(0)} pts earned</span></div>` : ''}
                 ${order.points_redeemed > 0 ? `<div style="margin-top:0.3rem;"><span class="os-points-badge os-points-redeemed"><i class="fas fa-gift"></i> ${parseFloat(order.points_redeemed).toFixed(0)} pts used</span></div>` : ''}
             </div>`;
     }
 
     // Detail Modal
-    function openDetailModal(orderId) {
-        const order = allOrders.find(o => o.order_id == orderId);
+    function openDetailModal(entryId) {
+        const order = allOrders.find(o => (o.entry_id || o.order_id) == entryId);
         if (!order) return;
 
+        const isPos = order.entry_type === 'pos_sale';
         const statusClass = (order.status || 'pending').toLowerCase();
         const orderDate = order.created_at ? new Date(order.created_at) : null;
         const dateStr = orderDate ? orderDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A';
@@ -665,14 +730,15 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         // Order info
         html += `<div class="os-detail-section">
             <div class="os-detail-label"><i class="fas fa-info-circle"></i> Order Information</div>
-            <div class="os-detail-row"><span>Order Date</span><span>${dateStr}</span></div>
-            <div class="os-detail-row"><span>Order Time</span><span>${timeStr}</span></div>
+            <div class="os-detail-row"><span>${isPos ? 'Sale Date' : 'Order Date'}</span><span>${dateStr}</span></div>
+            <div class="os-detail-row"><span>${isPos ? 'Sale Time' : 'Order Time'}</span><span>${timeStr}</span></div>
             <div class="os-detail-row"><span>Last Updated</span><span>${updatedStr}</span></div>
-            <div class="os-detail-row"><span>Payment Method</span><span>${escapeHtml(order.payment_method || 'Cash on Pickup')}</span></div>
+            <div class="os-detail-row"><span>Payment Method</span><span>${escapeHtml(order.payment_method || (isPos ? 'N/A' : 'Cash on Pickup'))}</span></div>
+            ${isPos ? `<div class="os-detail-row"><span>Cashier</span><span>${escapeHtml(order.cashier || 'POS')}</span></div>` : ''}
         </div>`;
 
         // Admin extra details
-        if (isStaff) {
+        if (isStaff && !isPos) {
             html += `<div class="os-detail-section">
                 <div class="os-detail-label"><i class="fas fa-user-shield"></i> Admin Details <span class="os-admin-badge">STAFF VIEW</span></div>
                 <div class="os-detail-row"><span>Customer Name</span><span>${escapeHtml(order.customer_full_name || order.customer_name || 'N/A')}</span></div>
@@ -707,7 +773,7 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
         if (order.points_earned > 0) {
             html += `<div class="os-detail-row"><span>Points Earned</span><span class="os-points-badge os-points-earned"><i class="fas fa-star"></i> +${parseFloat(order.points_earned).toFixed(0)} points</span></div>`;
         }
-        if (statusClass === 'completed' && order.points_earned == 0 && !isStaff) {
+        if (!isPos && statusClass === 'completed' && order.points_earned == 0 && !isStaff) {
             html += `<div style="font-size:0.8rem;color:var(--text-light);margin-top:0.3rem;"><i class="fas fa-info-circle"></i> Points are awarded upon order pickup verification.</div>`;
         }
         html += `</div>`;
@@ -729,6 +795,19 @@ $isCustomer = (($_SESSION['role_name'] ?? '') === 'customer');
             document.querySelectorAll('.os-filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.dataset.filter;
+            if (currentFilter === 'active') {
+                currentSource = 'all';
+                document.querySelectorAll('.os-source-btn').forEach((b, idx) => b.classList.toggle('active', idx === 0));
+            }
+            renderOrders();
+        });
+    });
+
+    document.querySelectorAll('.os-source-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.os-source-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentSource = this.dataset.source;
             renderOrders();
         });
     });

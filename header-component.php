@@ -209,4 +209,28 @@ $_headerIsCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] ==
   if (typeof window.toggleNotifPanel !== 'function') {
     window.toggleNotifPanel = function () {};
   }
+
+  <?php $canTriggerCron = !empty($_SESSION['role_name']) && in_array(strtolower((string)$_SESSION['role_name']), ['admin', 'owner', 'superadmin', 'administrator']); ?>
+  <?php if ($canTriggerCron): ?>
+  (function () {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = 'calloway_cron_ping_' + today;
+      if (sessionStorage.getItem(key)) return;
+
+      sessionStorage.setItem(key, '1');
+      setTimeout(function () {
+        fetch('cron_web.php', {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store'
+        }).catch(function () {
+          // Ignore network errors; manual trigger remains available in settings.
+        });
+      }, 1200);
+    } catch (e) {
+      // Ignore storage availability issues.
+    }
+  })();
+  <?php endif; ?>
 </script>
