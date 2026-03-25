@@ -76,6 +76,11 @@ jobs:
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
+    env:
+      AZ_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID_495B0B0777B64BA3969DCD590D8F0175 }}
+      AZ_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID_5F55D94C32F34FA2BAB448C4FB149026 }}
+      AZ_SUBSCRIPTION_ID: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3A979E6025D54F4487C3C0CA4744B9B1 }}
+      AZ_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
 
     steps:
       - name: Download artifact from build job
@@ -87,15 +92,15 @@ jobs:
         run: ls -lah
       
       - name: Login to Azure (Service Principal)
-        if: ${{ secrets.AZUREAPPSERVICE_CLIENTID_495B0B0777B64BA3969DCD590D8F0175 != '' && secrets.AZUREAPPSERVICE_TENANTID_5F55D94C32F34FA2BAB448C4FB149026 != '' && secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3A979E6025D54F4487C3C0CA4744B9B1 != '' }}
+        if: ${{ env.AZ_CLIENT_ID != '' && env.AZ_TENANT_ID != '' && env.AZ_SUBSCRIPTION_ID != '' }}
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_495B0B0777B64BA3969DCD590D8F0175 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5F55D94C32F34FA2BAB448C4FB149026 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3A979E6025D54F4487C3C0CA4744B9B1 }}
+          client-id: ${{ env.AZ_CLIENT_ID }}
+          tenant-id: ${{ env.AZ_TENANT_ID }}
+          subscription-id: ${{ env.AZ_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App (Service Principal)
-        if: ${{ secrets.AZUREAPPSERVICE_CLIENTID_495B0B0777B64BA3969DCD590D8F0175 != '' && secrets.AZUREAPPSERVICE_TENANTID_5F55D94C32F34FA2BAB448C4FB149026 != '' && secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3A979E6025D54F4487C3C0CA4744B9B1 != '' }}
+        if: ${{ env.AZ_CLIENT_ID != '' && env.AZ_TENANT_ID != '' && env.AZ_SUBSCRIPTION_ID != '' }}
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
@@ -104,16 +109,16 @@ jobs:
           package: php-app.zip
 
       - name: Deploy to Azure Web App (Publish Profile fallback)
-        if: ${{ !(secrets.AZUREAPPSERVICE_CLIENTID_495B0B0777B64BA3969DCD590D8F0175 != '' && secrets.AZUREAPPSERVICE_TENANTID_5F55D94C32F34FA2BAB448C4FB149026 != '' && secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3A979E6025D54F4487C3C0CA4744B9B1 != '') && secrets.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
+        if: ${{ !(env.AZ_CLIENT_ID != '' && env.AZ_TENANT_ID != '' && env.AZ_SUBSCRIPTION_ID != '') && env.AZ_PUBLISH_PROFILE != '' }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'PharmacyCalloway'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          publish-profile: ${{ env.AZ_PUBLISH_PROFILE }}
           package: php-app.zip
 
       - name: Fail when Azure credentials are missing
-        if: ${{ !(secrets.AZUREAPPSERVICE_CLIENTID_495B0B0777B64BA3969DCD590D8F0175 != '' && secrets.AZUREAPPSERVICE_TENANTID_5F55D94C32F34FA2BAB448C4FB149026 != '' && secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3A979E6025D54F4487C3C0CA4744B9B1 != '') && secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
+        if: ${{ !(env.AZ_CLIENT_ID != '' && env.AZ_TENANT_ID != '' && env.AZ_SUBSCRIPTION_ID != '') && env.AZ_PUBLISH_PROFILE == '' }}
         run: |
           echo "No Azure deployment credentials configured."
           echo "Set either Service Principal secrets (client/tenant/subscription) or AZURE_WEBAPP_PUBLISH_PROFILE in repository secrets."
