@@ -28,231 +28,80 @@ $page_title = 'Supplier Management';
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
     <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="award-winning-polish.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js?v=2"></script>
     <style>
-        .supplier-container {
-            max-width: 1400px;
-            margin: 100px auto 2rem;
-            padding: 2rem;
-        }
-        
-        .supplier-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        
-        .supplier-header h1 {
-            color: var(--primary-color);
-            margin: 0;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background: var(--secondary-color);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .search-bar {
-            margin-bottom: 1.5rem;
-        }
-        
-        .search-bar input {
-            width: 100%;
-            max-width: 400px;
-            padding: 0.75rem 1rem;
-            border: 2px solid var(--input-border);
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        
-        .suppliers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .supplier-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        
-        [data-theme="dark"] .supplier-card {
-            background: #1e293b;
-        }
-        
-        .supplier-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-        
-        .supplier-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 1rem;
-        }
-        
-        .supplier-info {
-            margin-bottom: 1rem;
-        }
-        
-        .supplier-info-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-color);
-            opacity: 0.8;
-        }
-        
-        .supplier-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        .btn-sm {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-        }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        [data-theme="dark"] .modal-content {
-            background: #1e293b;
-        }
-        
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 2px solid var(--input-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-header h2 {
-            margin: 0;
-            color: var(--text-color);
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--input-border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--bg-color);
-            color: var(--text-color);
-        }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 2px solid var(--input-border);
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-color);
-            opacity: 0.5;
-        }
-        
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
+        /* ── Supplier Management — Award-Winning ──────────── */
+        .supplier-container { max-width:1440px; margin:0 auto; padding:1.25rem 1.5rem 2rem; }
 
-        @media (max-width: 768px) {
-            .supplier-container { padding: 1rem; }
-            .supplier-header { flex-direction: column; align-items: flex-start; }
-            .suppliers-grid { grid-template-columns: 1fr; }
+        /* Page Header Card */
+        .supplier-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; background:var(--c-surface,#fff); border:1px solid var(--c-border,#e5e7eb); border-radius:16px; padding:1.25rem 1.5rem; box-shadow:0 1px 3px rgba(0,0,0,.06); position:relative; overflow:hidden; animation:smFade .35s ease both; }
+        .supplier-header::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:linear-gradient(180deg,#0a74da,#6366f1); border-radius:4px 0 0 4px; }
+        .supplier-header::after { content:''; position:absolute; top:-50%; right:-15%; width:280px; height:280px; background:radial-gradient(circle,rgba(10,116,218,.04) 0%,transparent 70%); pointer-events:none; }
+        .supplier-header h1 { font-size:1.5rem; font-weight:800; letter-spacing:-.02em; color:var(--text-color,#222); margin:0; display:flex; align-items:center; gap:.5rem; }
+        .supplier-header h1 i { background:linear-gradient(135deg,#0a74da,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; font-size:1.3rem; }
+        .supplier-header p { margin:.25rem 0 0; color:#64748b; font-size:.87rem; }
+
+        .btn { padding:.6rem 1.25rem; border:none; border-radius:10px; font-weight:600; cursor:pointer; font-size:.87rem; font-family:inherit; transition:all .25s cubic-bezier(.34,1.56,.64,1); display:inline-flex; align-items:center; gap:.4rem; }
+        .btn-primary { background:linear-gradient(135deg,#0a74da,#5b7fff); color:#fff; box-shadow:0 3px 12px rgba(10,116,218,.25); }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(10,116,218,.35); }
+        .btn-primary:active { transform:scale(.97); }
+        .btn-secondary { background:rgba(10,116,218,.08); color:#0a74da; } .btn-secondary:hover{background:rgba(10,116,218,.15);transform:translateY(-1px)}
+        .btn-danger { background:#ef4444; color:#fff; } .btn-danger:hover{background:#dc2626;transform:translateY(-1px)}
+        .btn-sm { padding:.4rem .85rem; font-size:.8rem; border-radius:8px; }
+
+        /* Search Bar */
+        .search-bar { margin-bottom:1.25rem; animation:smFade .35s .05s ease both; }
+        .search-bar input { width:100%; max-width:420px; padding:.65rem 1rem .65rem 2.5rem; border:1.5px solid var(--c-border,#e5e7eb); border-radius:12px; font-size:.9rem; background:var(--c-surface,#fff) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2394a3b8' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath d='M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") no-repeat 10px center; color:var(--text-color,#222); font-family:inherit; transition:border-color .2s ease,box-shadow .2s ease; }
+        .search-bar input:focus { outline:none; border-color:#0a74da; box-shadow:0 0 0 3px rgba(10,116,218,.1); }
+
+        /* Supplier Cards */
+        .suppliers-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1rem; }
+        .supplier-card { background:var(--c-surface,#fff); border:1px solid var(--c-border,#e5e7eb); border-radius:16px; padding:1.25rem 1.5rem; box-shadow:0 1px 3px rgba(0,0,0,.06); transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease; position:relative; overflow:hidden; animation:smFade .35s ease both; }
+        .supplier-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#0a74da,#6366f1); opacity:0; transition:opacity .2s ease; }
+        .supplier-card:hover { transform:translateY(-4px); box-shadow:0 12px 35px -8px rgba(0,0,0,.12); }
+        .supplier-card:hover::before { opacity:1; }
+        [data-theme="dark"] .supplier-card { background:#1e293b; }
+        .supplier-name { font-size:1.1rem; font-weight:700; color:var(--text-color,#222); margin-bottom:.75rem; display:flex; align-items:center; gap:.4rem; transition:color .2s ease; }
+        .supplier-card:hover .supplier-name { color:#0a74da; }
+        .supplier-info { margin-bottom:.75rem; }
+        .supplier-info-item { display:flex; align-items:center; gap:.5rem; margin-bottom:.45rem; color:var(--text-color,#222); font-size:.87rem; }
+        .supplier-info-item i { color:#0a74da; font-size:.8rem; width:16px; text-align:center; }
+        .supplier-actions { display:flex; gap:.5rem; margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--c-border,#e5e7eb); }
+
+        /* Modal */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:9999; justify-content:center; align-items:center; }
+        .modal.active { display:flex; }
+        .modal-content { background:var(--c-surface,#fff); border-radius:16px; max-width:600px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,.15); animation:smModalIn .3s cubic-bezier(.34,1.56,.64,1); }
+        [data-theme="dark"] .modal-content { background:#1e293b; }
+        .modal-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--c-border,#e5e7eb); display:flex; justify-content:space-between; align-items:center; }
+        .modal-header h2 { margin:0; font-weight:700; font-size:1.15rem; color:var(--text-color,#222); }
+        .close-modal { background:none; border:1px solid var(--c-border,#e5e7eb); width:32px; height:32px; border-radius:8px; display:grid; place-items:center; cursor:pointer; font-size:1.1rem; color:var(--text-color,#222); transition:all .15s ease; }
+        .close-modal:hover { background:rgba(239,68,68,.08); border-color:#ef4444; color:#ef4444; }
+        .modal-body { padding:1.5rem; }
+        .form-group { margin-bottom:1.25rem; }
+        .form-group label { display:block; margin-bottom:.4rem; font-weight:600; font-size:.85rem; color:var(--text-color,#222); }
+        .form-group input,.form-group textarea { width:100%; padding:.65rem .85rem; border:1.5px solid var(--c-border,#e5e7eb); border-radius:10px; font-size:.9rem; background:var(--bg-color,#fff); color:var(--text-color,#222); font-family:inherit; transition:border-color .2s ease,box-shadow .2s ease; }
+        .form-group input:focus,.form-group textarea:focus { outline:none; border-color:#0a74da; box-shadow:0 0 0 3px rgba(10,116,218,.1); }
+        .form-group textarea { resize:vertical; min-height:80px; }
+        .modal-footer { padding:1.25rem 1.5rem; border-top:1px solid var(--c-border,#e5e7eb); display:flex; gap:.75rem; justify-content:flex-end; }
+
+        /* Empty State */
+        .empty-state { text-align:center; padding:3.5rem 2rem; grid-column:1/-1; }
+        .empty-icon { font-size:3rem; margin-bottom:.75rem; opacity:.25; }
+        .empty-title { font-size:1rem; font-weight:700; opacity:.6; margin:0 0 .3rem; }
+        .empty-sub { font-size:.85rem; color:#64748b; opacity:.5; }
+
+        /* Animations */
+        @keyframes smFade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes smModalIn { from{opacity:0;transform:scale(.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+        @media (max-width:768px) {
+            .supplier-container { padding:.75rem 1rem; }
+            .supplier-header { flex-direction:column; align-items:flex-start; }
+            .suppliers-grid { grid-template-columns:1fr; }
         }
     </style>
 </head>
@@ -261,20 +110,23 @@ $page_title = 'Supplier Management';
     
     <div class="supplier-container">
         <div class="supplier-header">
-            <h1>🏢 Supplier Management</h1>
-            <button class="btn btn-primary ripple-effect" onclick="openAddModal()">
-                ➕ Add New Supplier
+            <div>
+                <h1><i class="fas fa-building"></i> Supplier Management</h1>
+                <p>Manage your pharmacy's supplier network and contacts</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Add New Supplier
             </button>
         </div>
         
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="🔍 Search suppliers..." oninput="filterSuppliers()">
+            <input type="text" id="searchInput" placeholder="Search suppliers by name, contact, or email..." oninput="filterSuppliers()">
         </div>
         
         <div class="suppliers-grid" id="suppliersGrid">
             <div class="empty-state">
-                <div class="empty-icon">⏳</div>
-                <div>Loading suppliers...</div>
+                <div class="empty-icon"><i class="fas fa-spinner fa-spin"></i></div>
+                <div class="empty-title">Loading suppliers...</div>
             </div>
         </div>
     </div>

@@ -35,247 +35,107 @@ $page_title = 'Purchase Orders';
     <link rel="stylesheet" href="shared-polish.css">
     <link rel="stylesheet" href="polish.css">
     <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="award-winning-polish.css">
     <link rel="stylesheet" href="custom-modal.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="custom-modal.js"></script>
     <style>
-        .po-container {
-            max-width: 1400px;
-            margin: 100px auto 2rem;
-            padding: 2rem;
-        }
-        
-        .po-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-        
-        .po-header h1 {
-            color: var(--primary-color);
-            margin: 0;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid var(--input-border);
-        }
-        
-        .tab {
-            padding: 1rem 2rem;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: transform 0.15s, box-shadow 0.15s;
-            color: var(--text-color);
-        }
-        
-        .tab.active {
-            border-bottom-color: var(--primary-color);
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        
-        .po-table {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        [data-theme="dark"] .po-table {
-            background: #1e293b;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--input-border);
-        }
-        
-        th {
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-ordered {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .status-received {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            max-width: 900px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        [data-theme="dark"] .modal-content {
-            background: #1e293b;
-        }
-        
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 2px solid var(--input-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--input-border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--bg-color);
-            color: var(--text-color);
-        }
-        
-        .items-section {
-            margin-top: 2rem;
-        }
-        
-        .item-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 50px;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: end;
-        }
-        
-        .total-section {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 2px solid var(--input-border);
-            text-align: right;
-        }
-        
-        .total-amount {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-        
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 2px solid var(--input-border);
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-color);
-            opacity: 0.5;
-        }
+        /* ── Purchase Orders — Award-Winning ─────────────── */
+        .po-container { max-width:1440px; margin:0 auto; padding:1.25rem 1.5rem 2rem; }
 
-        @media (max-width: 768px) {
-            .po-container { padding: 1rem; }
-            .po-header { flex-direction: column; align-items: flex-start; }
-            .item-row { grid-template-columns: 1fr; }
-            table { display: block; overflow-x: auto; }
+        /* Page Header Card */
+        .po-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; background:var(--c-surface,#fff); border:1px solid var(--c-border,#e5e7eb); border-radius:16px; padding:1.25rem 1.5rem; box-shadow:0 1px 3px rgba(0,0,0,.06); position:relative; overflow:hidden; animation:poFadeIn .35s ease both; }
+        .po-header::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:linear-gradient(180deg,#0a74da,#6366f1); border-radius:4px 0 0 4px; }
+        .po-header::after { content:''; position:absolute; top:-50%; right:-15%; width:280px; height:280px; background:radial-gradient(circle,rgba(10,116,218,.04) 0%,transparent 70%); pointer-events:none; }
+        .po-header h1 { font-size:1.5rem; font-weight:800; letter-spacing:-.02em; color:var(--text-color,#222); margin:0; display:flex; align-items:center; gap:.5rem; }
+        .po-header h1 i { background:linear-gradient(135deg,#0a74da,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; font-size:1.3rem; }
+        .po-header p { margin:.25rem 0 0; color:#64748b; font-size:.87rem; }
+
+        /* Buttons */
+        .btn { padding:.6rem 1.25rem; border:none; border-radius:10px; font-weight:600; cursor:pointer; font-size:.87rem; font-family:inherit; transition:all .25s cubic-bezier(.34,1.56,.64,1); display:inline-flex; align-items:center; gap:.4rem; }
+        .btn-primary { background:linear-gradient(135deg,#0a74da,#5b7fff); color:#fff; box-shadow:0 3px 12px rgba(10,116,218,.25); }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(10,116,218,.35); }
+        .btn-primary:active { transform:scale(.97); }
+        .btn-success { background:#10b981; color:#fff; } .btn-success:hover{background:#059669;transform:translateY(-1px)}
+        .btn-danger { background:#ef4444; color:#fff; } .btn-danger:hover{background:#dc2626;transform:translateY(-1px)}
+        .btn-sm { padding:.4rem .85rem; font-size:.8rem; border-radius:8px; }
+
+        /* Stat Cards */
+        .po-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:.75rem; margin-bottom:1.5rem; }
+        .po-stat { background:var(--c-surface,#fff); border:1px solid var(--c-border,#e5e7eb); border-radius:14px; padding:1rem 1.15rem; display:flex; align-items:center; gap:.75rem; transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease; position:relative; overflow:hidden; animation:poFadeIn .35s ease both; }
+        .po-stat:nth-child(1){animation-delay:.04s} .po-stat:nth-child(2){animation-delay:.08s} .po-stat:nth-child(3){animation-delay:.12s} .po-stat:nth-child(4){animation-delay:.16s}
+        .po-stat::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:0 3px 3px 0; }
+        .po-stat.s-all::before{background:linear-gradient(180deg,#0a74da,#6366f1)} .po-stat.s-pending::before{background:linear-gradient(180deg,#f59e0b,#d97706)} .po-stat.s-ordered::before{background:linear-gradient(180deg,#3b82f6,#2563eb)} .po-stat.s-received::before{background:linear-gradient(180deg,#10b981,#059669)}
+        .po-stat:hover { transform:translateY(-3px); box-shadow:0 8px 25px -5px rgba(0,0,0,.1); }
+        .po-stat .si { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; font-size:1.1rem; flex-shrink:0; transition:transform .25s ease; }
+        .po-stat:hover .si { transform:scale(1.08); }
+        .si.blue{background:rgba(10,116,218,.1);color:#0a74da} .si.amber{background:rgba(245,158,11,.1);color:#f59e0b} .si.sky{background:rgba(59,130,246,.1);color:#3b82f6} .si.green{background:rgba(16,185,129,.1);color:#10b981}
+        .po-stat .sv { font-size:1.5rem; font-weight:800; letter-spacing:-.02em; line-height:1.1; }
+        .sv.blue{color:#0a74da} .sv.amber{color:#f59e0b} .sv.sky{color:#3b82f6} .sv.green{color:#10b981}
+        .po-stat .sl { font-size:.68rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:#64748b; margin-top:.1rem; }
+
+        /* Tabs */
+        .po-tabs { display:flex; gap:2px; padding:3px; border-radius:12px; background:var(--c-surface-sunken,#f1f5f9); border:1px solid var(--c-border,#e5e7eb); margin-bottom:1.25rem; overflow-x:auto; animation:poFadeIn .35s .1s ease both; }
+        .po-tab { padding:.55rem 1.25rem; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:.85rem; background:transparent; color:#64748b; transition:all .2s ease; font-family:inherit; display:inline-flex; align-items:center; gap:.35rem; white-space:nowrap; }
+        .po-tab:hover { color:var(--text-color,#222); background:rgba(0,0,0,.03); }
+        .po-tab.active { background:linear-gradient(135deg,#0a74da,#5b7fff); color:#fff; box-shadow:0 2px 8px rgba(10,116,218,.25); }
+        .po-tab .badge { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:10px; font-size:.65rem; font-weight:800; background:rgba(0,0,0,.08); color:inherit; margin-left:2px; }
+        .po-tab.active .badge { background:rgba(255,255,255,.25); }
+
+        /* Table Card */
+        .po-table { background:var(--c-surface,#fff); border:1px solid var(--c-border,#e5e7eb); border-radius:16px; padding:0; box-shadow:0 1px 3px rgba(0,0,0,.06); overflow:hidden; animation:poFadeIn .35s .15s ease both; }
+        [data-theme="dark"] .po-table { background:#1e293b; }
+        table { width:100%; border-collapse:collapse; }
+        th { padding:.85rem 1.25rem; text-align:left; font-weight:700; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:#64748b; background:var(--c-surface-sunken,#f8fafc); border-bottom:1px solid var(--c-border,#e5e7eb); }
+        td { padding:.85rem 1.25rem; text-align:left; border-bottom:1px solid var(--c-border,#e5e7eb); font-size:.9rem; color:var(--text-color,#222); transition:background .15s ease; }
+        tbody tr { transition:background .15s ease; }
+        tbody tr:hover { background:rgba(10,116,218,.02); }
+        tbody tr:last-child td { border-bottom:none; }
+
+        /* Status Badges */
+        .status-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.25rem .7rem; border-radius:20px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+        .status-pending { background:rgba(245,158,11,.1); color:#d97706; } .status-pending i{color:#f59e0b}
+        .status-ordered { background:rgba(59,130,246,.1); color:#2563eb; } .status-ordered i{color:#3b82f6}
+        .status-received { background:rgba(16,185,129,.1); color:#059669; } .status-received i{color:#10b981}
+        .status-cancelled { background:rgba(239,68,68,.1); color:#dc2626; } .status-cancelled i{color:#ef4444}
+
+        /* Modal */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:9999; justify-content:center; align-items:center; }
+        .modal.active { display:flex; }
+        .modal-content { background:var(--c-surface,#fff); border-radius:16px; max-width:900px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px rgba(0,0,0,.15); animation:poModalIn .3s cubic-bezier(.34,1.56,.64,1) both; }
+        [data-theme="dark"] .modal-content { background:#1e293b; }
+        .modal-header { padding:1.25rem 1.5rem; border-bottom:1px solid var(--c-border,#e5e7eb); display:flex; justify-content:space-between; align-items:center; }
+        .modal-header h2 { margin:0; font-weight:700; font-size:1.15rem; }
+        .close-modal { background:none; border:1px solid var(--c-border,#e5e7eb); width:32px; height:32px; border-radius:8px; display:grid; place-items:center; cursor:pointer; font-size:1.1rem; color:var(--text-color,#222); transition:all .15s ease; }
+        .close-modal:hover { background:rgba(239,68,68,.08); border-color:#ef4444; color:#ef4444; }
+        .modal-body { padding:1.5rem; }
+        .form-group { margin-bottom:1.25rem; }
+        .form-group label { display:block; margin-bottom:.4rem; font-weight:600; font-size:.85rem; color:var(--text-color,#222); }
+        .form-group input,.form-group select,.form-group textarea { width:100%; padding:.65rem .85rem; border:1.5px solid var(--c-border,#e5e7eb); border-radius:10px; font-size:.9rem; background:var(--bg-color,#fff); color:var(--text-color,#222); font-family:inherit; transition:border-color .2s ease,box-shadow .2s ease; }
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus { outline:none; border-color:#0a74da; box-shadow:0 0 0 3px rgba(10,116,218,.1); }
+        .items-section { margin-top:1.5rem; }
+        .item-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 44px; gap:.75rem; margin-bottom:.75rem; align-items:end; }
+        .total-section { margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--c-border,#e5e7eb); text-align:right; }
+        .total-amount { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#0a74da,#6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .modal-footer { padding:1.25rem 1.5rem; border-top:1px solid var(--c-border,#e5e7eb); display:flex; gap:.75rem; justify-content:flex-end; }
+        
+        /* Empty State */
+        .empty-state { text-align:center; padding:3.5rem 2rem; }
+        .empty-icon { font-size:3rem; margin-bottom:.75rem; opacity:.25; }
+        .empty-title { font-size:1rem; font-weight:700; color:var(--text-color,#222); margin:0 0 .3rem; opacity:.6; }
+        .empty-sub { font-size:.85rem; color:#64748b; margin:0; opacity:.5; }
+
+        /* Animations */
+        @keyframes poFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes poModalIn { from{opacity:0;transform:scale(.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+        @media (max-width:768px) {
+            .po-container { padding:.75rem 1rem; }
+            .po-header { flex-direction:column; align-items:flex-start; }
+            .po-stats { grid-template-columns:repeat(2,1fr); }
+            .item-row { grid-template-columns:1fr; }
+            table { display:block; overflow-x:auto; }
+            .po-tabs { gap:0; }
         }
     </style>
 </head>
@@ -283,21 +143,35 @@ $page_title = 'Purchase Orders';
     <?php include 'header-component.php'; ?>
     
     <div class="po-container">
+        <!-- Page Header -->
         <div class="po-header">
-            <h1>📦 Purchase Orders</h1>
-            <button class="btn btn-primary ripple-effect" onclick="openCreateModal()">
-                ➕ Create Purchase Order
+            <div>
+                <h1><i class="fas fa-boxes-packing"></i> Purchase Orders</h1>
+                <p>Create and manage supplier purchase orders for restocking</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+                <i class="fas fa-plus"></i> Create Purchase Order
             </button>
         </div>
-        
-        <div class="tabs">
-            <div class="tab active" data-status="all" onclick="filterByStatus('all')">All Orders</div>
-            <div class="tab" data-status="Pending" onclick="filterByStatus('Pending')">Pending</div>
-            <div class="tab" data-status="Ordered" onclick="filterByStatus('Ordered')">Ordered</div>
-            <div class="tab" data-status="Received" onclick="filterByStatus('Received')">Received</div>
-            <div class="tab" data-status="Cancelled" onclick="filterByStatus('Cancelled')">Cancelled</div>
+
+        <!-- Stat Cards -->
+        <div class="po-stats">
+            <div class="po-stat s-all"><div class="si blue"><i class="fas fa-clipboard-list"></i></div><div><div class="sv blue" id="statAll">0</div><div class="sl">Total Orders</div></div></div>
+            <div class="po-stat s-pending"><div class="si amber"><i class="fas fa-clock"></i></div><div><div class="sv amber" id="statPending">0</div><div class="sl">Pending</div></div></div>
+            <div class="po-stat s-ordered"><div class="si sky"><i class="fas fa-truck"></i></div><div><div class="sv sky" id="statOrdered">0</div><div class="sl">Ordered</div></div></div>
+            <div class="po-stat s-received"><div class="si green"><i class="fas fa-check-circle"></i></div><div><div class="sv green" id="statReceived">0</div><div class="sl">Received</div></div></div>
         </div>
         
+        <!-- Tabs -->
+        <div class="po-tabs">
+            <button class="po-tab active" data-status="all" onclick="filterByStatus('all')"><i class="fas fa-border-all"></i> All <span class="badge" id="badgeAll">0</span></button>
+            <button class="po-tab" data-status="Pending" onclick="filterByStatus('Pending')"><i class="fas fa-clock"></i> Pending <span class="badge" id="badgePending">0</span></button>
+            <button class="po-tab" data-status="Ordered" onclick="filterByStatus('Ordered')"><i class="fas fa-truck"></i> Ordered <span class="badge" id="badgeOrdered">0</span></button>
+            <button class="po-tab" data-status="Received" onclick="filterByStatus('Received')"><i class="fas fa-check-circle"></i> Received <span class="badge" id="badgeReceived">0</span></button>
+            <button class="po-tab" data-status="Cancelled" onclick="filterByStatus('Cancelled')"><i class="fas fa-times-circle"></i> Cancelled <span class="badge" id="badgeCancelled">0</span></button>
+        </div>
+        
+        <!-- Table -->
         <div class="po-table">
             <table id="poTable">
                 <thead>
@@ -313,7 +187,13 @@ $page_title = 'Purchase Orders';
                 </thead>
                 <tbody id="poTableBody">
                     <tr>
-                        <td colspan="7" class="empty-state">Loading...</td>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="fas fa-boxes-packing"></i></div>
+                                <div class="empty-title">Loading purchase orders...</div>
+                                <div class="empty-sub">Please wait while we fetch your data</div>
+                            </div>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -449,23 +329,38 @@ $page_title = 'Purchase Orders';
         function renderPOs(pos) {
             const tbody = document.getElementById('poTableBody');
             
+            // Update stat cards & badges
+            const counts = {all:allPOs.length, Pending:0, Ordered:0, Received:0, Cancelled:0};
+            allPOs.forEach(po => counts[po.status] = (counts[po.status]||0)+1);
+            const s = id => document.getElementById(id);
+            if(s('statAll')) s('statAll').textContent = counts.all;
+            if(s('statPending')) s('statPending').textContent = counts.Pending;
+            if(s('statOrdered')) s('statOrdered').textContent = counts.Ordered;
+            if(s('statReceived')) s('statReceived').textContent = counts.Received;
+            if(s('badgeAll')) s('badgeAll').textContent = counts.all;
+            if(s('badgePending')) s('badgePending').textContent = counts.Pending;
+            if(s('badgeOrdered')) s('badgeOrdered').textContent = counts.Ordered;
+            if(s('badgeReceived')) s('badgeReceived').textContent = counts.Received;
+            if(s('badgeCancelled')) s('badgeCancelled').textContent = counts.Cancelled;
+            
             if (pos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No purchase orders found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i class="fas fa-inbox"></i></div><div class="empty-title">No purchase orders found</div><div class="empty-sub">Create your first purchase order to get started</div></div></td></tr>';
                 return;
             }
             
+            const statusIcons = {Pending:'fa-clock',Ordered:'fa-truck',Received:'fa-check-circle',Cancelled:'fa-times-circle'};
             tbody.innerHTML = pos.map(po => `
-                <tr class="fade-in">
-                    <td><strong>${escapeHtml(po.po_number)}</strong></td>
+                <tr>
+                    <td><strong style="color:var(--c-brand,#0a74da)">${escapeHtml(po.po_number)}</strong></td>
                     <td>${escapeHtml(po.supplier_name)}</td>
-                    <td>${po.item_count} items</td>
-                    <td>₱${formatNumber(po.total_amount)}</td>
-                    <td><span class="status-badge status-${po.status.toLowerCase()}">${po.status}</span></td>
-                    <td>${formatDate(po.created_at)}</td>
+                    <td><span style="font-weight:600">${po.item_count}</span> items</td>
+                    <td><strong>₱${formatNumber(po.total_amount)}</strong></td>
+                    <td><span class="status-badge status-${po.status.toLowerCase()}"><i class="fas ${statusIcons[po.status]||'fa-circle'}"></i> ${po.status}</span></td>
+                    <td style="color:#64748b;font-size:.85rem">${formatDate(po.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="viewPO(${po.po_id})">View</button>
-                        ${po.status === 'Ordered' ? `<button class="btn btn-sm btn-success" onclick="receivePO(${po.po_id})">Receive</button>` : ''}
-                        ${po.status === 'Pending' ? `<button class="btn btn-sm btn-danger" onclick="cancelPO(${po.po_id})">Cancel</button>` : ''}
+                        <button class="btn btn-sm" style="background:rgba(10,116,218,.08);color:#0a74da" onclick="viewPO(${po.po_id})"><i class="fas fa-eye"></i> View</button>
+                        ${po.status === 'Ordered' ? `<button class="btn btn-sm btn-success" onclick="receivePO(${po.po_id})"><i class="fas fa-check"></i> Receive</button>` : ''}
+                        ${po.status === 'Pending' ? `<button class="btn btn-sm btn-danger" onclick="cancelPO(${po.po_id})"><i class="fas fa-times"></i> Cancel</button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -475,7 +370,7 @@ $page_title = 'Purchase Orders';
             currentStatus = status;
             
             // Update active tab
-            document.querySelectorAll('.tab').forEach(tab => {
+            document.querySelectorAll('.po-tab').forEach(tab => {
                 tab.classList.remove('active');
                 if (tab.dataset.status === status) {
                     tab.classList.add('active');

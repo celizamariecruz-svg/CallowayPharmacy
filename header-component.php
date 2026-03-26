@@ -1,8 +1,12 @@
 <?php
 // Get the current page name
 $current_page = basename($_SERVER['PHP_SELF']);
-$_headerUser = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User';
-$_headerIsCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'customer');
+$_headerIsLoggedIn = isset($_SESSION['user_id']);
+$_headerRole = strtolower((string)($_SESSION['role_name'] ?? ''));
+$_headerIsGuest = !$_headerIsLoggedIn;
+$_headerIsCustomer = $_headerIsLoggedIn && $_headerRole === 'customer';
+$_headerUser = $_headerIsGuest ? 'Guest' : ($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User');
+$_headerRoleLabel = $_headerIsGuest ? 'Guest' : ($_SESSION['role_name'] ?? 'Staff');
 ?>
 
 <!-- Sidebar Overlay -->
@@ -24,12 +28,20 @@ $_headerIsCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] ==
     <div class="sidebar-user-avatar"><i class="fas fa-user-circle"></i></div>
     <div class="sidebar-user-info">
       <span class="sidebar-user-name"><?php echo htmlspecialchars($_headerUser); ?></span>
-      <span class="sidebar-user-role"><?php echo htmlspecialchars($_SESSION['role_name'] ?? 'Staff'); ?></span>
+      <span class="sidebar-user-role"><?php echo htmlspecialchars($_headerRoleLabel); ?></span>
     </div>
   </div>
 
   <div class="sidebar-nav">
-    <?php if (!$_headerIsCustomer): ?>
+    <?php if ($_headerIsGuest): ?>
+    <div class="sidebar-section-label">Browse</div>
+    <a href="onlineordering.php" class="sidebar-link <?php echo $current_page === 'onlineordering.php' ? 'active' : ''; ?>">
+      <i class="fas fa-cart-shopping"></i><span>Online Ordering</span>
+    </a>
+    <a href="order_status.php" class="sidebar-link <?php echo $current_page === 'order_status.php' ? 'active' : ''; ?>">
+      <i class="fas fa-receipt"></i><span>Order Status</span>
+    </a>
+    <?php elseif (!$_headerIsCustomer): ?>
     <div class="sidebar-section-label">Operations</div>
     <a href="index.php" class="sidebar-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>">
       <i class="fas fa-home"></i><span>Home</span>
@@ -40,11 +52,8 @@ $_headerIsCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] ==
     <a href="inventory_management.php" class="sidebar-link <?php echo $current_page === 'inventory_management.php' ? 'active' : ''; ?>">
       <i class="fas fa-boxes-stacked"></i><span>Inventory</span>
     </a>
-    <a href="medicine-locator.php" class="sidebar-link <?php echo $current_page === 'medicine-locator.php' ? 'active' : ''; ?>">
-      <i class="fas fa-search-location"></i><span>Medicine Locator</span>
-    </a>
-    <a href="expiry-monitoring.php" class="sidebar-link <?php echo $current_page === 'expiry-monitoring.php' ? 'active' : ''; ?>">
-      <i class="fas fa-calendar-xmark"></i><span>Expiry Monitoring</span>
+    <a href="medicine-locator.php" class="sidebar-link <?php echo in_array($current_page, ['medicine-locator.php', 'expiry-monitoring.php'], true) ? 'active' : ''; ?>">
+      <i class="fas fa-search-location"></i><span>Medicine Locator & Expiry</span>
     </a>
 
     <div class="sidebar-section-label">Customer Services</div>
@@ -63,8 +72,8 @@ $_headerIsCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] ==
     <a href="order_status.php" class="sidebar-link <?php echo $current_page === 'order_status.php' ? 'active' : ''; ?>">
       <i class="fas fa-receipt"></i><span>Order Status</span>
     </a>
-    <a href="loyalty_qr.php" class="sidebar-link <?php echo $current_page === 'loyalty_qr.php' ? 'active' : ''; ?>">
-      <i class="fas fa-gift"></i><span>Loyalty & QR</span>
+    <a href="<?php echo $_headerIsGuest ? 'login.php' : 'loyalty_qr.php'; ?>" class="sidebar-link <?php echo $current_page === 'loyalty_qr.php' ? 'active' : ''; ?>">
+      <i class="fas fa-gift"></i><span><?php echo $_headerIsGuest ? 'Login For Loyalty' : 'Loyalty & QR'; ?></span>
     </a>
 
     <?php if (!$_headerIsCustomer): ?>
@@ -88,8 +97,8 @@ $_headerIsCustomer = (isset($_SESSION['role_name']) && $_SESSION['role_name'] ==
   </div>
 
   <div class="sidebar-footer">
-    <a href="logout.php" class="sidebar-link sidebar-logout">
-      <i class="fas fa-right-from-bracket"></i><span>Logout</span>
+    <a href="<?php echo $_headerIsGuest ? 'login.php' : 'logout.php'; ?>" class="sidebar-link sidebar-logout">
+      <i class="fas <?php echo $_headerIsGuest ? 'fa-right-to-bracket' : 'fa-right-from-bracket'; ?>"></i><span><?php echo $_headerIsGuest ? 'Login' : 'Logout'; ?></span>
     </a>
   </div>
 </nav>

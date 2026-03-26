@@ -69,6 +69,8 @@ if (isset($_SESSION['user_id'])) {
     --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   }
 
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
   body {
     display: flex;
     flex-direction: row;
@@ -76,7 +78,7 @@ if (isset($_SESSION['user_id'])) {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-color);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -799,6 +801,12 @@ if (isset($_SESSION['user_id'])) {
         </form>
         <p class="register-note" style="margin-bottom:0.3rem;"><a href="#" onclick="openForgotModal(event)" style="color:var(--primary-color);font-weight:600;">Forgot Password?</a></p>
         <p class="register-note">Don't have an account? <a onclick="switchTab('register')">Register here</a></p>
+
+        <div style="margin-top: 1rem; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 1rem;">
+          <button type="button" onclick="window.location.href='onlineordering.php'" style="background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); margin-top: 0; padding: 0.8rem; font-size: 1rem;">
+            Browse Online Shop as Guest
+          </button>
+        </div>
       </div>
 
       <!-- REGISTER TAB -->

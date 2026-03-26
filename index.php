@@ -6,9 +6,9 @@
 require_once 'Security.php';
 Security::initSession();
 
-// Redirect to login if not logged in
+// Send unauthenticated visitors to storefront guest flow
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: onlineordering.php');
     exit;
 }
 

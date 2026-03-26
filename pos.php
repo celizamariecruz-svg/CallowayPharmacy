@@ -22,6 +22,7 @@ if ($taxStmt) {
     if ($taxRow) $taxRate = floatval($taxRow['setting_value']);
     $taxStmt->close();
 }
+$taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -2013,7 +2014,7 @@ if ($taxStmt) {
                     <span id="subtotalDisplay">₱0.00</span>
                 </div>
                 <div class="summary-row">
-                    <span>VAT (12%)</span>
+                    <span>VAT (<?php echo htmlspecialchars($taxRateLabel); ?>%)</span>
                     <span id="taxDisplay">₱0.00</span>
                 </div>
                 <div class="discount-row">
@@ -2795,6 +2796,22 @@ if ($taxStmt) {
         let discountEnabled = false;
         const DISCOUNT_RATE = 0.20;
         const DISCOUNT_MIN_SUBTOTAL = 200;
+        const VAT_RATE = <?php echo json_encode($taxRate / 100); ?>;
+        const VAT_RATE_LABEL = <?php echo json_encode($taxRateLabel); ?>;
+
+        function extractVatFromInclusive(subtotal) {
+            if (subtotal <= 0 || VAT_RATE <= 0) return 0;
+            return subtotal - (subtotal / (1 + VAT_RATE));
+        }
+
+        function computeSaleAmounts(subtotal) {
+            const tax = extractVatFromInclusive(subtotal);
+            const beforeDiscount = subtotal; // VAT already included in product prices
+            const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
+            const total = beforeDiscount - discountAmount;
+
+            return { tax, beforeDiscount, discountAmount, total };
+        }
 
         function toggleDiscount() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -2825,10 +2842,7 @@ if ($taxStmt) {
                 if (btn) btn.classList.remove('active');
                 showToast('Discount removed — subtotal below ₱' + DISCOUNT_MIN_SUBTOTAL.toFixed(2), 'error');
             }
-            const tax = subtotal * 0.12;
-            const beforeDiscount = subtotal + tax;
-            const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
-            const total = beforeDiscount - discountAmount;
+            const { tax, discountAmount, total } = computeSaleAmounts(subtotal);
 
             document.getElementById('subtotalDisplay').textContent = '₱' + subtotal.toFixed(2);
             document.getElementById('taxDisplay').textContent = '₱' + tax.toFixed(2);
@@ -2841,10 +2855,8 @@ if ($taxStmt) {
 
         function getTotal() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const tax = subtotal * 0.12;
-            const beforeDiscount = subtotal + tax;
-            const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
-            return beforeDiscount - discountAmount;
+            const { total } = computeSaleAmounts(subtotal);
+            return total;
         }
 
         // --- Payment ---
@@ -3008,10 +3020,7 @@ if ($taxStmt) {
             btn.disabled = true;
             btn.textContent = 'Processing...';
 
-            const tax = subtotal * 0.12;
-            const beforeDiscount = subtotal + tax;
-            const discountAmount = discountEnabled ? beforeDiscount * DISCOUNT_RATE : 0;
-            const total = beforeDiscount - discountAmount;
+            const { tax, discountAmount, total } = computeSaleAmounts(subtotal);
             const tenderedInput = parseFloat(document.getElementById('amountTendered').value) || 0;
             const pointsApplied = paymentMethod === 'loyalty_points' ? pointsToRedeem : 0;
             const gcashInput = paymentMethod === 'gcash' ? (parseFloat(document.getElementById('gcashPaidAmount').value) || 0) : 0;
@@ -3465,8 +3474,8 @@ if ($taxStmt) {
             const createdAt = saleData.created_at ? new Date(saleData.created_at) : new Date();
             const items = saleData.items || [];
             const subtotal = items.reduce((s, i) => s + (i.price * i.qty), 0);
-            const tax = subtotal * 0.12;
-            const beforeDiscount = subtotal + tax;
+            const tax = extractVatFromInclusive(subtotal);
+            const beforeDiscount = subtotal;
             const discountPct = saleData.discount_percent || 0;
             const discountAmt = saleData.discount_amount || 0;
             const total = beforeDiscount - discountAmt;
@@ -3513,7 +3522,7 @@ if ($taxStmt) {
 
             // Totals
             await sendText(padLine('Subtotal', fmtMoney(subtotal), W) + '\n');
-            await sendText(padLine('VAT 12%', fmtMoney(tax), W) + '\n');
+            await sendText(padLine('VAT ' + VAT_RATE_LABEL + '%', fmtMoney(tax), W) + '\n');
             if (discountPct > 0) {
                 await sendText(padLine('Discount (' + discountPct + '%)', '-' + fmtMoney(discountAmt), W) + '\n');
             }
@@ -3630,8 +3639,8 @@ if ($taxStmt) {
             const items = saleData.items || [];
 
             const subtotal = items.reduce((s, i) => s + (i.price * i.qty), 0);
-            const tax = subtotal * 0.12;
-            const beforeDiscount = subtotal + tax;
+            const tax = extractVatFromInclusive(subtotal);
+            const beforeDiscount = subtotal;
             const discountPct = saleData.discount_percent || 0;
             const discountAmt = saleData.discount_amount || 0;
             const total = beforeDiscount - discountAmt;
@@ -3665,7 +3674,7 @@ if ($taxStmt) {
 
             out.push(line);
             out.push(padLine('Subtotal', fmtMoney(subtotal), W));
-            out.push(padLine('VAT 12%', fmtMoney(tax), W));
+            out.push(padLine('VAT ' + VAT_RATE_LABEL + '%', fmtMoney(tax), W));
             if (discountPct > 0) {
                 out.push(padLine('Discount (' + discountPct + '%)', '-' + fmtMoney(discountAmt), W));
             }
@@ -3758,8 +3767,8 @@ if ($taxStmt) {
             const createdAt = saleData.created_at ? new Date(saleData.created_at) : new Date();
 
             const subtotal = saleData.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const tax = subtotal * 0.12;
-            const beforeDiscount = subtotal + tax;
+            const tax = extractVatFromInclusive(subtotal);
+            const beforeDiscount = subtotal;
             const discountPct = saleData.discount_percent || 0;
             const discountAmt = saleData.discount_amount || 0;
             const total = beforeDiscount - discountAmt;
@@ -3809,7 +3818,7 @@ if ($taxStmt) {
 
                 <div class="receipt-totals">
                     <div class="row"><span>Subtotal</span><span>₱${subtotal.toFixed(2)}</span></div>
-                    <div class="row"><span>VAT (12%)</span><span>₱${tax.toFixed(2)}</span></div>
+                    <div class="row"><span>VAT (${VAT_RATE_LABEL}%)</span><span>₱${tax.toFixed(2)}</span></div>
                     ${discountPct > 0 ? `<div class="row" style="color:#dc2626;"><span>Discount (${discountPct}%)</span><span>-₱${discountAmt.toFixed(2)}</span></div>` : ''}
                     <div class="row total"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
                     ${gcashPaid > 0 ? `<div class="row"><span>GCash Paid</span><span>₱${gcashPaid.toFixed(2)}</span></div>` : ''}

@@ -605,10 +605,6 @@ $salesTrend = getSalesTrend($conn);
                     <h3 class="chart-title" style="margin-bottom: 0.5rem;">
                         <i class="fas fa-chart-area" style="color: var(--primary-color);"></i>
                         7-Day Sales Trend
-                        <span class="status-badge-live" style="margin-left: auto; font-size: 0.7rem; padding: 0.25rem 0.6rem;">
-                            <span style="width: 6px; height: 6px;"></span>
-                            Live
-                        </span>
                     </h3>
                     <div id="salesTrendChart" style="width: 100%; min-height: 180px;"></div>
                 </div>
@@ -733,46 +729,6 @@ $salesTrend = getSalesTrend($conn);
           heroSection.style.setProperty('--mouse-y', `${y}%`);
         });
       }
-
-      // Live data indicator
-      const createLiveIndicator = () => {
-        const indicator = document.createElement('div');
-        indicator.className = 'live-indicator';
-        indicator.innerHTML = `
-          <span class="live-dot"></span>
-          <span class="live-text">Live</span>
-        `;
-        indicator.style.cssText = `
-          position: fixed;
-          bottom: 1.5rem;
-          left: 1.5rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: var(--c-surface);
-          padding: 0.5rem 1rem;
-          border-radius: 50px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--c-success);
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-          z-index: 100;
-          border: 1px solid var(--c-border);
-        `;
-
-        const dot = indicator.querySelector('.live-dot');
-        dot.style.cssText = `
-          width: 8px;
-          height: 8px;
-          background: var(--c-success);
-          border-radius: 50%;
-          animation: pulse 2s ease-in-out infinite;
-        `;
-
-        document.body.appendChild(indicator);
-      };
-
-      createLiveIndicator();
 
       // Add keyboard shortcut hint
       console.log('%c⌨️ Press Ctrl+/ to see keyboard shortcuts', 'color: #667eea; font-weight: bold;');
