@@ -4145,7 +4145,6 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
                     break;
                 case 'Ready':
                     html += `<button class="oo-action-btn complete-btn" onclick="processPickupPayment(${order.order_id})"><i class="fas fa-cash-register"></i> Process Pickup Payment</button>`;
-                    html += `<button class="oo-action-btn" onclick="changeOrderStatus(${order.order_id}, 'Completed')" style="background:#6b7280;"><i class="fas fa-flag-checkered"></i> Mark Complete (No Payment)</button>`;
                     break;
             }
             html += `<button class="oo-action-btn view-btn" onclick="toggleOrderExpand(${order.order_id})"><i class="fas fa-eye"></i> Details</button>`;

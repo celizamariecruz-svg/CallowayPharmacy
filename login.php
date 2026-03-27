@@ -858,7 +858,7 @@ if (isset($_SESSION['user_id'])) {
   </div>
 
   <div id="register-success-modal" class="modal modal-success">
-      <p>Registration Successful! You can now login.</p>
+      <p>Email verified! You can now login.</p>
       <button onclick="closeRegisterSuccessModal()">Okay</button>
   </div>
 
@@ -866,6 +866,20 @@ if (isset($_SESSION['user_id'])) {
       <p id="register-error-msg">Registration failed.</p>
       <button onclick="document.getElementById('register-error-modal').style.display='none'">Okay</button>
   </div>
+
+    <div id="email-verify-modal" class="modal modal-success" style="display:none;">
+      <p id="verify-modal-title" style="font-weight:700;">Enter Verification Code</p>
+      <p id="verify-modal-message" style="font-size:0.92rem; margin-top:0.35rem; color:var(--text-light);">We sent a 6-digit code to your email.</p>
+      <form onsubmit="handleVerifySubmit(event)" style="display:flex;flex-direction:column;gap:0.6rem;margin-top:0.85rem;">
+        <input id="verify-code-input" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" style="padding:0.7rem 0.85rem;border:1px solid #cbd5e1;border-radius:10px;font-size:1rem;text-align:center;letter-spacing:0.25rem;" required>
+        <button id="verify-submit-btn" type="submit">Verify Email</button>
+      </form>
+      <p id="verify-dev-hint" style="display:none; margin-top:0.6rem; font-size:0.8rem; color:#92400e; background:#fef3c7; padding:0.55rem 0.7rem; border-radius:8px;"></p>
+      <div style="display:flex;gap:0.55rem;justify-content:center;margin-top:0.75rem;">
+        <button type="button" onclick="resendVerificationCode()" style="padding:0.55rem 0.9rem; border:none; border-radius:9px; background:#1d4ed8; color:#fff; font-weight:600; cursor:pointer;">Resend Code</button>
+        <button type="button" onclick="closeVerifyModal()" style="padding:0.55rem 0.9rem; border:none; border-radius:9px; background:#64748b; color:#fff; font-weight:600; cursor:pointer;">Cancel</button>
+      </div>
+    </div>
 
   <!-- Forgot Password Modal -->
   <div id="forgot-password-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
@@ -975,6 +989,7 @@ if (isset($_SESSION['user_id'])) {
 
     // ─── Modal functionality ───
     let loginRedirectUrl = 'index.php'; // default; overridden by role
+    let pendingVerificationEmail = '';
 
     function redirectToIndex() {
       document.getElementById('login-success-modal').style.display = 'none';
@@ -988,6 +1003,105 @@ if (isset($_SESSION['user_id'])) {
     function closeRegisterSuccessModal() {
       document.getElementById('register-success-modal').style.display = 'none';
       switchTab('login');
+    }
+
+    function openVerifyModal(email, message, devHint = '') {
+      pendingVerificationEmail = (email || '').trim();
+      if (!pendingVerificationEmail) {
+        showRegisterError('Missing email for verification. Please register again.');
+        return;
+      }
+
+      const msgEl = document.getElementById('verify-modal-message');
+      const hintEl = document.getElementById('verify-dev-hint');
+      const inputEl = document.getElementById('verify-code-input');
+
+      msgEl.textContent = message || ('Enter the 6-digit code sent to ' + pendingVerificationEmail + '.');
+      inputEl.value = '';
+      hintEl.style.display = devHint ? 'block' : 'none';
+      hintEl.textContent = devHint ? ('Email service unavailable. Use this code for now: ' + devHint) : '';
+
+      document.getElementById('email-verify-modal').style.display = 'block';
+    }
+
+    function closeVerifyModal() {
+      document.getElementById('email-verify-modal').style.display = 'none';
+    }
+
+    async function resendVerificationCode() {
+      if (!pendingVerificationEmail) {
+        showRegisterError('No email pending verification. Please register again.');
+        return;
+      }
+
+      const hintEl = document.getElementById('verify-dev-hint');
+      const msgEl = document.getElementById('verify-modal-message');
+      msgEl.textContent = 'Resending verification code...';
+
+      try {
+        const response = await fetch('verify_email.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingVerificationEmail, action: 'resend' })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          msgEl.textContent = data.message || ('A new code was sent to ' + pendingVerificationEmail + '.');
+          hintEl.style.display = data.email_hint ? 'block' : 'none';
+          hintEl.textContent = data.email_hint ? ('Email service unavailable. Use this code for now: ' + data.email_hint) : '';
+        } else {
+          msgEl.textContent = data.message || 'Could not resend verification code.';
+        }
+      } catch (error) {
+        console.error('Resend verification error:', error);
+        msgEl.textContent = 'Could not resend verification code. Please try again.';
+      }
+    }
+
+    async function handleVerifySubmit(e) {
+      e.preventDefault();
+      const codeInput = document.getElementById('verify-code-input');
+      const submitBtn = document.getElementById('verify-submit-btn');
+      const code = codeInput.value.trim();
+
+      if (!pendingVerificationEmail) {
+        showRegisterError('No email pending verification. Please register again.');
+        closeVerifyModal();
+        return;
+      }
+
+      if (!/^\d{6}$/.test(code)) {
+        showRegisterError('Please enter a valid 6-digit verification code.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verifying...';
+
+      try {
+        const response = await fetch('verify_email.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: pendingVerificationEmail, code })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          closeVerifyModal();
+          document.getElementById('register-success-modal').style.display = 'block';
+          pendingVerificationEmail = '';
+          switchTab('login');
+        } else {
+          showRegisterError(data.message || 'Verification failed.');
+        }
+      } catch (error) {
+        console.error('Verify email error:', error);
+        showRegisterError('An error occurred while verifying your email.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Verify Email';
+      }
     }
 
     // Get CSRF Token from meta tag
@@ -1040,6 +1154,8 @@ if (isset($_SESSION['user_id'])) {
             loginRedirectUrl = 'index.php';
           }
           document.getElementById('login-success-modal').style.display = 'block';
+        } else if (data.needs_verification && data.email) {
+          openVerifyModal(data.email, data.message || ('Enter the verification code sent to ' + data.email + '.'));
         } else {
           showErrorModal(data.message || 'Invalid username or password');
         }
@@ -1093,7 +1209,14 @@ if (isset($_SESSION['user_id'])) {
 
         const data = await response.json();
 
-        if (data.success) {
+        if (data.success && data.needs_verification) {
+          e.target.reset();
+          const verifyMessage = data.email_sent
+            ? ('Registration submitted. Enter the 6-digit code sent to ' + (data.user_email || email) + ' to activate your account.')
+            : ('Registration submitted. Enter your verification code to activate your account.');
+          openVerifyModal(data.user_email || email, verifyMessage, data.email_hint || '');
+        } else if (data.success) {
+          // Backward-compatible fallback: if backend returns success without verification flow
           document.getElementById('register-success-modal').style.display = 'block';
           e.target.reset();
         } else {

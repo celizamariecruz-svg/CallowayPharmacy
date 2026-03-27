@@ -3394,8 +3394,8 @@ if ($prodResult) {
                         <input type="radio" name="paymentMethod" value="Cash on Pickup" checked>
                         <div class="payment-card">
                             <i class="fas fa-money-bill-wave" style="color:#22c55e; font-size:1.5rem;"></i>
-                            <span class="payment-label">Cash on Pickup</span>
-                            <span class="payment-desc">Pay when you pick up</span>
+                            <span class="payment-label">Cash or GCash on Pickup</span>
+                            <span class="payment-desc">Pay at pickup (cash or GCash)</span>
                         </div>
                     </label>
                     <?php if ($isLoggedIn): ?>
@@ -3408,15 +3408,6 @@ if ($prodResult) {
                         </div>
                     </label>
                     <?php endif; ?>
-                    <label class="payment-option" style="opacity:0.4; pointer-events:none; position:relative;">
-                        <input type="radio" name="paymentMethod" value="GCash" disabled>
-                        <div class="payment-card">
-                            <i class="fas fa-mobile-screen-button" style="color:#0070f0; font-size:1.5rem;"></i>
-                            <span class="payment-label">GCash</span>
-                            <span class="payment-desc">Coming soon</span>
-                        </div>
-                        <span style="position:absolute;top:0.4rem;right:0.6rem;font-size:0.65rem;background:#ef4444;color:#fff;padding:0.15rem 0.5rem;border-radius:99px;font-weight:700;">UNAVAILABLE</span>
-                    </label>
                 </div>
 
                 <?php if (!$isLoggedIn): ?>
@@ -3892,7 +3883,7 @@ if ($prodResult) {
                 </div>
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFaq(this)"><i class="fas fa-chevron-right faq-arrow"></i> What payment methods are accepted?</div>
-                    <div class="faq-answer">We accept cash payment upon pick-up at our store. Online payment integrations are coming soon.</div>
+                    <div class="faq-answer">We accept cash or GCash payment upon pick-up at our store. Loyalty points can also be used for full or partial payment during checkout.</div>
                 </div>
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFaq(this)"><i class="fas fa-chevron-right faq-arrow"></i> Can I cancel my order?</div>
@@ -4830,7 +4821,7 @@ if ($prodResult) {
 
             if (paymentMethod === 'Loyalty Points' && pointsToRedeem <= 0) {
                 if (userLoyaltyPoints <= 0) {
-                    showToast('You have 0 loyalty points. Please use Cash on Pickup.', 'info');
+                    showToast('You have 0 loyalty points. Please use Cash or GCash on Pickup.', 'info');
                 } else {
                     showToast('Please enter points to redeem for Loyalty Points payment.', 'info');
                 }
@@ -5101,7 +5092,7 @@ if ($prodResult) {
             if (selectedMethod === 'Loyalty Points' && points > 0) {
                 const remaining = roundMoney(orderSubtotal - points);
                 if (remaining > 0) {
-                    pointsError.textContent = `Remaining ₱${remaining.toFixed(2)} will be paid as cash on pickup.`;
+                    pointsError.textContent = `Remaining ₱${remaining.toFixed(2)} will be paid as cash or GCash on pickup.`;
                     pointsError.style.display = 'block';
                     pointsError.style.color = '#90EE90';
                 }

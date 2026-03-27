@@ -5,6 +5,7 @@ $_headerIsLoggedIn = isset($_SESSION['user_id']);
 $_headerRole = strtolower((string)($_SESSION['role_name'] ?? ''));
 $_headerIsGuest = !$_headerIsLoggedIn;
 $_headerIsCustomer = $_headerIsLoggedIn && $_headerRole === 'customer';
+$_headerIsStaff = $_headerIsLoggedIn && !$_headerIsCustomer;
 $_headerUser = $_headerIsGuest ? 'Guest' : ($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'User');
 $_headerRoleLabel = $_headerIsGuest ? 'Guest' : ($_SESSION['role_name'] ?? 'Staff');
 ?>
@@ -41,7 +42,10 @@ $_headerRoleLabel = $_headerIsGuest ? 'Guest' : ($_SESSION['role_name'] ?? 'Staf
     <a href="order_status.php" class="sidebar-link <?php echo $current_page === 'order_status.php' ? 'active' : ''; ?>">
       <i class="fas fa-receipt"></i><span>Order Status</span>
     </a>
-    <?php elseif (!$_headerIsCustomer): ?>
+    <a href="login.php" class="sidebar-link <?php echo $current_page === 'loyalty_qr.php' ? 'active' : ''; ?>">
+      <i class="fas fa-gift"></i><span>Login For Loyalty</span>
+    </a>
+    <?php elseif ($_headerIsStaff): ?>
     <div class="sidebar-section-label">Operations</div>
     <a href="index.php" class="sidebar-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>">
       <i class="fas fa-home"></i><span>Home</span>
@@ -66,17 +70,19 @@ $_headerRoleLabel = $_headerIsGuest ? 'Guest' : ($_SESSION['role_name'] ?? 'Staf
     </a>
     <?php endif; ?>
 
+    <?php if (!$_headerIsGuest): ?>
     <a href="onlineordering.php" class="sidebar-link <?php echo $current_page === 'onlineordering.php' ? 'active' : ''; ?>">
       <i class="fas fa-cart-shopping"></i><span>Online Ordering</span>
     </a>
     <a href="order_status.php" class="sidebar-link <?php echo $current_page === 'order_status.php' ? 'active' : ''; ?>">
       <i class="fas fa-receipt"></i><span>Order Status</span>
     </a>
-    <a href="<?php echo $_headerIsGuest ? 'login.php' : 'loyalty_qr.php'; ?>" class="sidebar-link <?php echo $current_page === 'loyalty_qr.php' ? 'active' : ''; ?>">
-      <i class="fas fa-gift"></i><span><?php echo $_headerIsGuest ? 'Login For Loyalty' : 'Loyalty & QR'; ?></span>
+    <a href="loyalty_qr.php" class="sidebar-link <?php echo $current_page === 'loyalty_qr.php' ? 'active' : ''; ?>">
+      <i class="fas fa-gift"></i><span>Loyalty & QR</span>
     </a>
+    <?php endif; ?>
 
-    <?php if (!$_headerIsCustomer): ?>
+    <?php if ($_headerIsStaff): ?>
     <div class="sidebar-section-label">Administration</div>
     <a href="reports.php" class="sidebar-link <?php echo $current_page === 'reports.php' ? 'active' : ''; ?>">
       <i class="fas fa-chart-bar"></i><span>Reports & Analytics</span>

@@ -576,74 +576,36 @@ try {
     $stmt->execute();
     $stmt->close();
 
-    $conn->commit();
-
-    // ===== LOYALTY POINTS SYSTEM =====
-    // Security rule: Online orders must NOT receive earned points or redeemable
-    // QR rewards until POS validates payment at pickup.
-    // Points are awarded in online_order_api.php (mark_picked_up -> awardLoyaltyForPickup).
+    // ===== LOYALTY POINTS REDEMPTION (ATOMIC) =====
+    // Deduct and log redemption inside the same transaction as order creation.
+    // This prevents discounts from applying without a matching points deduction.
     $responseMessages = [];
-    
-    if ($customerId !== null && $customerId > 0) {
-        try {
-            // Get user details from users table
-            $stmt = $conn->prepare("SELECT full_name, email FROM users WHERE user_id = ?");
-            $stmt->bind_param("i", $customerId);
-            $stmt->execute();
-            $user = $stmt->get_result()->fetch_assoc();
-            $stmt->close();
-            
-            if ($user) {
-                $userName = $user['full_name'] ?? $customerName;
-                $userEmail = $user['email'] ?? $email ?? '';
-                $userPhone = '';
-                
-                // Find or create loyalty member
-                $stmt = $conn->prepare("SELECT member_id, points FROM loyalty_members WHERE email = ? LIMIT 1");
-                $stmt->bind_param("s", $userEmail);
-                $stmt->execute();
-                $member = $stmt->get_result()->fetch_assoc();
-                $stmt->close();
-                
-                $memberId = null;
-                if ($member) {
-                    $memberId = $member['member_id'];
-                } else {
-                    // Create new member with 0 points initially
-                    $stmt = $conn->prepare("INSERT INTO loyalty_members (name, email, phone, points, member_since) VALUES (?, ?, ?, 0, CURDATE())");
-                    $stmt->bind_param("sss", $userName, $userEmail, $userPhone);
-                    $stmt->execute();
-                    $memberId = $conn->insert_id;
-                    $stmt->close();
-                }
-                
-                // STEP 1: Process points redemption if requested
-                if ($pointsRedeemed > 0 && $loyaltyMemberId === $memberId) {
-                    // Deduct redeemed points
-                    $stmt = $conn->prepare("UPDATE loyalty_members SET points = points - ? WHERE member_id = ?");
-                    $stmt->bind_param("di", $pointsRedeemed, $memberId);
-                    $stmt->execute();
-                    $stmt->close();
-                    
-                    // Log redemption
-                    $refId = 'ORDER-' . $orderId;
-                    $negativePoints = -$pointsRedeemed; // Store as negative for REDEEM
-                    $stmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id) VALUES (?, ?, 'REDEEM', ?)");
-                    $stmt->bind_param("ids", $memberId, $negativePoints, $refId);
-                    $stmt->execute();
-                    $stmt->close();
-                    
-                    $responseMessages[] = "You saved ₱" . number_format($pointsDiscount, 2) . " using " . number_format($pointsRedeemed, 2) . " points!";
-                }
-                
-                // IMPORTANT: Do NOT award earned points here.
-                // Online-order earnings are only granted after POS pickup validation.
-            }
-        } catch (Exception $e) {
-            // Log loyalty error but don't fail the order
-            error_log('Loyalty points error: ' . $e->getMessage());
+    if ($pointsRedeemed > 0) {
+        if ($loyaltyMemberId === null) {
+            throw new Exception('Loyalty member not found for points redemption.');
         }
+
+        $deductStmt = $conn->prepare("UPDATE loyalty_members SET points = points - ? WHERE member_id = ? AND points >= ?");
+        $deductStmt->bind_param("did", $pointsRedeemed, $loyaltyMemberId, $pointsRedeemed);
+        $deductStmt->execute();
+        $deducted = $deductStmt->affected_rows;
+        $deductStmt->close();
+
+        if ($deducted <= 0) {
+            throw new Exception('Insufficient loyalty points. Please refresh and try again.');
+        }
+
+        $refId = 'ORDER-' . $orderId;
+        $negativePoints = -$pointsRedeemed; // Store as negative for REDEEM
+        $logStmt = $conn->prepare("INSERT INTO loyalty_points_log (member_id, points, transaction_type, reference_id) VALUES (?, ?, 'REDEEM', ?)");
+        $logStmt->bind_param("ids", $loyaltyMemberId, $negativePoints, $refId);
+        $logStmt->execute();
+        $logStmt->close();
+
+        $responseMessages[] = "You saved ₱" . number_format($pointsDiscount, 2) . " using " . number_format($pointsRedeemed, 2) . " points!";
     }
+
+    $conn->commit();
 
     // Clean any stray output, then send JSON
     ob_clean();
