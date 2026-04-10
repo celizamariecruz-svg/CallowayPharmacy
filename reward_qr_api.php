@@ -131,7 +131,11 @@ switch ($action) {
         break;
 
     case 'staff_redeem_for_customer':
-        staffRedeemForCustomer($conn);
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Employee-based reward claiming is disabled. Customers must redeem points using their own account.'
+        ]);
         break;
 
     default:

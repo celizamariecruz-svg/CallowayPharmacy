@@ -10,6 +10,30 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+if (!isset($_SESSION['user_id'])) {
+    $target = 'onlineordering.php';
+    if (!empty($_SERVER['QUERY_STRING'])) {
+        $target .= '?' . $_SERVER['QUERY_STRING'];
+    }
+    header('Location: login.php?redirect=' . urlencode($target));
+    exit;
+}
+
+$supportEmail = 'callowaypharmacy@gmail.com';
+$supportEmailQuery = "SELECT setting_key, setting_value
+                      FROM settings
+                      WHERE setting_key IN ('company_email', 'email_from_address', 'smtp_from_email')";
+$supportEmailResult = $conn->query($supportEmailQuery);
+if ($supportEmailResult) {
+    while ($supportRow = $supportEmailResult->fetch_assoc()) {
+        $candidate = trim((string) ($supportRow['setting_value'] ?? ''));
+        if ($candidate !== '' && filter_var($candidate, FILTER_VALIDATE_EMAIL)) {
+            $supportEmail = $candidate;
+            break;
+        }
+    }
+}
+
 // Ensure tables exist — only run once per session to avoid repeated DDL on every page load
 if (empty($_SESSION['_online_tables_checked'])) {
     $conn->query("CREATE TABLE IF NOT EXISTS online_orders (
@@ -51,9 +75,9 @@ if (empty($_SESSION['_online_tables_checked'])) {
     $_SESSION['_online_tables_checked'] = true;
 }
 
-$isLoggedIn = isset($_SESSION['user_id']);
-$isAdmin = $isLoggedIn && (($_SESSION['role_name'] ?? '') === 'admin');
-$customerName = $isLoggedIn ? ($_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Customer') : '';
+$isLoggedIn = true;
+$isAdmin = (($_SESSION['role_name'] ?? '') === 'admin');
+$customerName = $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Customer';
 
 function normalizeImagePathSegments($path) {
     $path = str_replace('\\', '/', (string)$path);
@@ -3749,7 +3773,7 @@ if ($prodResult) {
             <div class="chat-popup-body">
                 <p>Hi! How can we help you today? Reach out to us through any of these channels:</p>
                 <div class="chat-contact-item"><i class="fas fa-phone"></i> <a href="tel:88332273">8833 2273</a></div>
-                <div class="chat-contact-item"><i class="fas fa-envelope"></i> <a href="mailto:callowaypharmacy@gmail.com">callowaypharmacy@gmail.com</a></div>
+                <div class="chat-contact-item"><i class="fas fa-envelope"></i> <a href="mailto:<?php echo htmlspecialchars($supportEmail); ?>"><?php echo htmlspecialchars($supportEmail); ?></a></div>
                 <div class="chat-contact-item"><i class="fab fa-facebook-messenger"></i> <a href="#">Message us on Facebook</a></div>
             </div>
         </div>
@@ -3773,7 +3797,7 @@ if ($prodResult) {
                 </div>
                 <div class="footer-contact-item">
                     <i class="fas fa-envelope"></i>
-                    <span>callowaypharmacy@gmail.com</span>
+                    <span><?php echo htmlspecialchars($supportEmail); ?></span>
                 </div>
             </div>
             <div class="footer-col">
@@ -3917,7 +3941,7 @@ if ($prodResult) {
                 <h4>Data Protection</h4>
                 <p>We implement industry-standard security measures to protect your personal data. Your information is stored securely and is never sold or shared with third parties for marketing purposes.</p>
                 <h4>Your Rights</h4>
-                <p>You may request access to, correction of, or deletion of your personal data at any time by contacting us at <strong>callowaypharmacy@gmail.com</strong>.</p>
+                <p>You may request access to, correction of, or deletion of your personal data at any time by contacting us at <strong><?php echo htmlspecialchars($supportEmail); ?></strong>.</p>
                 <h4>Cookies</h4>
                 <p>Our website uses cookies to enhance your browsing experience and remember your preferences. You can manage cookie settings through your browser.</p>
             </div>
@@ -3938,7 +3962,7 @@ if ($prodResult) {
                 </div>
                 <div class="contact-method-card">
                     <i class="fas fa-envelope"></i>
-                    <div><strong>Email</strong><br><a href="mailto:callowaypharmacy@gmail.com" style="color:var(--primary-blue);">callowaypharmacy@gmail.com</a></div>
+                    <div><strong>Email</strong><br><a href="mailto:<?php echo htmlspecialchars($supportEmail); ?>" style="color:var(--primary-blue);"><?php echo htmlspecialchars($supportEmail); ?></a></div>
                 </div>
                 <div class="contact-method-card">
                     <i class="fas fa-map-marker-alt"></i>
@@ -5134,36 +5158,156 @@ if ($prodResult) {
                 return;
             }
 
-            const lines = [];
-            lines.push('CALLOWAY PHARMACY');
-            lines.push('Integrated Management System');
-            lines.push('----------------------------------------');
-            lines.push('Order Receipt');
-            lines.push('Order Ref: ' + latestOrderReceipt.orderRef);
-            lines.push('Date: ' + latestOrderReceipt.date);
-            lines.push('Payment: ' + latestOrderReceipt.paymentMethod);
-            lines.push('----------------------------------------');
+            const receipt = latestOrderReceipt;
+            const itemCount = Array.isArray(receipt.items) ? receipt.items.length : 0;
+            const canvasWidth = 1080;
+            const canvasHeight = Math.max(920, 560 + (itemCount * 52));
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
 
-            latestOrderReceipt.items.forEach(item => {
-                lines.push(item.quantity + 'x ' + item.name + '  -  ₱' + item.subtotal.toFixed(2));
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                showToast('Could not create receipt image.', 'error');
+                return;
+            }
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            const left = 70;
+            const right = canvasWidth - 70;
+            let y = 88;
+
+            function drawDivider(posY) {
+                ctx.strokeStyle = '#d4d8de';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(left, posY);
+                ctx.lineTo(right, posY);
+                ctx.stroke();
+            }
+
+            function drawWrappedText(text, x, startY, maxWidth, lineHeight, color, font) {
+                ctx.fillStyle = color;
+                ctx.font = font;
+                const words = String(text || '').split(/\s+/);
+                let line = '';
+                let posY = startY;
+
+                words.forEach((word) => {
+                    const candidate = line ? (line + ' ' + word) : word;
+                    if (ctx.measureText(candidate).width > maxWidth && line) {
+                        ctx.fillText(line, x, posY);
+                        line = word;
+                        posY += lineHeight;
+                    } else {
+                        line = candidate;
+                    }
+                });
+
+                if (line) {
+                    ctx.fillText(line, x, posY);
+                    posY += lineHeight;
+                }
+
+                return posY;
+            }
+
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 48px Arial';
+            ctx.fillText('CALLOWAY PHARMACY', left, y);
+            y += 50;
+
+            ctx.fillStyle = '#475569';
+            ctx.font = '28px Arial';
+            ctx.fillText('Online Order Receipt', left, y);
+            y += 26;
+
+            drawDivider(y + 18);
+            y += 64;
+
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '26px Arial';
+            ctx.fillText('Order Ref: ' + receipt.orderRef, left, y);
+            y += 42;
+            ctx.fillText('Date: ' + receipt.date, left, y);
+            y += 42;
+            ctx.fillText('Payment: ' + (receipt.paymentMethod || 'N/A'), left, y);
+            y += 42;
+            ctx.fillText('Status: Pending', left, y);
+            y += 30;
+
+            drawDivider(y + 16);
+            y += 56;
+
+            ctx.fillStyle = '#334155';
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText('Items', left, y);
+            ctx.textAlign = 'right';
+            ctx.fillText('Amount', right, y);
+            ctx.textAlign = 'left';
+            y += 24;
+
+            drawDivider(y + 14);
+            y += 48;
+
+            (receipt.items || []).forEach((item) => {
+                const itemLabel = (item.quantity || 0) + 'x ' + (item.name || 'Item');
+                y = drawWrappedText(itemLabel, left, y, 720, 34, '#0f172a', '24px Arial');
+
+                ctx.fillStyle = '#0f172a';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'right';
+                ctx.fillText('PHP ' + Number(item.subtotal || 0).toFixed(2), right, y - 34);
+                ctx.textAlign = 'left';
+                y += 14;
             });
 
-            lines.push('----------------------------------------');
-            lines.push('Total Amount: ' + latestOrderReceipt.total);
-            lines.push('Status: Pending');
-            lines.push('');
-            lines.push('Thank you for ordering with Calloway Pharmacy.');
+            drawDivider(y + 8);
+            y += 52;
 
-            const content = lines.join('\n');
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 34px Arial';
+            ctx.fillText('Total Amount', left, y);
+            ctx.textAlign = 'right';
+            ctx.fillText(String(receipt.total || 'PHP 0.00').replace('₱', 'PHP '), right, y);
+            ctx.textAlign = 'left';
+            y += 66;
+
+            drawDivider(y);
+            y += 52;
+
+            ctx.fillStyle = '#475569';
+            ctx.font = '24px Arial';
+            ctx.fillText('Thank you for ordering with Calloway Pharmacy.', left, y);
+
             const link = document.createElement('a');
-            const objectUrl = URL.createObjectURL(blob);
-            link.href = objectUrl;
-            link.download = latestOrderReceipt.orderRef + '-receipt.txt';
+            link.download = receipt.orderRef + '-receipt.png';
+
+            if (canvas.toBlob) {
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        showToast('Receipt image generation failed.', 'error');
+                        return;
+                    }
+                    const objectUrl = URL.createObjectURL(blob);
+                    link.href = objectUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(objectUrl);
+                    showToast('Receipt image downloaded.', 'success');
+                }, 'image/png');
+                return;
+            }
+
+            link.href = canvas.toDataURL('image/png');
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(objectUrl);
+            showToast('Receipt image downloaded.', 'success');
         }
     </script>
 

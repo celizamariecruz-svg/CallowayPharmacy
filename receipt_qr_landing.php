@@ -2,10 +2,7 @@
 /**
  * Receipt QR Code Landing Page
  * When a customer scans the QR code on their POS receipt, they land here.
- * They choose: "I'm a Customer" or "I'm an Employee"
- *
- * Customer path → login.php?tab=register&reward_qr=CODE  (register & auto-earn points)
- * Employee path → loyalty_qr.php?scan=CODE               (staff adds points for customer)
+ * Customer path only → login.php?tab=register&reward_qr=CODE
  */
 
 session_start();
@@ -159,10 +156,6 @@ if (empty($qrCode)) {
             background: #dbeafe;
             color: #2563eb;
         }
-        .choice-btn.employee .icon {
-            background: #d1fae5;
-            color: #059669;
-        }
         .choice-btn .text h3 {
             font-size: 1.05rem;
             font-weight: 700;
@@ -243,7 +236,7 @@ if (empty($qrCode)) {
                     <div class="points-label">Loyalty Points Available</div>
                 </div>
 
-                <div class="choice-label">How would you like to claim your points?</div>
+                <div class="choice-label">Claim your loyalty points</div>
 
                 <div class="choice-buttons">
                     <a href="login.php?tab=register&reward=<?php echo urlencode($qrCode); ?>" class="choice-btn customer">
@@ -251,14 +244,6 @@ if (empty($qrCode)) {
                         <div class="text">
                             <h3>I'm a Customer</h3>
                             <p>Register or log in to earn points automatically on your account</p>
-                        </div>
-                    </a>
-
-                    <a href="loyalty_qr.php?scan=<?php echo urlencode($qrCode); ?>" class="choice-btn employee">
-                        <div class="icon"><i class="fas fa-user-tie"></i></div>
-                        <div class="text">
-                            <h3>I'm an Employee</h3>
-                            <p>Add points to a customer's loyalty account (staff login required)</p>
                         </div>
                     </a>
                 </div>

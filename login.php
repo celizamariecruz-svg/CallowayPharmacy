@@ -5,9 +5,30 @@ require_once 'CSRF.php';
 
 Security::initSession();
 
+function resolveLoginRedirect($default = 'index.php') {
+  $redirect = $_GET['redirect'] ?? $_POST['redirect'] ?? '';
+  if (!is_string($redirect) || $redirect === '') {
+    return $default;
+  }
+
+  if (preg_match('/^[A-Za-z0-9_\-\/\.\?=&%]+$/', $redirect) !== 1) {
+    return $default;
+  }
+
+  if (strpos($redirect, '://') !== false || strpos($redirect, '//') === 0 || strpos($redirect, '\\') !== false) {
+    return $default;
+  }
+
+  return ltrim($redirect, '/');
+}
+
+$requestedRedirect = resolveLoginRedirect();
+
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
-    if (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'customer') {
+  if ($requestedRedirect !== 'index.php') {
+    header('Location: ' . $requestedRedirect);
+  } elseif (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'customer') {
         header('Location: onlineordering.php');
     } else {
         header('Location: index.php');
@@ -803,8 +824,8 @@ if (isset($_SESSION['user_id'])) {
         <p class="register-note">Don't have an account? <a onclick="switchTab('register')">Register here</a></p>
 
         <div style="margin-top: 1rem; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 1rem;">
-          <button type="button" onclick="window.location.href='onlineordering.php'" style="background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); margin-top: 0; padding: 0.8rem; font-size: 1rem;">
-            Browse Online Shop as Guest
+          <button type="button" onclick="switchTab('register')" style="background: transparent; border: 2px solid var(--primary-color); color: var(--primary-color); margin-top: 0; padding: 0.8rem; font-size: 1rem;">
+            Create an account to shop online
           </button>
         </div>
       </div>
@@ -988,7 +1009,8 @@ if (isset($_SESSION['user_id'])) {
     })();
 
     // ─── Modal functionality ───
-    let loginRedirectUrl = 'index.php'; // default; overridden by role
+    const requestedRedirect = <?php echo json_encode($requestedRedirect); ?>;
+    let loginRedirectUrl = requestedRedirect && requestedRedirect !== 'index.php' ? requestedRedirect : 'index.php'; // default; overridden by role
     let pendingVerificationEmail = '';
 
     function redirectToIndex() {
@@ -1142,8 +1164,10 @@ if (isset($_SESSION['user_id'])) {
           // Check for pending reward QR from POS receipt
           const pendingReward = localStorage.getItem('calloway_pending_reward');
           
-          // Redirect based on role
-          if (data.role_name === 'customer') {
+          // Redirect based on role (or explicit requested redirect)
+          if (requestedRedirect && requestedRedirect !== 'index.php') {
+            loginRedirectUrl = requestedRedirect;
+          } else if (data.role_name === 'customer') {
             if (pendingReward) {
               localStorage.removeItem('calloway_pending_reward');
               loginRedirectUrl = 'loyalty_qr.php?auto_redeem=' + encodeURIComponent(pendingReward);

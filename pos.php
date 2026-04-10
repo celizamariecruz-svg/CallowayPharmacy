@@ -12,6 +12,7 @@ $auth->requireAuth('login.php');
 
 $currentUser = $auth->getCurrentUser();
 $page_title = 'Point of Sale';
+$isStandalonePos = isset($_GET['standalone']) && $_GET['standalone'] === '1';
 
 // Fetch tax rate from settings (VAT-inclusive)
 $taxRate = 12.00;
@@ -53,21 +54,52 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" onerror="console.warn('QRCode CDN failed to load, using fallback');"></script>
     <script src="custom-modal.js?v=2"></script>
     <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: var(--bg-color);
             overflow: hidden;
         }
 
+        body:not(.pos-standalone) {
+            --pos-top-offset: 56px;
+        }
+
+        body.pos-standalone {
+            --pos-top-offset: 0px;
+            display: block !important;
+            grid-template-columns: none !important;
+            grid-template-rows: none !important;
+            min-height: 100dvh;
+            overflow: hidden;
+        }
+
+        body.pos-standalone > * {
+            grid-column: auto !important;
+        }
+
         /* === LAYOUT === */
         .pos-wrapper {
             display: grid;
             grid-template-columns: 1fr 380px;
-            height: calc(100vh - 56px);
-            margin-top: 56px;
+            height: calc(100dvh - var(--pos-top-offset));
+            margin-top: var(--pos-top-offset);
             padding-top: 0;
             width: 100%;
             min-width: 0;
+        }
+
+        body.pos-standalone .pos-wrapper {
+            margin-top: 0;
+            height: 100dvh;
+            max-width: 100vw;
+            grid-template-columns: minmax(0, 1fr) clamp(360px, 30vw, 520px);
         }
 
         /* === LEFT: PRODUCT CATALOG === */
@@ -1855,8 +1887,10 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
     </style>
 </head>
 
-<body data-cashier-name="<?php echo htmlspecialchars($currentUser['full_name'] ?? $currentUser['username'] ?? 'Cashier'); ?>">
+<body class="<?php echo $isStandalonePos ? 'pos-standalone' : ''; ?>" data-cashier-name="<?php echo htmlspecialchars($currentUser['full_name'] ?? $currentUser['username'] ?? 'Cashier'); ?>">
+    <?php if (!$isStandalonePos): ?>
     <?php include 'header-component.php'; ?>
+    <?php endif; ?>
 
     <script>
     // Inject POS-specific buttons into the topbar-right extras area and hide general notif bell
@@ -1985,6 +2019,16 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
                     <span class="item-count" id="cartCount" style="display: none;">0</span>
                 </h2>
                 <div class="cart-header-actions">
+                    <?php if ($isStandalonePos): ?>
+                    <button class="cart-action-btn" onclick="toggleStandaloneFullscreen()" title="Toggle Fullscreen">
+                        <i class="fas fa-expand" id="standaloneFullscreenIcon"></i>
+                    </button>
+                    <?php endif; ?>
+                    <?php if (!$isStandalonePos): ?>
+                    <button class="cart-action-btn" onclick="openStandalonePos()" title="Open POS-only tab">
+                        <i class="fas fa-up-right-from-square"></i>
+                    </button>
+                    <?php endif; ?>
                     <button class="cart-action-btn" onclick="holdSale()" title="Hold sale">
                         <i class="fas fa-pause"></i>
                     </button>
@@ -2205,6 +2249,111 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             }
         }
 
+        let hasRestoredPosState = false;
+        const POS_STATE_KEY = 'calloway_pos_state_<?php echo (int) ($currentUser['user_id'] ?? 0); ?>';
+        const POS_STATE_TTL_MS = 12 * 60 * 60 * 1000;
+
+        function persistPosState() {
+            const payload = {
+                savedAt: Date.now(),
+                currentCategory,
+                viewMode,
+                searchTerm: document.getElementById('searchInput') ? document.getElementById('searchInput').value : '',
+                cart
+            };
+            posStorageSet(POS_STATE_KEY, JSON.stringify(payload));
+        }
+
+        function clearPersistedPosState() {
+            if (!posStorageAvailable) return;
+            try {
+                localStorage.removeItem(POS_STATE_KEY);
+            } catch (_) {
+                // ignore
+            }
+        }
+
+        function syncCategoryTabSelection() {
+            document.querySelectorAll('#categoryNav .cat-tab').forEach((tab) => {
+                const isActive = tab.getAttribute('data-category') === currentCategory;
+                tab.classList.toggle('active', isActive);
+            });
+        }
+
+        function syncViewToggle() {
+            const viewButtons = document.querySelectorAll('.view-toggle button');
+            viewButtons.forEach((btn, idx) => {
+                const isGridBtn = idx === 0;
+                btn.classList.toggle('active', (viewMode === 'grid' && isGridBtn) || (viewMode === 'list' && !isGridBtn));
+            });
+        }
+
+        function restorePosStateOnce() {
+            if (hasRestoredPosState) return;
+            hasRestoredPosState = true;
+
+            const raw = posStorageGet(POS_STATE_KEY, null);
+            if (!raw) return;
+
+            try {
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object') return;
+
+                const age = Date.now() - Number(parsed.savedAt || 0);
+                if (!Number.isFinite(age) || age > POS_STATE_TTL_MS) {
+                    clearPersistedPosState();
+                    return;
+                }
+
+                if (parsed.viewMode === 'grid' || parsed.viewMode === 'list') {
+                    viewMode = parsed.viewMode;
+                }
+
+                const searchEl = document.getElementById('searchInput');
+                if (searchEl && typeof parsed.searchTerm === 'string') {
+                    searchEl.value = parsed.searchTerm;
+                }
+
+                const categoryExists = products.some(p => (p.category_name || '') === parsed.currentCategory);
+                currentCategory = categoryExists ? parsed.currentCategory : 'all';
+                syncCategoryTabSelection();
+                syncViewToggle();
+
+                if (Array.isArray(parsed.cart) && parsed.cart.length > 0) {
+                    const restoredCart = [];
+                    parsed.cart.forEach((savedItem) => {
+                        const product = products.find(p => String(p.product_id) === String(savedItem.id));
+                        if (!product || parseInt(product.stock_quantity, 10) <= 0) return;
+
+                        const perPiece = Boolean(savedItem.perPiece);
+                        const piecesPerBox = parseInt(product.pieces_per_box || 1, 10);
+                        const stockQty = parseInt(product.stock_quantity, 10);
+                        const maxStock = perPiece ? stockQty * piecesPerBox : stockQty;
+                        const qty = Math.min(Math.max(parseInt(savedItem.qty || 1, 10), 1), maxStock);
+                        if (qty <= 0 || !Number.isFinite(maxStock) || maxStock <= 0) return;
+
+                        restoredCart.push({
+                            id: product.product_id,
+                            cartKey: perPiece ? product.product_id + '_pc' : product.product_id + '_box',
+                            name: perPiece ? (product.name + ' (per pc)') : product.name,
+                            price: perPiece ? parseFloat(product.price_per_piece) : parseFloat(product.selling_price),
+                            qty,
+                            maxStock,
+                            perPiece,
+                            piecesPerBox
+                        });
+                    });
+
+                    cart = restoredCart;
+                    if (cart.length > 0) {
+                        showToast('Recovered your previous cart', 'success');
+                    }
+                }
+            } catch (_) {
+                // ignore invalid storage payloads
+            }
+        }
+
         // === Loyalty Customer Functions ===
         async function loadLoyaltyMembers() {
             try {
@@ -2373,7 +2522,9 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
                     products = data.data || [];
                     console.log(`POS: Loaded ${products.length} products`);
                     renderCategories();
-                    renderProducts();
+                    restorePosStateOnce();
+                    renderProducts(document.getElementById('searchInput').value || '');
+                    updateCartUI();
                 } else {
                     console.error('POS: API returned error:', data.message || 'Unknown error');
                     document.getElementById('productsGrid').innerHTML =
@@ -2391,7 +2542,10 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             let searchTimeout;
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => renderProducts(e.target.value), 120);
+                searchTimeout = setTimeout(() => {
+                    renderProducts(e.target.value);
+                    persistPosState();
+                }, 120);
             });
 
             document.getElementById('amountTendered').addEventListener('input', updateChange);
@@ -2434,6 +2588,8 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
                     completeSale();
                 }
             });
+
+            window.addEventListener('beforeunload', persistPosState);
         }
 
         // --- Categories ---
@@ -2443,7 +2599,7 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             nav.innerHTML = cats.map(cat => {
                 const count = cat === 'all' ? products.length : products.filter(p => p.category_name === cat).length;
                 const label = cat === 'all' ? 'All' : cat;
-                return `<button class="cat-tab ${cat === 'all' ? 'active' : ''}" title="${label} (${count})"
+                return `<button class="cat-tab ${cat === 'all' ? 'active' : ''}" data-category="${cat.replace(/"/g, '&quot;')}" title="${label} (${count})"
                     onclick="setCategory('${cat.replace(/'/g, "\\'")}', this)">
                     ${label} <span style="opacity:0.5;font-size:0.7rem;margin-left:2px;">${count}</span>
                 </button>`;
@@ -2455,6 +2611,7 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             document.querySelectorAll('#categoryNav .cat-tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             renderProducts(document.getElementById('searchInput').value);
+            persistPosState();
         }
 
         // --- View Toggle ---
@@ -2464,6 +2621,7 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             btn.classList.add('active');
             const grid = document.getElementById('productsGrid');
             grid.classList.toggle('list-view', mode === 'list');
+            persistPosState();
         }
 
         // --- Products ---
@@ -2608,6 +2766,7 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
                     </div>`;
                 document.getElementById('payBtn').disabled = true;
                 updateTotals(0);
+                clearPersistedPosState();
                 return;
             }
 
@@ -2632,6 +2791,7 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             updateTotals(subtotal);
             document.getElementById('payBtn').disabled = false;
+            persistPosState();
         }
 
         function updateQty(index, change) {
@@ -2657,6 +2817,7 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             if (cart.length === 0) return;
             cart = [];
             updateCartUI();
+            clearPersistedPosState();
             showToast('Cart cleared', 'success');
         }
 
@@ -3224,6 +3385,7 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
 
         function newSale() {
             cart = [];
+            clearPersistedPosState();
             discountEnabled = false;
             const discToggle = document.getElementById('discountToggle');
             if (discToggle) discToggle.classList.remove('active');
@@ -3239,6 +3401,31 @@ $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2, '.', ''), '0'), '.');
             // Reload loyalty members to get updated points balances
             loadLoyaltyMembers();
         }
+
+        function openStandalonePos() {
+            const win = window.open('pos.php?standalone=1', '_blank', 'noopener,noreferrer');
+            if (!win) {
+                showToast('Popup blocked. Allow popups to open POS-only tab.', 'error');
+            }
+        }
+
+        function toggleStandaloneFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    showToast('Fullscreen blocked by browser.', 'error');
+                });
+            } else {
+                document.exitFullscreen().catch(() => {
+                    showToast('Could not exit fullscreen.', 'error');
+                });
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.getElementById('standaloneFullscreenIcon');
+            if (!icon) return;
+            icon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
+        });
 
         // ═══════════════════════════════════════════════
         // ═══ THERMAL PRINTER — Web Bluetooth ESC/POS ═══

@@ -64,18 +64,33 @@ class EmailService {
             $settings['port'] = (int) ($raw['smtp_port'] ?? $raw['email_port'] ?? $settings['port']);
             $settings['username'] = trim($raw['smtp_username'] ?? $raw['email_username'] ?? $settings['username']);
 
-            $passwordValue = $raw['smtp_password'] ?? ($raw['email_password'] ?? $settings['password']);
-            // Decrypt using AES-256-CBC encryption
-            require_once __DIR__ . '/CryptoManager.php';
-            $decryptedPassword = CryptoManager::decrypt($passwordValue);
-            // Fallback to raw value if decryption fails (for backward compatibility with base64)
-            if ($decryptedPassword === false) {
-                $decryptedPassword = base64_decode((string) $passwordValue, true);
-                if ($decryptedPassword === false) {
-                    $decryptedPassword = $passwordValue;
-                }
+            $passwordValue = (string) ($raw['smtp_password'] ?? ($raw['email_password'] ?? $settings['password']));
+            $resolvedPassword = $passwordValue;
+
+            // Decrypt only when payload shape matches AES-256-CBC(iv + ciphertext blocks).
+            $decoded = base64_decode($passwordValue, true);
+            $looksEncrypted = false;
+            if ($decoded !== false) {
+                $decodedLen = strlen($decoded);
+                $looksEncrypted = $decodedLen >= 32 && (($decodedLen - 16) % 16 === 0);
             }
-            $settings['password'] = ($decryptedPassword !== '' ? $decryptedPassword : $passwordValue);
+
+            if ($looksEncrypted) {
+                require_once __DIR__ . '/CryptoManager.php';
+                $maybeDecrypted = CryptoManager::decrypt($passwordValue);
+                if ($maybeDecrypted !== false) {
+                    $resolvedPassword = (string) $maybeDecrypted;
+                } elseif ($decoded !== false && preg_match('/^[\x20-\x7E]+$/', $decoded)) {
+                    // Legacy format: base64-encoded plain password
+                    $resolvedPassword = $decoded;
+                }
+            } elseif ($decoded !== false && preg_match('/^[\x20-\x7E]+$/', $decoded)) {
+                // Legacy format: base64-encoded plain password
+                $resolvedPassword = $decoded;
+            }
+
+            // Backward compatibility: encrypted, base64-plain, or raw plain values.
+            $settings['password'] = $resolvedPassword;
 
             $settings['from_email'] = trim($raw['smtp_from_email'] ?? $raw['email_from_address'] ?? $settings['from_email']);
             $settings['from_name'] = trim($raw['smtp_from_name'] ?? $raw['email_from_name'] ?? $settings['from_name']);

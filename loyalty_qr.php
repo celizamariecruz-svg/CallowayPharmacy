@@ -592,7 +592,7 @@ $page_title = 'Loyalty & QR';
                 <div class="scanner-icon">📷</div>
                 <h2>Scan Reward QR Code</h2>
                 <?php if ($isStaff): ?>
-                <p>Scan a receipt QR code and assign points to a customer loyalty member.</p>
+                <p>Reward QR redemption is customer-only. Staff accounts cannot claim points.</p>
                 <?php else: ?>
                 <p>Enter or scan the QR code from your receipt to earn loyalty points</p>
                 <?php endif; ?>
@@ -601,11 +601,6 @@ $page_title = 'Loyalty & QR';
                     <?php if (!$isStaff): ?>
                     <button class="btn btn-primary" onclick="redeemQRCode()" style="padding:0.85rem 2rem; font-size:1rem;">
                         <i class="fas fa-qrcode"></i> Redeem Points
-                    </button>
-                    <?php endif; ?>
-                    <?php if ($isStaff): ?>
-                    <button class="btn btn-secondary" onclick="openStaffRedeemModal(document.getElementById('qrScanInput').value.trim())" style="padding:0.85rem 1.5rem; font-size:1rem; background:#059669; color:#fff; border:none;">
-                        <i class="fas fa-user-plus"></i> Redeem for Customer
                     </button>
                     <?php endif; ?>
                 </div>
@@ -834,8 +829,7 @@ $page_title = 'Loyalty & QR';
                     const input = document.getElementById('qrScanInput');
                     if (input) input.value = scanParam;
                     <?php if ($isStaff): ?>
-                    // Staff: show the "Redeem for Customer" modal
-                    openStaffRedeemModal(scanParam);
+                    showToast('Staff accounts cannot redeem reward QR codes.', 'error');
                     <?php else: ?>
                     // Non-staff: just auto-redeem for self
                     redeemQRCode();
@@ -886,7 +880,7 @@ $page_title = 'Loyalty & QR';
         // Redeem QR code
         async function redeemQRCode() {
             if (isStaffUser) {
-                showToast('Staff accounts cannot redeem points for themselves. Use Redeem for Customer.', 'error');
+                showToast('Staff accounts cannot redeem reward QR codes.', 'error');
                 return;
             }
 

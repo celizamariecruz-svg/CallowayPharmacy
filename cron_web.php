@@ -68,30 +68,72 @@ if ($lastRun === $today) {
 
 // ─── Run the email cron ───
 try {
-    // Mark as run today FIRST to prevent double-runs from concurrent requests
+    // Record attempt timestamp for diagnostics even if execution fails.
+    $attemptAt = date('Y-m-d H:i:s');
     $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value, category, description) 
-                            VALUES ('cron_last_run', ?, 'system', 'Last date email cron ran')
+                            VALUES ('cron_last_attempt_at', ?, 'system', 'Last timestamp email cron was attempted')
                             ON DUPLICATE KEY UPDATE setting_value = ?");
-    $stmt->bind_param('ss', $today, $today);
-    $stmt->execute();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->bind_param('ss', $attemptAt, $attemptAt);
+        $stmt->execute();
+        $stmt->close();
+    }
 
     // Try subprocess first (cleanest — email_cron.php calls exit())
     $phpBin = PHP_BINARY ?: 'php';
     $cronScript = __DIR__ . DIRECTORY_SEPARATOR . 'email_cron.php';
     $cmd = escapeshellarg($phpBin) . ' ' . escapeshellarg($cronScript) . ' 2>&1';
-    $output = @shell_exec($cmd);
+    $output = '';
+    $ranInShell = false;
+    $cronSucceeded = false;
 
-    if ($output === null) {
+    if (function_exists('shell_exec')) {
+        $shellOutput = @shell_exec($cmd);
+        if ($shellOutput !== null) {
+            $ranInShell = true;
+            $output = $shellOutput;
+            $hasErrorLine = stripos($output, 'ERROR:') !== false;
+            $hasFailedMarker = stripos($output, '✗ Failed') !== false;
+            $cronSucceeded = !$hasErrorLine && !$hasFailedMarker;
+        }
+    }
+
+    if (!$ranInShell) {
         // shell_exec disabled — fall back to direct include in shutdown handler
         // Register the cron to run AFTER this script sends its response
         register_shutdown_function(function() use ($cronScript) {
             @include $cronScript;
         });
         $output = 'Scheduled via shutdown handler (shell_exec unavailable)';
+        // We cannot determine outcome synchronously in this mode.
+        $cronSucceeded = true;
     }
 
-    echo json_encode(['success' => true, 'message' => 'Cron executed successfully', 'output' => $output]);
+    if ($cronSucceeded) {
+        $runAt = date('Y-m-d H:i:s');
+
+        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value, category, description) 
+                                VALUES ('cron_last_run', ?, 'system', 'Last date email cron ran')
+                                ON DUPLICATE KEY UPDATE setting_value = ?");
+        if ($stmt) {
+            $stmt->bind_param('ss', $today, $today);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        $stmt = $conn->prepare("INSERT INTO settings (setting_key, setting_value, category, description) 
+                                VALUES ('cron_last_run_at', ?, 'system', 'Last timestamp email cron ran successfully')
+                                ON DUPLICATE KEY UPDATE setting_value = ?");
+        if ($stmt) {
+            $stmt->bind_param('ss', $runAt, $runAt);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Cron executed successfully', 'output' => $output]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Cron failed. Check cron output for details.', 'output' => $output]);
+    }
 } catch (Exception $e) {
     error_log("cron_web.php error: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Cron failed: ' . $e->getMessage()]);
