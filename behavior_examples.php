@@ -66,7 +66,7 @@ function exampleGetStageStats() {
 
 /**
  * EXAMPLE 4: Automated daemon - Run continuously
- * Add to cron job: */5 * * * * php behavior_daemon.php
+ * Add to cron job (every 5 minutes): php behavior_daemon.php
  */
 function exampleAutomatedDaemon() {
     global $engine;

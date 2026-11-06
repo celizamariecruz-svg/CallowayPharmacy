@@ -1,0 +1,232 @@
+/* Calloway Pharmacy - login page
+   Hooks used by login.php scripts: .tab-btn/.tab-panel(.active), .dropdown-menu(.show),
+   .modal(.modal-success/.modal-error), [data-theme], .ripple */
+
+:root {
+  --primary: #0b6fd6;
+  --primary-hover: #0958ad;
+  --primary-soft: #e8f2fd;
+  --accent: #14b8a6;
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --text: #0f1b2d;
+  --muted: #5b6b82;
+  --border: #d6e0ee;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --radius: 14px;
+  --shadow: 0 20px 50px -20px rgba(11, 111, 214, .35), 0 6px 18px rgba(15, 27, 45, .08);
+  --ring: 0 0 0 4px rgba(11, 111, 214, .18);
+  --ease: cubic-bezier(.4, 0, .2, 1);
+}
+
+[data-theme="dark"] {
+  --primary: #4c9bff;
+  --primary-hover: #7ab4ff;
+  --primary-soft: #16233a;
+  --accent: #2dd4bf;
+  --bg: #0b1220;
+  --surface: #111b2e;
+  --text: #e6edf7;
+  --muted: #93a4bd;
+  --border: #25344f;
+  --shadow: 0 20px 50px -20px rgba(0, 0, 0, .7), 0 6px 18px rgba(0, 0, 0, .35);
+  --ring: 0 0 0 4px rgba(76, 155, 255, .25);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background .3s var(--ease), color .3s var(--ease);
+}
+
+:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- Top bar ---------- */
+header {
+  position: fixed; inset: 0 0 auto 0; z-index: 50;
+  height: 64px; padding: 0 clamp(16px, 4vw, 32px);
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(135deg, #0958ad, #0b6fd6);
+  box-shadow: 0 2px 18px rgba(9, 88, 173, .35);
+}
+header > div:first-child { font-size: 1.15rem !important; font-weight: 700 !important; letter-spacing: .2px; }
+
+.dropdown { position: relative; }
+.dropdown-toggle {
+  width: 42px; height: 42px; border: 0; border-radius: 12px; cursor: pointer;
+  background: rgba(255, 255, 255, .14); color: #fff;
+  display: grid; place-items: center; transition: background .2s var(--ease);
+}
+.dropdown-toggle:hover { background: rgba(255, 255, 255, .26); }
+.dropdown-menu {
+  position: absolute; right: 0; top: calc(100% + 10px); min-width: 190px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow);
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: all .2s var(--ease);
+}
+.dropdown-menu.show { opacity: 1; visibility: visible; transform: none; }
+.dropdown-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+  color: var(--text); text-decoration: none; font-size: .92rem; cursor: pointer;
+}
+.dropdown-item:hover { background: var(--primary-soft); }
+.divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+/* ---------- Layout ---------- */
+.login-side {
+  position: relative; z-index: 2;
+  flex: 0 0 min(520px, 100%); min-height: 100vh;
+  padding: 96px clamp(20px, 5vw, 56px) 72px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface);
+  box-shadow: 8px 0 40px rgba(15, 27, 45, .08);
+}
+.container { width: 100%; max-width: 400px; position: relative; animation: rise .5s var(--ease) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+#login-title { margin: 0 0 1.25rem !important; }
+#login-title img { height: 120px !important; width: auto; max-width: 100%; filter: none !important; }
+
+[data-theme="dark"] #login-title img { background: #fff; border-radius: 14px; padding: 8px 14px; }
+
+.image-side { position: relative; flex: 1; min-height: 100vh; overflow: hidden; background: #0b1220; }
+.wallpaper { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.wallpaper1 { background-image: url('wallpaper1.jpg'); }
+.wallpaper2 { background-image: url('wallpaper2.jpg'); opacity: 0; animation: crossfade 14s ease-in-out infinite; }
+@keyframes crossfade { 0%, 40% { opacity: 0; } 50%, 90% { opacity: 1; } 100% { opacity: 0; } }
+.image-side::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(120deg, rgba(9, 88, 173, .55), rgba(20, 184, 166, .15) 60%, transparent);
+}
+
+/* decorative pills from the old design are not needed */
+.pill, .preload { display: none; }
+
+/* ---------- Tabs ---------- */
+.tab-switcher {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 1.5rem;
+  background: var(--primary-soft); border-radius: 12px;
+}
+.tab-btn {
+  border: 0; padding: .7rem; border-radius: 9px; cursor: pointer;
+  background: transparent; color: var(--muted); font-weight: 600; font-size: .95rem; font-family: inherit;
+  transition: all .2s var(--ease);
+}
+.tab-btn.active { background: var(--surface); color: var(--primary); box-shadow: 0 2px 8px rgba(15, 27, 45, .12); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: rise .35s var(--ease) both; }
+
+/* ---------- Floating-label fields ---------- */
+.form-group { position: relative; margin-bottom: 1.1rem; }
+.form-group input {
+  width: 100%; height: 54px; padding: 1.35rem 1rem .45rem;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font-size: 1rem; font-family: inherit;
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.form-group input:hover { border-color: var(--primary); }
+.form-group input:focus { outline: none; border-color: var(--primary); box-shadow: var(--ring); }
+.form-group label {
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-size: 1rem; pointer-events: none;
+  transition: all .18s var(--ease); transform-origin: left;
+}
+.form-group input:focus + label,
+.form-group input:not(:placeholder-shown) + label {
+  top: 11px; transform: none; font-size: .72rem; font-weight: 600; color: var(--primary);
+}
+.form-group small { display: block; margin-top: .35rem; font-size: .75rem; color: var(--muted) !important; }
+
+/* ---------- Buttons ---------- */
+button[type="submit"] {
+  position: relative; overflow: hidden; width: 100%; height: 54px; margin-top: .4rem;
+  border: 0; border-radius: var(--radius); cursor: pointer;
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #fff;
+  font-weight: 700; font-size: 1rem; font-family: inherit; letter-spacing: .2px;
+  box-shadow: 0 10px 24px -10px var(--primary);
+  transition: transform .15s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
+}
+button[type="submit"]:hover { transform: translateY(-1px); filter: brightness(1.05); }
+button[type="submit"]:active { transform: translateY(0); }
+button[type="submit"]:disabled { opacity: .65; cursor: progress; transform: none; }
+.ripple { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .45); transform: scale(0); animation: ripple .6s linear; pointer-events: none; }
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+.register-note { text-align: center; font-size: .9rem; color: var(--muted); margin: 1rem 0 0 !important; }
+.register-note a { color: var(--primary) !important; font-weight: 600; cursor: pointer; text-decoration: none; }
+.register-note a:hover { text-decoration: underline; }
+
+#tab-login > div:last-child { border-top: 1px solid var(--border) !important; }
+#tab-login > div:last-child button {
+  width: 100%; height: 50px; border-radius: var(--radius); cursor: pointer;
+  background: transparent !important; color: var(--primary) !important;
+  border: 1.5px solid var(--primary) !important; font-weight: 600; font-size: .95rem; font-family: inherit;
+  transition: background .2s var(--ease);
+}
+#tab-login > div:last-child button:hover { background: var(--primary-soft) !important; }
+
+/* ---------- Result modals (shown by script with display:block) ---------- */
+.modal {
+  display: none; position: fixed; z-index: 10000; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(92vw, 380px); padding: 1.75rem 1.5rem 1.5rem; text-align: center;
+  background: var(--surface); color: var(--text); border-radius: 18px; box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+  border-top: 5px solid var(--primary); animation: pop .25s var(--ease) both;
+}
+@keyframes pop { from { opacity: 0; transform: translate(-50%, -46%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+/* Email verification dialog (display toggled by script) */
+#email-verify-modal { width: min(92vw, 400px); }
+#email-verify-modal input {
+  width: 100%; background: var(--surface); color: var(--text);
+  border: 1.5px solid var(--border) !important; border-radius: 12px !important;
+  font-size: 1.4rem !important; font-weight: 700; padding: .7rem !important;
+}
+#email-verify-modal input:focus { outline: none; border-color: var(--primary) !important; box-shadow: var(--ring); }
+#email-verify-modal #verify-modal-message { color: var(--muted) !important; font-weight: 400; }
+.modal-success { border-top-color: var(--success); }
+.modal-error { border-top-color: var(--danger); }
+.modal p { margin: 0 0 1.25rem; font-size: 1.05rem; font-weight: 600; line-height: 1.45; }
+.modal button {
+  min-width: 120px; padding: .7rem 1.4rem; border: 0; border-radius: 10px; cursor: pointer;
+  color: #fff; background: var(--primary); font-weight: 600; font-size: .95rem; font-family: inherit;
+}
+.modal-success button { background: var(--success); }
+.modal-error button { background: var(--danger); }
+
+/* Verify / forgot-password dialogs (inline-styled in markup) */
+#verify-email-modal > div, #forgot-password-modal > div { background: var(--surface) !important; color: var(--text); }
+#verify-email-modal h3, #forgot-password-modal h3 { color: var(--text) !important; }
+#verify-email-modal input, #forgot-password-modal input {
+  background: var(--surface); color: var(--text); border-color: var(--border) !important;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  position: fixed; left: 0; bottom: 0; width: min(520px, 100%); z-index: 3;
+  padding: 14px; text-align: center; font-size: .78rem; color: var(--muted); background: var(--surface);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  body { display: block; }
+  .image-side { display: none; }
+  .login-side { flex: none; min-height: 100vh; box-shadow: none; padding-top: 88px; }
+  footer { width: 100%; }
+  #login-title img { height: 96px !important; }
+}

@@ -92,6 +92,15 @@ Options -Indexes
     Require all denied
 </FilesMatch>
 
+# Block one-off maintenance, seeding, diagnostic and dev-tool scripts from the web.
+# Run these from the command line instead (php seed_ph_medicines.php).
+<FilesMatch "^(seed_|topup_|migrate_|backfill_).*\.php$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^(update_foreign_key|update_products_table|update_schema|add_condoms|add_sexual_health|cleanup_tables|set_sample_prices|verify_products|verify_image_system|diagnostic|print_diagnostic|full_system_check|force_relogin|scan|system_design_analyzer|behavior_examples)\.php$">
+    Require all denied
+</FilesMatch>
+
 # Protect core files from direct access
 <FilesMatch "^(db_connection|Auth|email_service|render_employee_table)\.php$">
     Require all denied
